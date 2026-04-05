@@ -3,29 +3,30 @@
 # Author: Hegel3DReloaded
 # Licence: GPLv3
 #
-
+# SPDX-FileCopyrightText: 2026 Wenyin Root <ruojiner@hotmail.com>
 msgid ""
 msgstr ""
 "Project-Id-Version: NsCDE\n"
 "POT-Creation-Date: 2021-11-08 09:35+0100\n"
-"PO-Revision-Date: 2021-11-08 09:37+0100\n"
-"Last-Translator: Hegel3DReloaded <nscde@protonmail.com>\n"
-"Language-Team: Chinese\n"
+"PO-Revision-Date: 2026-04-05 16:01+0800\n"
+"Last-Translator: Wenyin Root <ruojiner@hotmail.com>\n"
+"Language-Team: WenYin Community\n"
 "Language: Chinese (Simplified)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Lokalize 26.07.70\n"
 
 # nscde-migrate-1x_to_2x
-
 msgid "File "
 msgstr "文件 "
 
 msgid " exists."
 msgstr " 存在。"
 
-msgid "This script is refusing to run in the interactive mode while that file exists."
+msgid ""
+"This script is refusing to run in the interactive mode while that file exists."
 msgstr "当该文件存在时，此脚本拒绝以交互模式运行。"
 
 msgid "It appears that you have ~/.NsCDE profile from NsCDE 1.x installation."
@@ -94,7 +95,8 @@ msgstr "按回车键取消迁移并退出。"
 msgid "No automatic migration will be performed. This migration script will"
 msgstr "将不执行自动迁移。此迁移脚本将在"
 
-msgid "run again on next log in. To disable, choose Abort action from the menu."
+msgid ""
+"run again on next log in. To disable, choose Abort action from the menu."
 msgstr "下次登录时再次运行。要禁用，请从菜单中选择\"中止\"操作。"
 
 msgid "This migration process will now restart NsCDE in normal mode. Many of"
@@ -149,7 +151,6 @@ msgid "Please try again: type 1, 2 or 3"
 msgstr "请重试：输入 1、2 或 3"
 
 # Errors
-
 msgid "Error: cannot change directory to"
 msgstr "错误：无法切换到目录"
 
@@ -162,7 +163,9 @@ msgstr "错误：您的 "
 msgid "directory has more then 200 MB. Something appears to be"
 msgstr "目录超过 200 MB。似乎"
 
-msgid "wrong with your NsCDE profile. Examine your profile, or back it up manually, and"
+msgid ""
+"wrong with your NsCDE profile. Examine your profile, or back it up manually, a"
+"nd"
 msgstr "您的 NsCDE 配置文件有问题。检查您的配置文件，或手动备份，然后"
 
 msgid "rerun migration script without \"-i\" option."

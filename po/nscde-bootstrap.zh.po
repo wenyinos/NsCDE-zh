@@ -3,22 +3,22 @@
 # Author: Hegel3DReloaded
 # Licence: GPLv3
 #
-
+# SPDX-FileCopyrightText: 2026 Wenyin Root <ruojiner@hotmail.com>
 msgid ""
 msgstr ""
 "Project-Id-Version: NsCDE\n"
 "POT-Creation-Date: 2020-03-15 09:35+0100\n"
-"PO-Revision-Date: 2020-03-15 09:37+0100\n"
-"Last-Translator: Hegel3DReloaded <nscde@protonmail.com>\n"
-"Language-Team: Chinese\n"
+"PO-Revision-Date: 2026-04-05 15:58+0800\n"
+"Last-Translator: Wenyin Root <ruojiner@hotmail.com>\n"
+"Language-Team: WenYin Community\n"
 "Language: Chinese (Simplified)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Lokalize 26.07.70\n"
 
 # nscde bootstrap
-
 msgid "One"
 msgstr "一"
 
@@ -74,7 +74,7 @@ msgid "Generating NsCDE fvwm Colorset ..."
 msgstr "正在生成 NsCDE fvwm 颜色集 ..."
 
 msgid "already exists."
-msgstr "已存在。"
+msgstr "已存在"
 
 msgid "Setting up X resources in"
 msgstr "正在设置 X 资源于"
@@ -115,7 +115,9 @@ msgstr "是否要启用 NsCDE Qt4 主题集成？"
 msgid "Do you want to enable NsCDE Qt5 GTK engine theme integration?"
 msgstr "是否要启用 NsCDE Qt5 GTK 引擎主题集成？"
 
-msgid "(Do not use Qt5 GTK engine if Qt5 Kvantum engine is available. Qt5 GTK engine is a legacy.)"
+msgid ""
+"(Do not use Qt5 GTK engine if Qt5 Kvantum engine is available. Qt5 GTK engine "
+"is a legacy.)"
 msgstr "（如果可用 Qt5 Kvantum 引擎，请不要使用 Qt5 GTK 引擎。Qt5 GTK 引擎已过时。）"
 
 msgid "Do you want to enable NsCDE Qt5 Kvantum engine theme integration?"
@@ -157,7 +159,9 @@ msgstr "正在将 Qt5 主题与生成的 Gtk2 主题集成 ..."
 msgid "Setting default"
 msgstr "正在设置默认"
 
-msgid "Do you want to enable NsCDE-specific visual pager preview on page/workspace change?"
+msgid ""
+"Do you want to enable NsCDE-specific visual pager preview on page/workspace ch"
+"ange?"
 msgstr "是否要在页面/工作区切换时启用 NsCDE 特定的可视化页面切换器预览？"
 
 msgid "Enabling:"
@@ -187,7 +191,9 @@ msgstr "已存在"
 msgid "Do you want to enable Stalonetray Tray?"
 msgstr "是否要启用 Stalonetray 托盘？"
 
-msgid "Do you want to enable color scheme integration with XSETTINGS daemon xsettingsd?"
+msgid ""
+"Do you want to enable color scheme integration with XSETTINGS daemon xsettings"
+"d?"
 msgstr "是否要启用与 XSETTINGS 守护进程 xsettingsd 的颜色方案集成？"
 
 msgid "Do you want to enable dunst notification daemon?"
@@ -199,7 +205,8 @@ msgstr "是否要启用 Picom X 合成器？"
 msgid "Do you want to run rofi launcher on Alt+F12 or built in Exec Dialog?"
 msgstr "是否要在 Alt+F12 运行 rofi 启动器或使用内置执行对话框？"
 
-msgid "Do you want to remember last page on workspace when changing back to it?"
+msgid ""
+"Do you want to remember last page on workspace when changing back to it?"
 msgstr "是否要在切换回工作区时记住上次的页面？"
 
 msgid "Do you want to enable FVWM3 logging by default?"
@@ -238,7 +245,8 @@ msgstr "跳过 X 编辑器选择。您可以稍后在以下位置设置"
 msgid "... done!"
 msgstr "... 完成！"
 
-msgid "Please select a color palette (default: Broica) and GUI widgets integrations"
+msgid ""
+"Please select a color palette (default: Broica) and GUI widgets integrations"
 msgstr "请选择调色板（默认：Broica）和 GUI 控件集成"
 
 msgid "that you want to apply and confirm with OK in Color Style Manager"
