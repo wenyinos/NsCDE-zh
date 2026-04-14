@@ -34,7 +34,17 @@ sudo apt install ./nscde-zh_*.deb
 
 ```bash
 # Fedora/RHEL/CentOS
-sudo dnf install NsCDE-2.3-3.zh.fc*.x86_64.rpm
+sudo dnf install NsCDE-2.3.1-1.zh.fc*.x86_64.rpm
+```
+
+### From Arch Linux (AUR)
+
+```bash
+# 使用 AUR helper
+paru -S nscde-zh
+
+# 或从源码构建 (pkg/pacman/PKGBUILD)
+makepkg -si
 ```
 
 ### From Source
