@@ -19,7 +19,7 @@ BuildRequires:  glibc-headers
 %if 0%{?suse_version}
 BuildRequires:  glibc-devel
 %endif
-Requires:	xterm ksh sed fvwm cpp xsettingsd stalonetray dunst xclip xdotool
+Requires:	xterm ksh sed fvwm3 cpp xsettingsd stalonetray dunst xclip xdotool
 Requires:	python3-pyxdg python3-psutil qt5ct
 %if 0%{?fedora} || 0%{?rhel_version} || 0%{?centos_version}
 Requires: python3-yaml PyQt5 qt5-qtstyleplugins dex-autostart groff-base dejavu-serif-fonts
@@ -51,7 +51,7 @@ lightweight hybrid desktop environment.
 
 
 %prep
-%autosetup -p1 -n NsCDE-zh
+%autosetup -p1 -n NsCDE-2.3
 
 
 %build
