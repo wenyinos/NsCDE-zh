@@ -1,6 +1,6 @@
 Name:		NsCDE
-Version:	2.3
-Release:	3.zh%{?dist}
+Version:	2.3.1
+Release:	1.zh%{?dist}
 Summary:	Not so Common Desktop Environment - Chinese Localization
 
 License:	GPLv3
@@ -51,7 +51,7 @@ lightweight hybrid desktop environment.
 
 
 %prep
-%autosetup -p1 -n NsCDE-2.3
+%autosetup -p1 -n NsCDE-2.3.1
 
 
 %build
