@@ -5,7 +5,7 @@ Summary:	Not so Common Desktop Environment - Chinese Localization
 
 License:	GPLv3
 URL:		https://github.com/wenyinos/NsCDE-zh
-Source0:	https://github.com/wenyinos/NsCDE-zh/releases/download/v2.3_zh/NsCDE-2.3.tar.gz
+Source0:	%{name}-%{version}.tar.gz
 
 BuildRequires:  ksh
 BuildRequires:  gcc
@@ -23,9 +23,11 @@ Requires:	xterm ksh sed fvwm cpp xsettingsd stalonetray dunst xclip xdotool
 Requires:	python3-pyxdg python3-psutil qt5ct
 %if 0%{?fedora} || 0%{?rhel_version} || 0%{?centos_version}
 Requires: python3-yaml PyQt5 qt5-qtstyleplugins dex-autostart groff-base dejavu-serif-fonts
+Requires: google-noto-sans-cjk-ttc-fonts google-noto-sans-mono-cjk-ttc-fonts
 %endif
 %if 0%{?suse_version}
 Requires: python3-qt5 python3-pyaml libqt5-qtstyleplugins-platformtheme-gtk2 dex groff-full dejavu-fonts
+Requires: noto-sans-cjk-fonts
 %endif
 Requires:	%{_bindir}/convert
 Requires:	%{_bindir}/import
@@ -49,7 +51,7 @@ lightweight hybrid desktop environment.
 
 
 %prep
-%autosetup -p1
+%autosetup -p1 -n NsCDE-zh
 
 
 %build
@@ -79,6 +81,8 @@ autoreconf -ivf
 - Add full Chinese (zh) translation support
 - Fix build system to compile and install Chinese locales
 - 25 translation files for Chinese language
+- Add NotoSansCJK.fontset for Chinese character support
+- Add google-noto-sans-cjk-ttc-fonts and google-noto-sans-mono-cjk-ttc-fonts dependencies
 - Based on NsCDE 2.3 release
 
 * Fri Jun 16 2023 Hegel3DReloaded <nscde@protonmail.com>  - 2.3-3
