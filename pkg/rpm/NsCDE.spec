@@ -4,8 +4,8 @@ Release:	3.zh%{?dist}
 Summary:	Not so Common Desktop Environment - Chinese Localization
 
 License:	GPLv3
-URL:		https://github.com/NsCDE
-Source0:	https://github.com/wenyiros/NsCDE-zh/releases/download/v2.3-zh/NsCDE-zh-2.3-zh.tar.gz
+URL:		https://github.com/wenyiros/NsCDE-zh
+Source0:	https://github.com/wenyiros/NsCDE-zh/releases/download/2.3_zh/NsCDE-zh-2.3_zh.tar.gz
 
 BuildRequires:  ksh
 BuildRequires:  gcc
