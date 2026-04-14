@@ -1,11 +1,11 @@
 Name:		NsCDE
 Version:	2.3
-Release:	3%{?dist}
-Summary:	Not so Common Desktop Environment
+Release:	3.zh%{?dist}
+Summary:	Not so Common Desktop Environment - Chinese Localization
 
 License:	GPLv3
 URL:		https://github.com/NsCDE
-Source0:	https://github.com/NsCDE/NsCDE/releases/download/2.3/NsCDE-2.3.tar.gz
+Source0:	https://github.com/wenyiros/NsCDE-zh/releases/download/v2.3-zh/NsCDE-zh-2.3-zh.tar.gz
 
 BuildRequires:  ksh
 BuildRequires:  gcc
@@ -74,6 +74,13 @@ autoreconf -ivf
 %{_sysconfdir}/xdg/menus/nscde-applications.menu
 
 %changelog
+* Tue Apr 14 2026 WenyiOS <wenyiios@github.com>  - 2.3-3.zh
+- Chinese localization version
+- Add full Chinese (zh) translation support
+- Fix build system to compile and install Chinese locales
+- 25 translation files for Chinese language
+- Based on NsCDE 2.3 release
+
 * Fri Jun 16 2023 Hegel3DReloaded <nscde@protonmail.com>  - 2.3-3
 - Portability and bug fixes
 - Misc small fixes

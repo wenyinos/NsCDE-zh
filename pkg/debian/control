@@ -1,14 +1,14 @@
-Source: nscde
+Source: nscde-zh
 Section: x11
 Priority: optional
-Maintainer: Hegel3DReloaded <nscde@protonmail.com>
+Maintainer: WenyiOS <wenyiios@github.com>
 Build-Depends:
  libc6-dev, libxext-dev, x11proto-dev, libx11-dev, libxpm-dev, ksh | ksh93,
  autotools-dev, automake, build-essential, debhelper-compat (= 11), gettext
 Standards-Version: 4.5.0
-Homepage: https://github.com/NsCDE
+Homepage: https://github.com/wenyiros/NsCDE-zh
 
-Package: nscde
+Package: nscde-zh
 Architecture: any
 Multi-Arch: foreign
 Depends:
@@ -19,11 +19,14 @@ Depends:
 Recommends: xclip, xscreensaver, dex, gtk2-engines-pixbuf, dunst,
  qt5-gtk2-platformtheme, qt5-gtk-platformtheme
 Suggests: rofi, gkrellm, gkrellm-xkb, gkrelltop, qt5ct, picom
-Description: Not so Common Desktop Environment
+Description: Not so Common Desktop Environment - Chinese Localization
  NsCDE is a retro but powerful UNIX desktop environment which resembles
  CDE look (and partially feel) but with a more powerful and flexible
  framework beneath-the-surface, more suited for 21st century unix-like
  and Linux systems and user requirements than original CDE.
+ .
+ This is the Chinese localization version with full Chinese (zh) translation
+ support, including 25 translation files for complete locale coverage.
  .
  NsCDE can be considered as a heavyweight FVWM theme on steroids, but
  combined with a couple other free software components and custom FVWM
