@@ -4,7 +4,7 @@ pkgver=2.3
 pkgrel=3.zh
 pkgdesc="Not so Common Desktop Environment: Modern and functional CDE based on FVWM - Chinese Localization"
 arch=(x86_64)
-url="https://github.com/wenyiros/NsCDE-zh"
+url="https://github.com/wenyinos/NsCDE-zh"
 license=('GPL')
 depends=('libxext' 'libx11' 'libxpm' 'stalonetray' 'xsettingsd' 'fvwm' 'glibc' 'ksh'
 'imagemagick' 'xorg-xprop' 'xorg-xrdb' 'xorg-xset' 'xorg-xdpyinfo' 'xorg-xrefresh'
