@@ -1,30 +1,77 @@
-# **Not so Common Desktop Environment (NsCDE)**
+# **Not so Common Desktop Environment (NsCDE) - Chinese**
 
-[![Github commits](https://img.shields.io/github/last-commit/NsCDE/NsCDE)](https://github.com/NsCDE/NsCDE/commits/master)
-[![GitHub contributors](https://img.shields.io/github/contributors/NsCDE/NsCDE)](https://github.com/NsCDE/NsCDE/graphs/contributors)
-[![PR's Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat)](https://github.com/NsCDE/NsCDE/pull/new)
+[![Github commits](https://img.shields.io/github/last-commit/wenyinos/NsCDE-zh)](https://github.com/wenyinos/NsCDE-zh)
+[![GitHub release](https://img.shields.io/github/v/release/wenyinos/NsCDE-zh)](https://github.com/wenyinos/NsCDE-zh/releases)
+[![PR's Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/wenyinos/NsCDE-zh/pull/new)
 
 ![ScreenShot](NsCDE.png)
 
-Notices:
-- For a full documentation, see share/doc/NsCDE/*
-- FAQ: https://github.com/NsCDE/NsCDE/wiki/NsCDE---Frequently-Asked-Questions-(FAQ)
+**NsCDE-zh** is a Chinese localization of NsCDE, providing full Simplified Chinese support.
 
-Screenshots:
-- https://imgur.com/gallery/nHkw35X
-- https://imgur.com/gallery/RroGvLH
+## Features
 
-Video Presentations and guides:
-- https://www.youtube.com/watch?v=BwuTOghS3ac&list=PLpVwwj0aIJjeHbA38F1z693-fKIC8IHS5
-Set of 12 NsCDE video presentations (commented and titled screen captures) on
-NsCDE Youtube channel.
+- 🌏 Full Chinese (Simplified) translation with 25+ language files
+- 🎨 Default Noto Sans CJK SC font for proper Chinese character display
+- 🎯 Retro CDE look and feel with modern functionality
+- 💻 FVWM-based lightweight desktop environment
+- ⚙️ GTK2/GTK3/Qt4/Qt5 theme integration
+- 🎭 Color and Font Style Managers with GUI configuration
 
-- https://www.youtube.com/playlist?list=PLpVwwj0aIJjcaTFrZ5FLokl-kAMwmBxux
-Set of newer 7 NsCDE video presentations, describing features implemented in
-the last two years and for NsCDE 2.X
+## Installation
 
-The author would like to apologize for bad English in the docs. A rand() function putting
-(the, a, an) in articles would probably be more accurate.
+### From RPM Package (Recommended)
+
+```bash
+# Fedora/RHEL/CentOS
+sudo dnf install NsCDE-2.3-3.zh.fc*.x86_64.rpm
+
+# Install dependencies
+sudo dnf install google-noto-sans-cjk-fonts
+```
+
+### From Source
+
+```bash
+./autogen.sh
+./configure --prefix=/usr
+make
+sudo make install
+```
+
+## Dependencies
+
+```
+ksh xterm sed fvwm cpp xsettingsd stalonetray dunst xclip xdotool
+python3-pyxdg python3-psutil qt5ct
+python3-yaml PyQt5 qt5-qtstyleplugins dex-autostart groff-base
+dejavu-serif-fonts google-noto-sans-cjk-fonts google-noto-sans-mono-cjk-vf-fonts
+google-noto-sans-mono-fonts convert import xrdb xset xprop xdpyinfo xrandr
+xdg-utils gettext
+```
+
+## Usage
+
+1. Start NsCDE session from your display manager
+2. Use **Font Style Manager** to configure fonts
+3. Use **Color Style Manager** to configure colors and themes
+
+## Screenshots
+
+See the [NsCDE Gallery](https://imgur.com/gallery/nHkw35X)
+
+## Documentation
+
+Full documentation available in `share/doc/NsCDE/` after installation or view online.
+
+## License
+
+GPLv3 - See [COPYING](COPYING) file for details.
+
+## Links
+
+- GitHub: https://github.com/wenyinos/NsCDE-zh
+- Original NsCDE: https://github.com/NsCDE/NsCDE
+- FAQ: https://github.com/NsCDE/NsCDE/wiki
 
 # **Introduction**
 

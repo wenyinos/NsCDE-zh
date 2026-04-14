@@ -5,7 +5,7 @@
 #
 # Noto Sans CJK font set for Chinese/Japanese/Korean language support
 # Recommended font: Noto Sans CJK SC (Simplified Chinese)
-# Install: fonts-noto-cjk or noto-fonts-cjk package
+# Install: google-noto-sans-cjk-fonts google-noto-sans-mono-cjk-vf-fonts
 
 InfoStoreAdd font.variable.normal.small "xft:Noto Sans CJK SC:Medium:Regular:size=10"
 InfoStoreAdd font.variable.normal.medium "xft:Noto Sans CJK SC:Medium:Regular:size=11"
