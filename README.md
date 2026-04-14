@@ -19,14 +19,22 @@
 
 ## Installation
 
-### From RPM Package (Recommended)
+### From DEB Package (Debian/Ubuntu)
+
+```bash
+# Debian/Ubuntu
+sudo apt install ./nscde-zh_*.deb
+
+# 或从源码构建
+dpkg-buildpackage -rfakeroot -b
+sudo apt install ./nscde-zh_*.deb
+```
+
+### From RPM Package
 
 ```bash
 # Fedora/RHEL/CentOS
 sudo dnf install NsCDE-2.3-3.zh.fc*.x86_64.rpm
-
-# Install dependencies
-sudo dnf install google-noto-sans-cjk-fonts
 ```
 
 ### From Source
@@ -54,6 +62,41 @@ xdg-utils gettext
 1. Start NsCDE session from your display manager
 2. Use **Font Style Manager** to configure fonts
 3. Use **Color Style Manager** to configure colors and themes
+
+## Font Configuration
+
+默认使用 **Noto Sans CJK SC** 和 **Noto Sans Mono CJK SC** 字体显示中文。
+
+### 安装字体
+
+```bash
+# Debian/Ubuntu
+sudo apt install fonts-noto-cjk fonts-noto-cjk-extra
+
+# Fedora/RHEL
+sudo dnf install google-noto-sans-cjk-fonts google-noto-sans-mono-cjk-vf-fonts
+```
+
+### 手动配置 DPI
+
+如果中文显示为方框，可能是 DPI 不匹配：
+
+```bash
+# 查看当前 DPI
+xrdb -query | grep Xft.dpi
+
+# 编辑配置文件（根据实际 DPI 修改）
+sed -i 's/Xft.dpi: 96/Xft.dpi: 120/' ~/.NsCDE/Xdefaults.fontdefs
+xrdb -merge ~/.NsCDE/Xdefaults.fontdefs
+```
+
+### 配置文件位置
+
+| 文件 | 说明 |
+|------|------|
+| `~/.NsCDE/Xdefaults.fontdefs` | Xft 字体定义 |
+| `~/.NsCDE/Font-*.fvwmconf` | FVWM 窗口管理器字体 |
+| `~/.NsCDE/Xsettingsd.conf` | GTK/Qt 应用程序字体 |
 
 ## Screenshots
 

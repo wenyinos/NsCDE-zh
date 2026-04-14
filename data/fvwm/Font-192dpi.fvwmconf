@@ -16,10 +16,10 @@ InfoStoreAdd font.variable.italic.small "xft:Noto Sans CJK SC:Medium:Regular:siz
 InfoStoreAdd font.variable.italic.medium "xft:Noto Sans CJK SC:Medium:Regular:size=10"
 InfoStoreAdd font.variable.italic.large "xft:Noto Sans CJK SC:Medium:Regular:size=12"
 
-InfoStoreAdd font.monospaced.normal.small "xft:Noto Sans Mono CJK SC:Medium:Regular:size=9"
-InfoStoreAdd font.monospaced.normal.medium "xft:Noto Sans Mono CJK SC:Medium:Regular:size=10"
-InfoStoreAdd font.monospaced.normal.large "xft:Noto Sans Mono CJK SC:Medium:Regular:size=12"
+InfoStoreAdd font.monospaced.normal.small "xft:Noto Sans Mono CJK SC:style=Medium:size=9"
+InfoStoreAdd font.monospaced.normal.medium "xft:Noto Sans Mono CJK SC:style=Medium:size=10"
+InfoStoreAdd font.monospaced.normal.large "xft:Noto Sans Mono CJK SC:style=Medium:size=12"
 
-InfoStoreAdd font.monospaced.bold.small "xft:Noto Sans Mono CJK SC:Medium:Bold:size=9"
-InfoStoreAdd font.monospaced.bold.medium "xft:Noto Sans Mono CJK SC:Medium:Bold:size=10"
-InfoStoreAdd font.monospaced.bold.large "xft:Noto Sans Mono CJK SC:Medium:Bold:size=12"
+InfoStoreAdd font.monospaced.bold.small "xft:Noto Sans Mono CJK SC:style=Medium:size=9"
+InfoStoreAdd font.monospaced.bold.medium "xft:Noto Sans Mono CJK SC:style=Medium:size=10"
+InfoStoreAdd font.monospaced.bold.large "xft:Noto Sans Mono CJK SC:style=Medium:size=12"
