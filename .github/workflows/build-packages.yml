@@ -38,15 +38,9 @@ jobs:
           VERSION=$(git describe --tags --always 2>/dev/null || echo "2.3.1")
           VERSION=${VERSION#v}
           
-          # 手动创建 changelog（不使用 dch 避免编辑器依赖）
+          # 手动创建 changelog
           DATE=$(date -R)
-          cat > debian/changelog << EOF
-nscde-zh (${VERSION}-1) unstable; urgency=medium
-
-  * Automated build from GitHub Actions
-
- -- GitHub Actions <github-actions@github.com>  ${DATE}
-EOF
+          printf "nscde-zh (%s-1) unstable; urgency=medium\n\n  * Automated build from GitHub Actions\n\n -- GitHub Actions <github-actions@github.com>  %s\n" "${VERSION}" "${DATE}" > debian/changelog
           
           # 构建包
           dpkg-buildpackage -rfakeroot -us -uc -b
@@ -207,15 +201,9 @@ EOF
           VERSION=$(git describe --tags --always 2>/dev/null || echo "2.3.1")
           VERSION=${VERSION#v}
           
-          # 手动创建 changelog（不使用 dch 避免编辑器依赖）
+          # 手动创建 changelog
           DATE=$(date -R)
-          cat > debian/changelog << EOF
-nscde-zh (${VERSION}-1ubuntu1) jammy; urgency=medium
-
-  * Automated Ubuntu build from GitHub Actions
-
- -- GitHub Actions <github-actions@github.com>  ${DATE}
-EOF
+          printf "nscde-zh (%s-1ubuntu1) jammy; urgency=medium\n\n  * Automated Ubuntu build from GitHub Actions\n\n -- GitHub Actions <github-actions@github.com>  %s\n" "${VERSION}" "${DATE}" > debian/changelog
           
           # 构建包
           dpkg-buildpackage -rfakeroot -us -uc -b
