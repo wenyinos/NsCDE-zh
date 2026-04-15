@@ -1,3 +1,8 @@
+nscde-zh (v2.3.2_zh-1) unstable; urgency=low
+  * Update to v2.3.2_zh release
+
+ -- WenyiOS <wenyiios@github.com>  Wed, 15 Apr 2026 00:00:00 +0000
+
 nscde-zh (v2.3.1_zh-1) unstable; urgency=low
   * Update to v2.3.1_zh release
   * Add DEB package installation support

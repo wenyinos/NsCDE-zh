@@ -1,5 +1,5 @@
-Name:		NsCDE
-Version:	2.3.1
+Name:		NsCDE-zh
+Version:	2.3.2
 Release:	1%{?dist}
 Summary:	Not so Common Desktop Environment - Chinese Localization
 
@@ -52,7 +52,7 @@ lightweight hybrid desktop environment.
 
 
 %prep
-%autosetup -p1 -n NsCDE-%{version}_zh
+%autosetup -p1 -n %{name}-%{version}_zh
 
 
 %build
@@ -77,6 +77,9 @@ autoreconf -ivf
 %{_sysconfdir}/xdg/menus/nscde-applications.menu
 
 %changelog
+* Wed Apr 15 2026 WenyiOS <wenyiios@github.com>  - 2.3.2-1
+- Update to 2.3.2 release
+
 * Wed Apr 15 2026 WenyiOS <wenyiios@github.com>  - 2.3.1-1
 - Chinese localization version
 - Add full Chinese (zh) translation support
