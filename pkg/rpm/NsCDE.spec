@@ -21,6 +21,7 @@ BuildRequires:  glibc-devel
 %endif
 Requires:	xterm ksh sed fvwm3 cpp xsettingsd stalonetray dunst xclip xdotool
 Requires:	python3-pyxdg python3-psutil qt5ct
+Requires:	qterminal pcmanfm-qt gvim pavucontrol-qt arandr kcalc
 %if 0%{?fedora} || 0%{?rhel_version} || 0%{?centos_version}
 Requires: python3-yaml PyQt5 qt5-qtstyleplugins dex-autostart groff-base dejavu-serif-fonts
 Requires: google-noto-sans-cjk-fonts google-noto-sans-cjk-vf-fonts google-noto-sans-mono-cjk-vf-fonts google-noto-sans-mono-fonts
