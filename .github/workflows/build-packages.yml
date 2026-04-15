@@ -50,7 +50,8 @@ jobs:
         with:
           name: debian-packages
           path: "*.deb"
-          if-no-files-found: ignore
+          retention-days: 5
+          if-no-files-found: warn
 
       - name: Test installation
         run: |
@@ -123,7 +124,8 @@ jobs:
         with:
           name: arch-packages
           path: "*.pkg.tar.zst"
-          if-no-files-found: ignore
+          retention-days: 5
+          if-no-files-found: warn
 
       - name: Test installation
         run: |
@@ -181,9 +183,10 @@ jobs:
         with:
           name: fedora-rpm-packages
           path: |
-            ~/rpmbuild/RPMS/**/*.rpm
-            ~/rpmbuild/SRPMS/*.rpm
-          if-no-files-found: ignore
+            ${{ github.workspace }}/rpmbuild/RPMS/**/*.rpm
+            ${{ github.workspace }}/rpmbuild/SRPMS/**/*.rpm
+          retention-days: 5
+          if-no-files-found: warn
 
   # Ubuntu 特定构建
   build-ubuntu:
@@ -225,7 +228,8 @@ jobs:
         with:
           name: ubuntu-packages
           path: "*.deb"
-          if-no-files-found: ignore
+          retention-days: 5
+          if-no-files-found: warn
 
   # 源码编译测试
   build-from-source:
@@ -271,13 +275,20 @@ jobs:
         with:
           path: artifacts
 
+      - name: Debug artifacts structure
+        run: |
+          echo "=== Artifacts structure ==="
+          find artifacts -type f 2>/dev/null | head -50
+
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: |
-            artifacts/**/*.deb
-            artifacts/**/*.pkg.tar.zst
-            artifacts/**/*.rpm
+            artifacts/debian-packages/*.deb
+            artifacts/ubuntu-packages/*.deb
+            artifacts/arch-packages/*.pkg.tar.zst
+            artifacts/fedora-rpm-packages/*.rpm
+            artifacts/fedora-rpm-packages/SRPMS/*.rpm
           draft: false
           prerelease: false
           generate_release_notes: true
