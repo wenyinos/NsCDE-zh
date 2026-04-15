@@ -44,6 +44,10 @@ jobs:
           
           # 构建包
           dpkg-buildpackage -rfakeroot -us -uc -b
+          
+          # 调试：列出生成的文件
+          echo "=== DEB files generated ==="
+          find . -maxdepth 2 -name "*.deb" -type f 2>/dev/null || echo "No .deb files found"
 
       - name: Upload Debian artifacts
         uses: actions/upload-artifact@v4
@@ -118,6 +122,10 @@ jobs:
 
           # 使用非 root 用户构建
           su - builder -c "cd $PWD && makepkg -sf --noconfirm"
+          
+          # 调试：列出生成的文件
+          echo "=== Arch packages generated ==="
+          ls -la *.pkg.tar.zst 2>/dev/null || echo "No .pkg.tar.zst files found"
 
       - name: Upload Arch artifacts
         uses: actions/upload-artifact@v4
@@ -176,15 +184,19 @@ jobs:
           # 构建 RPM
           rpmbuild -ba ~/rpmbuild/SPECS/NsCDE.spec \
             --define "version ${VERSION}" \
-            --define "_topdir ${HOME}/rpmbuild" || echo "Build completed with warnings"
+            --define "_topdir ${HOME}/rpmbuild"
+          
+          # 调试：列出生成的文件
+          echo "=== RPM files generated ==="
+          find ~/rpmbuild -name "*.rpm" -type f
 
       - name: Upload RPM artifacts
         uses: actions/upload-artifact@v4
         with:
           name: fedora-rpm-packages
           path: |
-            ${{ github.workspace }}/rpmbuild/RPMS/**/*.rpm
-            ${{ github.workspace }}/rpmbuild/SRPMS/**/*.rpm
+            ~/rpmbuild/RPMS/**/*.rpm
+            ~/rpmbuild/SRPMS/**/*.rpm
           retention-days: 5
           if-no-files-found: warn
 
@@ -222,6 +234,10 @@ jobs:
           
           # 构建包
           dpkg-buildpackage -rfakeroot -us -uc -b
+          
+          # 调试：列出生成的文件
+          echo "=== DEB files generated ==="
+          ls -la *.deb 2>/dev/null || echo "No .deb files found"
 
       - name: Upload Ubuntu artifacts
         uses: actions/upload-artifact@v4
