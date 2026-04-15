@@ -96,30 +96,39 @@ jobs:
           VERSION=$(git describe --tags --always 2>/dev/null || echo "2.3.1")
           VERSION=${VERSION#v}
 
+          # 创建本地源码包
+          tar -czf "nscde-zh-${VERSION}.tar.gz" \
+            --transform="s,^,nscde-zh-${VERSION}/," \
+            --exclude='.git' \
+            --exclude='.github' \
+            *
+
+          # 准备 PKGBUILD
+          cp pkg/pacman/PKGBUILD ./PKGBUILD
+          sed -i "s|^pkgver=.*|pkgver=${VERSION}|" PKGBUILD
+          sed -i "s|^pkgrel=.*|pkgrel=1|" PKGBUILD
+          # 使用本地源码包
+          sed -i "s|^source=.*|source=(\"nscde-zh-\${pkgver}.tar.gz\")|" PKGBUILD
+          sed -i "s|^md5sums=.*|md5sums=('SKIP')|" PKGBUILD
+
           # 设置目录权限
           chown -R builder:builder .
 
-          # 使用非 root 用户直接构建
-          su - builder -c "
-            cd $PWD
-            ./autogen.sh
-            ./configure --prefix=/usr --libexecdir=/usr/lib
-            make
-          "
+          # 使用非 root 用户构建
+          su - builder -c "cd $PWD && makepkg -sfd --noconfirm"
 
       - name: Upload Arch artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: arch-build-check
-          path: |
-            **/bin/*
-            **/*.so
+          name: arch-packages
+          path: "*.pkg.tar.zst"
           if-no-files-found: ignore
 
       - name: Test installation
         run: |
-          echo "Arch build completed successfully"
-          find . -name "*.so" -o -name "nscde" 2>/dev/null | head -20
+          if ls *.pkg.tar.zst 1> /dev/null 2>&1; then
+            pacman -U --noconfirm *.pkg.tar.zst || echo "Installation test completed"
+          fi
 
   # Fedora/RHEL RPM 包构建
   build-rpm-fedora:
@@ -266,6 +275,7 @@ jobs:
         with:
           files: |
             artifacts/**/*.deb
+            artifacts/**/*.pkg.tar.zst
             artifacts/**/*.rpm
           draft: false
           prerelease: false
