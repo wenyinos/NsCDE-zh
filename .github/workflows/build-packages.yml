@@ -38,15 +38,15 @@ jobs:
           VERSION=$(git describe --tags --always 2>/dev/null || echo "2.3.1")
           VERSION=${VERSION#v}
           
-          # 设置环境变量避免 dch 交互
-          export DEBEMAIL="github-actions@github.com"
-          export DEBFULLNAME="GitHub Actions"
-          export EDITOR="cat"
-          
-          # 删除已存在的 changelog，使用 dch 重新生成
-          rm -f debian/changelog
-          dch --create --distribution unstable --newversion "${VERSION}-1" \
-            "Automated build from GitHub Actions"
+          # 手动创建 changelog（不使用 dch 避免编辑器依赖）
+          DATE=$(date -R)
+          cat > debian/changelog << EOF
+nscde-zh (${VERSION}-1) unstable; urgency=medium
+
+  * Automated build from GitHub Actions
+
+ -- GitHub Actions <github-actions@github.com>  ${DATE}
+EOF
           
           # 构建包
           dpkg-buildpackage -rfakeroot -us -uc -b
@@ -207,15 +207,15 @@ jobs:
           VERSION=$(git describe --tags --always 2>/dev/null || echo "2.3.1")
           VERSION=${VERSION#v}
           
-          # 设置环境变量避免 dch 交互
-          export DEBEMAIL="github-actions@github.com"
-          export DEBFULLNAME="GitHub Actions"
-          export EDITOR="cat"
-          
-          # 删除已存在的 changelog，使用 dch 重新生成
-          rm -f debian/changelog
-          dch --create --distribution jammy --newversion "${VERSION}-1ubuntu1" \
-            "Automated Ubuntu build from GitHub Actions"
+          # 手动创建 changelog（不使用 dch 避免编辑器依赖）
+          DATE=$(date -R)
+          cat > debian/changelog << EOF
+nscde-zh (${VERSION}-1ubuntu1) jammy; urgency=medium
+
+  * Automated Ubuntu build from GitHub Actions
+
+ -- GitHub Actions <github-actions@github.com>  ${DATE}
+EOF
           
           # 构建包
           dpkg-buildpackage -rfakeroot -us -uc -b
