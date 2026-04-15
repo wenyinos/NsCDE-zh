@@ -84,7 +84,7 @@ jobs:
             python-yaml python-psutil python-qtpy xdotool xdg-utils \
             gettext groff ttf-dejavu \
             fvwm3 xorg-xrefresh xorg-xmodmap xterm \
-            noto-fonts-cjk || true
+            noto-fonts-cjk
 
       - name: Build Arch package
         run: |
@@ -102,6 +102,9 @@ jobs:
           # 更新版本信息
           sed -i "s|^pkgver=.*|pkgver=${VERSION}|" PKGBUILD
           sed -i "s|^pkgrel=.*|pkgrel=1|" PKGBUILD
+          
+          # 修正依赖包名（fonts-noto-cjk -> noto-fonts-cjk）
+          sed -i "s|'fonts-noto-cjk'|'noto-fonts-cjk'|" PKGBUILD
           
           # 更新 source URL（使用正确的 tag 格式 vX.Y.Z_zh）
           sed -i "s|v2.3.1_zh.tar.gz|v${VERSION}_zh.tar.gz|" PKGBUILD
