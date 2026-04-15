@@ -84,6 +84,12 @@ jobs:
             python-yaml python-psutil python-qtpy xdotool xdg-utils \
             gettext groff ttf-dejavu
 
+      - name: Install Arch build dependencies
+        run: |
+          pacman -S --noconfirm --needed \
+            fvwm3 xorg-xrefresh xorg-xmodmap xterm \
+            noto-fonts-cjk || true
+
       - name: Build Arch package
         run: |
           # 创建非 root 用户用于构建
@@ -99,18 +105,12 @@ jobs:
           sed -i "s/pkgver=.*/pkgver=${VERSION}/" PKGBUILD
           # 修复 pkgrel 格式（必须是纯数字）
           sed -i "s/pkgrel=.*/pkgrel=1/" PKGBUILD
-          # 注释掉 CI 环境中不需要的依赖以避免安装失败
-          sed -i "s/'fvwm3'/'#fvwm3'/" PKGBUILD
-          sed -i "s/'xorg-xrefresh'/'#xorg-xrefresh'/" PKGBUILD
-          sed -i "s/'xorg-xmodmap'/'#xorg-xmodmap'/" PKGBUILD
-          sed -i "s/'xterm'/'#xterm'/" PKGBUILD
-          sed -i "s/'fonts-noto-cjk'/'#fonts-noto-cjk'/" PKGBUILD
 
           # 设置目录权限
           chown -R builder:builder .
 
-          # 使用非 root 用户构建
-          su - builder -c "cd $PWD && makepkg -sf --noconfirm"
+          # 使用非 root 用户构建（-d 跳过依赖检查）
+          su - builder -c "cd $PWD && makepkg -sfd --noconfirm"
 
       - name: Upload Arch artifacts
         uses: actions/upload-artifact@v4
