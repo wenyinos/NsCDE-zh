@@ -4,8 +4,10 @@
 	dh $@
 
 override_dh_fixperms:
-	dh_fixperms ; \
-	find debian/nscde -name "XOverrideFontCursor.so" -exec chmod 0755 {} \;
+	dh_fixperms
+	@if [ -d debian/nscde-zh ]; then \
+		find debian/nscde-zh -name "XOverrideFontCursor.so" -exec chmod 0755 {} \; ; \
+	fi
 
 override_dh_compress:
 	dh_compress -X.pdf -X.txt -XREADME
