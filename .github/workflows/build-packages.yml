@@ -45,9 +45,12 @@ jobs:
           # 构建包
           dpkg-buildpackage -rfakeroot -us -uc -b
           
-          # 调试：列出生成的文件
-          echo "=== DEB files generated ==="
-          find . -maxdepth 2 -name "*.deb" -type f 2>/dev/null || echo "No .deb files found"
+          # 调试：列出生成的文件（包括父目录）
+          echo "=== All .deb files ==="
+          cd .. && find . -maxdepth 3 -name "*.deb" -type f 2>/dev/null && cd -
+          
+          # 移动 .deb 文件到当前目录
+          cd .. && mv nscde*.deb NsCDE-zh/ 2>/dev/null || true && cd -
 
       - name: Upload Debian artifacts
         uses: actions/upload-artifact@v4
@@ -240,9 +243,12 @@ jobs:
           # 构建包
           dpkg-buildpackage -rfakeroot -us -uc -b
           
-          # 调试：列出生成的文件
-          echo "=== DEB files generated ==="
-          ls -la *.deb 2>/dev/null || echo "No .deb files found"
+          # 调试：列出生成的文件（包括父目录）
+          echo "=== All .deb files ==="
+          cd .. && find . -maxdepth 3 -name "*.deb" -type f 2>/dev/null && cd -
+          
+          # 移动 .deb 文件到当前目录
+          cd .. && mv nscde*.deb NsCDE-zh/ 2>/dev/null || true && cd -
 
       - name: Upload Ubuntu artifacts
         uses: actions/upload-artifact@v4
