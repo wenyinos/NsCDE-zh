@@ -27,7 +27,7 @@ jobs:
           apt-get install -y \
             libc6-dev libxext-dev x11proto-dev libx11-dev libxpm-dev \
             ksh autotools-dev automake build-essential debhelper-compat=13 \
-            gettext dpkg-dev
+            gettext dpkg-dev devscripts
 
       - name: Build Debian package
         run: |
@@ -181,7 +181,7 @@ jobs:
           apt-get install -y \
             libc6-dev libxext-dev libx11-dev libxpm-dev \
             ksh autotools-dev automake build-essential debhelper-compat=13 \
-            gettext dpkg-dev fakeroot
+            gettext dpkg-dev fakeroot devscripts
 
       - name: Build Ubuntu package
         run: |
