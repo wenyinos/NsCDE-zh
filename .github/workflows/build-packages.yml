@@ -86,6 +86,10 @@ jobs:
 
       - name: Build Arch package
         run: |
+          # 创建非 root 用户用于构建
+          useradd -m builder
+          echo "builder ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+          
           # 准备 PKGBUILD
           cp pkg/pacman/PKGBUILD ./PKGBUILD
           
@@ -94,8 +98,11 @@ jobs:
           VERSION=${VERSION#v}
           sed -i "s/pkgver=.*/pkgver=${VERSION}/" PKGBUILD
           
-          # 构建包
-          makepkg -sf --noconfirm
+          # 设置目录权限
+          chown -R builder:builder .
+          
+          # 使用非 root 用户构建
+          su - builder -c "cd $PWD && makepkg -sf --noconfirm"
 
       - name: Upload Arch artifacts
         uses: actions/upload-artifact@v4
