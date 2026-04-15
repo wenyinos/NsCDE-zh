@@ -38,7 +38,8 @@ jobs:
           VERSION=$(git describe --tags --always 2>/dev/null || echo "2.3.1")
           VERSION=${VERSION#v}
           
-          # 更新 changelog
+          # 删除已存在的 changelog，使用 dch 重新生成
+          rm -f debian/changelog
           dch --create --distribution unstable --newversion "${VERSION}-1" \
             "Automated build from GitHub Actions"
           
@@ -89,18 +90,20 @@ jobs:
           # 创建非 root 用户用于构建
           useradd -m builder
           echo "builder ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
-          
+
           # 准备 PKGBUILD
           cp pkg/pacman/PKGBUILD ./PKGBUILD
-          
+
           # 更新版本号
           VERSION=$(git describe --tags --always 2>/dev/null || echo "2.3.1")
           VERSION=${VERSION#v}
           sed -i "s/pkgver=.*/pkgver=${VERSION}/" PKGBUILD
-          
+          # 修复 pkgrel 格式（必须是纯数字）
+          sed -i "s/pkgrel=.*/pkgrel=1/" PKGBUILD
+
           # 设置目录权限
           chown -R builder:builder .
-          
+
           # 使用非 root 用户构建
           su - builder -c "cd $PWD && makepkg -sf --noconfirm"
 
@@ -134,9 +137,9 @@ jobs:
             rpm-build rpmdevtools autoconf automake gcc make \
             ksh gettext-devel libX11-devel libXt-devel libXext-devel \
             libXpm-devel glibc-headers python3-PyQt5 python3-psutil \
-            python3-pyxdg python3-pyaml stalonetray xsettingsd \
+            python3-pyxdg python3-pyyaml stalonetray xsettingsd \
             xterm xdotool xdg-utils groff-base dejavu-serif-fonts \
-            wget findutils
+            wget || true
 
       - name: Build RPM package
         run: |
@@ -199,7 +202,8 @@ jobs:
           VERSION=$(git describe --tags --always 2>/dev/null || echo "2.3.1")
           VERSION=${VERSION#v}
           
-          # 更新 changelog
+          # 删除已存在的 changelog，使用 dch 重新生成
+          rm -f debian/changelog
           dch --create --distribution jammy --newversion "${VERSION}-1ubuntu1" \
             "Automated Ubuntu build from GitHub Actions"
           
