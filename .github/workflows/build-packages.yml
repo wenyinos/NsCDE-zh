@@ -38,6 +38,11 @@ jobs:
           VERSION=$(git describe --tags --always 2>/dev/null || echo "2.3.1")
           VERSION=${VERSION#v}
           
+          # 设置环境变量避免 dch 交互
+          export DEBEMAIL="github-actions@github.com"
+          export DEBFULLNAME="GitHub Actions"
+          export EDITOR="cat"
+          
           # 删除已存在的 changelog，使用 dch 重新生成
           rm -f debian/changelog
           dch --create --distribution unstable --newversion "${VERSION}-1" \
@@ -201,6 +206,11 @@ jobs:
           # 获取版本号
           VERSION=$(git describe --tags --always 2>/dev/null || echo "2.3.1")
           VERSION=${VERSION#v}
+          
+          # 设置环境变量避免 dch 交互
+          export DEBEMAIL="github-actions@github.com"
+          export DEBFULLNAME="GitHub Actions"
+          export EDITOR="cat"
           
           # 删除已存在的 changelog，使用 dch 重新生成
           rm -f debian/changelog
