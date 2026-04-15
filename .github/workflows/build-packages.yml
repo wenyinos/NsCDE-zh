@@ -2,7 +2,7 @@ name: Build and Test Packages
 
 on:
   push:
-    branches: [ main, master, develop ]
+    branches: [ main, develop ]
     tags:
       - 'v*'
   pull_request:
