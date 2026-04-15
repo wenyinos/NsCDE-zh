@@ -311,10 +311,10 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            artifacts/debian-packages/*.deb
-            artifacts/ubuntu-packages/*.deb
-            artifacts/arch-packages/*.pkg.tar.zst
-            artifacts/fedora-rpm-packages/RPMS/x86_64/*.rpm
+            artifacts/debian-packages/nscde-zh_*.deb
+            artifacts/ubuntu-packages/nscde-zh_*.deb
+            artifacts/arch-packages/nscde-zh-*.pkg.tar.zst
+            artifacts/fedora-rpm-packages/RPMS/x86_64/NsCDE-*.x86_64.rpm
           draft: false
           prerelease: false
           generate_release_notes: true
