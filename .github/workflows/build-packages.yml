@@ -314,8 +314,7 @@ jobs:
             artifacts/debian-packages/*.deb
             artifacts/ubuntu-packages/*.deb
             artifacts/arch-packages/*.pkg.tar.zst
-            artifacts/fedora-rpm-packages/*.rpm
-            artifacts/fedora-rpm-packages/SRPMS/*.rpm
+            artifacts/fedora-rpm-packages/RPMS/x86_64/*.rpm
           draft: false
           prerelease: false
           generate_release_notes: true
