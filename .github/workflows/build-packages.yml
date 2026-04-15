@@ -307,6 +307,23 @@ jobs:
           echo "=== Artifacts structure ==="
           find artifacts -type f 2>/dev/null | head -50
 
+      - name: Delete existing release assets
+        run: |
+          # 获取已存在的 release assets 并删除
+          ASSETS=$(curl -sL -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/tags/v2.3.1_zh/assets" 2>/dev/null)
+          
+          echo "Existing assets: $ASSETS"
+          
+          # 删除不需要的 assets
+          for asset_id in $(echo "$ASSETS" | python3 -c "import sys,json; [print(a['id']) for a in json.load(sys.stdin) if any(x in a['name'] for x in ['debug', 'dbgsym', 'src.rpm'])]"); do
+            echo "Deleting asset $asset_id"
+            curl -sL -X DELETE \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              "https://api.github.com/repos/${{ github.repository }}/releases/assets/$asset_id"
+          done
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
