@@ -96,26 +96,24 @@ jobs:
           VERSION=$(git describe --tags --always 2>/dev/null || echo "2.3.1")
           VERSION=${VERSION#v}
 
-          # 创建本地源码包
-          tar -czf "nscde-zh-${VERSION}.tar.gz" \
-            --transform="s,^,nscde-zh-${VERSION}/," \
-            --exclude='.git' \
-            --exclude='.github' \
-            *
-
           # 准备 PKGBUILD
           cp pkg/pacman/PKGBUILD ./PKGBUILD
+          
+          # 更新版本信息
           sed -i "s|^pkgver=.*|pkgver=${VERSION}|" PKGBUILD
           sed -i "s|^pkgrel=.*|pkgrel=1|" PKGBUILD
-          # 使用本地源码包
-          sed -i "s|^source=.*|source=(\"nscde-zh-\${pkgver}.tar.gz\")|" PKGBUILD
-          sed -i "s|^md5sums=.*|md5sums=('SKIP')|" PKGBUILD
+          
+          # 更新 source URL（使用正确的 tag 格式 vX.Y.Z_zh）
+          sed -i "s|v2.3.1_zh.tar.gz|v${VERSION}_zh.tar.gz|" PKGBUILD
+          
+          # 更新 build() 和 package() 中的目录名（添加 _zh 后缀）
+          sed -i "s|NsCDE-zh-\$pkgver|NsCDE-zh-\${pkgver}_zh|g" PKGBUILD
 
           # 设置目录权限
           chown -R builder:builder .
 
           # 使用非 root 用户构建
-          su - builder -c "cd $PWD && makepkg -sfd --noconfirm"
+          su - builder -c "cd $PWD && makepkg -sf --noconfirm"
 
       - name: Upload Arch artifacts
         uses: actions/upload-artifact@v4
