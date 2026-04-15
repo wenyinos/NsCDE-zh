@@ -309,14 +309,14 @@ jobs:
 
       - name: Delete existing release assets
         run: |
-          # 获取已存在的 release assets 并删除
+          VERSION=${GITHUB_REF#refs/tags/v}
+          
           ASSETS=$(curl -sL -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${{ github.repository }}/releases/tags/v2.3.2_zh/assets" 2>/dev/null)
+            "https://api.github.com/repos/${{ github.repository }}/releases/tags/v${VERSION}/assets" 2>/dev/null)
           
           echo "Existing assets: $ASSETS"
           
-          # 删除不需要的 assets
           for asset_id in $(echo "$ASSETS" | python3 -c "import sys,json; [print(a['id']) for a in json.load(sys.stdin) if any(x in a['name'] for x in ['debug', 'dbgsym', 'src.rpm'])]"); do
             echo "Deleting asset $asset_id"
             curl -sL -X DELETE \
@@ -324,14 +324,30 @@ jobs:
               "https://api.github.com/repos/${{ github.repository }}/releases/assets/$asset_id"
           done
 
+      - name: Prepare release files
+        id: prepare
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          
+          DEB_FILE=$(find artifacts/debian-packages -name "nscde-zh_*.deb" | head -1)
+          UBU_FILE=$(find artifacts/ubuntu-packages -name "nscde-zh_*.deb" | head -1)
+          ARCH_FILE=$(find artifacts/arch-packages -name "nscde-zh-*.pkg.tar.zst" | head -1)
+          RPM_FILE=$(find artifacts/fedora-rpm-packages -name "NsCDE-*.rpm" | grep -v debug | head -1)
+          
+          echo "deb_file=$DEB_FILE" >> $GITHUB_OUTPUT
+          echo "ubu_file=$UBU_FILE" >> $GITHUB_OUTPUT
+          echo "arch_file=$ARCH_FILE" >> $GITHUB_OUTPUT
+          echo "rpm_file=$RPM_FILE" >> $GITHUB_OUTPUT
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            artifacts/debian-packages/nscde-zh_2.3.1-1_amd64.deb
-            artifacts/ubuntu-packages/nscde-zh_2.3.1-1ubuntu1_amd64.deb
-            artifacts/arch-packages/nscde-zh-2.3.1-1-x86_64.pkg.tar.zst
-            artifacts/fedora-rpm-packages/RPMS/x86_64/NsCDE-2.3.1-1.fc43.x86_64.rpm
+            ${{ steps.prepare.outputs.deb_file }}
+            ${{ steps.prepare.outputs.ubu_file }}
+            ${{ steps.prepare.outputs.arch_file }}
+            ${{ steps.prepare.outputs.rpm_file }}
           draft: false
           prerelease: false
           generate_release_notes: true
