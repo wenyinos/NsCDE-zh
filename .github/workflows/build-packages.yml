@@ -35,7 +35,7 @@ jobs:
           cp -r pkg/debian ./debian/
           
           # 获取版本号
-          VERSION=$(git describe --tags --always 2>/dev/null || echo "2.3.1")
+          VERSION=$(git describe --tags --always 2>/dev/null || echo "2.3.2")
           VERSION=${VERSION#v}
           
           # 手动创建 changelog
@@ -101,7 +101,7 @@ jobs:
           echo "builder ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
           # 获取版本号
-          VERSION=$(git describe --tags --always 2>/dev/null || echo "2.3.1")
+          VERSION=$(git describe --tags --always 2>/dev/null || echo "2.3.2")
           VERSION=${VERSION#v}
 
           # 准备 PKGBUILD
@@ -115,7 +115,7 @@ jobs:
           sed -i "s|'fonts-noto-cjk'|'noto-fonts-cjk'|" PKGBUILD
           
           # 更新 source URL（使用正确的 tag 格式 vX.Y.Z_zh）
-          sed -i "s|v2.3.1_zh.tar.gz|v${VERSION}_zh.tar.gz|" PKGBUILD
+          sed -i "s|v2.3.2_zh.tar.gz|v${VERSION}_zh.tar.gz|" PKGBUILD
           
           # 更新 build() 和 package() 中的目录名（添加 _zh 后缀）
           sed -i "s|NsCDE-zh-\$pkgver|NsCDE-zh-\${pkgver}_zh|g" PKGBUILD
@@ -171,7 +171,7 @@ jobs:
           rpmdev-setuptree
           
           # 获取版本号
-          VERSION=$(git describe --tags --always 2>/dev/null || echo "2.3.1")
+          VERSION=$(git describe --tags --always 2>/dev/null || echo "2.3.2")
           VERSION=${VERSION#v}
           
           # 准备 spec 文件
@@ -233,7 +233,7 @@ jobs:
           cp -r pkg/debian ./debian/
           
           # 获取版本号
-          VERSION=$(git describe --tags --always 2>/dev/null || echo "2.3.1")
+          VERSION=$(git describe --tags --always 2>/dev/null || echo "2.3.2")
           VERSION=${VERSION#v}
           
           # 手动创建 changelog
@@ -312,7 +312,7 @@ jobs:
           # 获取已存在的 release assets 并删除
           ASSETS=$(curl -sL -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${{ github.repository }}/releases/tags/v2.3.1_zh/assets" 2>/dev/null)
+            "https://api.github.com/repos/${{ github.repository }}/releases/tags/v2.3.2_zh/assets" 2>/dev/null)
           
           echo "Existing assets: $ASSETS"
           

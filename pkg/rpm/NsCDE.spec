@@ -1,5 +1,5 @@
 Name:		NsCDE
-Version:	2.3.1
+Version:	2.3.2
 Release:	1%{?dist}
 Summary:	Not so Common Desktop Environment - Chinese Localization
 

@@ -1,5 +1,5 @@
-nscde-zh (v2.3.1_zh-1) unstable; urgency=low
-  * Update to v2.3.1_zh release
+nscde-zh (v2.3.2_zh-1) unstable; urgency=low
+  * Update to v2.3.2_zh release
   * Add DEB package installation support
   * Update Chinese font configuration to Noto Sans CJK SC and Noto Sans Mono CJK SC
   * Fix font style names for Noto Sans Mono CJK SC (use Medium style)
