@@ -43,7 +43,7 @@ Repository: https://github.com/wenyinos/NsCDE-zh
 
   cd ..
   sudo -i || su -
-  dpkg -i ./nscde-zh_v2.3_zh-1_<arch>.deb
+  dpkg -i ./nscde-zh_v2.3.2_zh-1_<arch>.deb
 
 That's it.
 
