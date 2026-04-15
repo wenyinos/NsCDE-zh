@@ -99,6 +99,12 @@ jobs:
           sed -i "s/pkgver=.*/pkgver=${VERSION}/" PKGBUILD
           # 修复 pkgrel 格式（必须是纯数字）
           sed -i "s/pkgrel=.*/pkgrel=1/" PKGBUILD
+          # 注释掉 CI 环境中不需要的依赖以避免安装失败
+          sed -i "s/'fvwm3'/'#fvwm3'/" PKGBUILD
+          sed -i "s/'xorg-xrefresh'/'#xorg-xrefresh'/" PKGBUILD
+          sed -i "s/'xorg-xmodmap'/'#xorg-xmodmap'/" PKGBUILD
+          sed -i "s/'xterm'/'#xterm'/" PKGBUILD
+          sed -i "s/'fonts-noto-cjk'/'#fonts-noto-cjk'/" PKGBUILD
 
           # 设置目录权限
           chown -R builder:builder .
