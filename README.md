@@ -120,7 +120,10 @@ See the [NsCDE Gallery](https://imgur.com/gallery/nHkw35X)
 
 ## Documentation
 
-Full documentation available in `share/doc/NsCDE/` after installation or view online.
+- Wiki: https://github.com/wenyinos/NsCDE-zh/wiki
+- FAQ: https://github.com/wenyinos/NsCDE-zh/wiki/NsCDE---Frequently-Asked-Questions-(FAQ)
+- Videos: https://github.com/wenyinos/NsCDE-zh/wiki/NsCDE---Video-presentations-and-tutorials
+- Full offline docs are available in `share/doc/NsCDE/` after installation.
 
 ## License
 
@@ -130,7 +133,8 @@ GPLv3 - See [COPYING](COPYING) file for details.
 
 - GitHub: https://github.com/wenyinos/NsCDE-zh
 - Original NsCDE: https://github.com/NsCDE/NsCDE
-- FAQ: https://github.com/NsCDE/NsCDE/wiki
+- Wiki: https://github.com/wenyinos/NsCDE-zh/wiki
+- FAQ: https://github.com/wenyinos/NsCDE-zh/wiki/NsCDE---Frequently-Asked-Questions-(FAQ)
 
 # **Introduction**
 
@@ -260,4 +264,3 @@ GPLv3 - See [COPYING](COPYING) file for details.
    It is not using the default configuration directory `$HOME/.fvwm` but sets it's
    own `$FVWM_USERDIR` to `$HOME/.NsCDE`, and uses **NsCDE** private
    `$[FVWM_DATADIR]` as a source of configuration.
-
