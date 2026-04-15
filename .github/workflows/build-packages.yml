@@ -174,12 +174,17 @@ jobs:
           # 准备 spec 文件
           cp pkg/rpm/NsCDE.spec ~/rpmbuild/SPECS/NsCDE.spec
           
-          # 创建源码包
+          # 创建源码包（目录名必须匹配 autosetup -n 参数）
           tar -czf ~/rpmbuild/SOURCES/NsCDE-${VERSION}.tar.gz \
             --exclude='.git' \
             --exclude='debian' \
             --exclude='pkg' \
+            --transform "s|^|NsCDE-${VERSION}_zh/|" \
             .
+          
+          # 验证源码包内容
+          echo "=== Source package contents ==="
+          tar -tzf ~/rpmbuild/SOURCES/NsCDE-${VERSION}.tar.gz | head -5
           
           # 构建 RPM
           rpmbuild -ba ~/rpmbuild/SPECS/NsCDE.spec \
