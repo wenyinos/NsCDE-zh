@@ -1,11 +1,11 @@
 Name:		NsCDE
 Version:	2.3.1
-Release:	1.zh%{?dist}
+Release:	1%{?dist}
 Summary:	Not so Common Desktop Environment - Chinese Localization
 
 License:	GPLv3
 URL:		https://github.com/wenyinos/NsCDE-zh
-Source0:	%{name}-%{version}.tar.gz
+Source0:	%{url}/archive/refs/tags/v%{version}_zh/%{name}-%{version}.tar.gz
 
 BuildRequires:  ksh
 BuildRequires:  gcc
@@ -51,7 +51,7 @@ lightweight hybrid desktop environment.
 
 
 %prep
-%autosetup -p1 -n NsCDE-2.3.1
+%autosetup -p1 -n NsCDE-%{version}_zh
 
 
 %build
@@ -76,15 +76,15 @@ autoreconf -ivf
 %{_sysconfdir}/xdg/menus/nscde-applications.menu
 
 %changelog
-* Tue Apr 14 2026 WenyiOS <wenyiios@github.com>  - 2.3-3.zh
+* Wed Apr 15 2026 WenyiOS <wenyiios@github.com>  - 2.3.1-1
 - Chinese localization version
 - Add full Chinese (zh) translation support
 - Fix build system to compile and install Chinese locales
 - 25 translation files for Chinese language
 - Add NotoSansCJK.fontset for Chinese character support
-- Add google-noto-sans-cjk-fonts google-noto-sans-cjk-vf-fonts 
+- Add google-noto-sans-cjk-fonts google-noto-sans-cjk-vf-fonts
   google-noto-sans-mono-cjk-vf-fonts google-noto-sans-mono-fonts dependencies
-- Based on NsCDE 2.3 release
+- Based on NsCDE 2.3.1 release
 
 * Fri Jun 16 2023 Hegel3DReloaded <nscde@protonmail.com>  - 2.3-3
 - Portability and bug fixes
@@ -191,4 +191,3 @@ autoreconf -ivf
 
 * Tue Nov 9 2021 Hegel3DReloaded <nscde@protonmail.com> - 2.0
 - First RPM package, working example
-
