@@ -34,10 +34,11 @@ jobs:
           # 准备 debian 目录
           cp -r pkg/debian ./debian/
           
-          # 获取版本号
+          # 获取版本号 (Debian格式: 2.3.3+zh)
           VERSION=$(git describe --tags --always 2>/dev/null)
           VERSION=${VERSION#v}
           VERSION=${VERSION%_zh}
+          VERSION=${VERSION/_/+}
           
           # 手动创建 changelog
           DATE=$(date -R)
@@ -101,10 +102,9 @@ jobs:
           useradd -m builder
           echo "builder ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-          # 获取版本号
+          # 获取版本号 (保留 _zh 后缀)
           VERSION=$(git describe --tags --always 2>/dev/null)
           VERSION=${VERSION#v}
-          VERSION=${VERSION%_zh}
 
           # 准备 PKGBUILD
           cp pkg/pacman/PKGBUILD ./PKGBUILD
@@ -117,10 +117,10 @@ jobs:
           sed -i "s|'fonts-noto-cjk'|'noto-fonts-cjk'|" PKGBUILD
           
           # 更新 source URL（使用正确的 tag 格式 vX.Y.Z_zh）
-          sed -i "s|v2.3.2_zh.tar.gz|v${VERSION}_zh.tar.gz|" PKGBUILD
+          sed -i "s|v2.3.3_zh.tar.gz|v${VERSION}.tar.gz|" PKGBUILD
           
-          # 更新 build() 和 package() 中的目录名（添加 _zh 后缀）
-          sed -i "s|NsCDE-zh-\$pkgver|NsCDE-zh-\${pkgver}_zh|g" PKGBUILD
+          # 更新 build() 和 package() 中的目录名
+          sed -i "s|NsCDE-zh-v\${pkgver}|NsCDE-zh-v${VERSION}|g" PKGBUILD
 
           # 设置目录权限
           chown -R builder:builder .
@@ -172,10 +172,9 @@ jobs:
           # 设置 RPM 构建环境
           rpmdev-setuptree
           
-          # 获取版本号
+          # 获取版本号 (保留 _zh 后缀)
           VERSION=$(git describe --tags --always 2>/dev/null)
           VERSION=${VERSION#v}
-          VERSION=${VERSION%_zh}
           
           # 准备 spec 文件
           cp pkg/rpm/NsCDE.spec ~/rpmbuild/SPECS/NsCDE.spec
@@ -235,10 +234,11 @@ jobs:
           # 准备 debian 目录
           cp -r pkg/debian ./debian/
           
-          # 获取版本号
+          # 获取版本号 (Ubuntu格式: 2.3.3+zh)
           VERSION=$(git describe --tags --always 2>/dev/null)
           VERSION=${VERSION#v}
           VERSION=${VERSION%_zh}
+          VERSION=${VERSION/_/+}
           
           # 手动创建 changelog
           DATE=$(date -R)
