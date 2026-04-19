@@ -1,5 +1,5 @@
 Name:		NsCDE-zh
-Version:	2.3.2_zh
+Version:	2.3.3_zh
 Release:	1%{?dist}
 Summary:	Not so Common Desktop Environment - Chinese Localization
 
@@ -7,13 +7,12 @@ License:	GPLv3
 URL:		https://github.com/wenyinos/NsCDE-zh
 Source0:	%{url}/archive/refs/tags/v%{version}.tar.gz
 
-BuildRequires:  ksh ksh93
+BuildRequires:  ksh
 BuildRequires:  gcc
 BuildRequires:	autoconf
 BuildRequires:	automake
 BuildRequires:	make
 BuildRequires:	gettext
-BuildRequires:	xorgproto
 BuildRequires:	libX11-devel libXext-devel libXpm-devel
 %if 0%{?fedora} || 0%{?rhel_version} || 0%{?centos_version}
 BuildRequires:  glibc-headers
