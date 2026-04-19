@@ -1,10 +1,10 @@
-nscde-zh (v2.3.2_zh-1) unstable; urgency=low
-  * Update to v2.3.2_zh release
+nscde-zh (2.3.2+zh-1) unstable; urgency=low
+  * Update to 2.3.2+zh release
 
- -- WenyiOS <wenyiios@github.com>  Wed, 15 Apr 2026 00:00:00 +0000
+ -- wenyinos <ruojiner@hotmail.com> Wed, 15 Apr 2026 00:00:00 +0000
 
-nscde-zh (v2.3.1_zh-1) unstable; urgency=low
-  * Update to v2.3.1_zh release
+nscde-zh (2.3.1+zh-1) unstable; urgency=low
+  * Update to 2.3.1+zh release
   * Add DEB package installation support
   * Update Chinese font configuration to Noto Sans CJK SC and Noto Sans Mono CJK SC
   * Fix font style names for Noto Sans Mono CJK SC (use Medium style)
@@ -13,9 +13,9 @@ nscde-zh (v2.3.1_zh-1) unstable; urgency=low
   * Update README with font configuration guide
   * Repository: https://github.com/wenyinos/NsCDE-zh
 
- -- WenyiOS <wenyiios@github.com>  Tue, 14 Apr 2026 00:00:00 +0000
+ -- wenyinos <ruojiner@hotmail.com>  Tue, 14 Apr 2026 00:00:00 +0000
 
-nscde-zh (v2.3_zh-1) unstable; urgency=low
+nscde-zh (2.3+zh-1) unstable; urgency=low
   * Chinese localization version
   * Add full Chinese (zh) translation support
   * Fix build system to compile and install Chinese locales
@@ -23,7 +23,7 @@ nscde-zh (v2.3_zh-1) unstable; urgency=low
   * Based on NsCDE 2.3 release
   * Repository: https://github.com/wenyinos/NsCDE-zh
 
- -- WenyiOS <wenyiios@github.com>  Tue, 14 Apr 2026 00:00:00 +0000
+ -- wenyinos <ruojiner@hotmail.com>  Tue, 14 Apr 2026 00:00:00 +0000
 
 nscde-zh (2.3-3) unstable; urgency=low
   * Portability and bug fixes
