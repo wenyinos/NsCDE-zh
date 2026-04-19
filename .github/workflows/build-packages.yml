@@ -35,7 +35,7 @@ jobs:
           cp -r pkg/debian ./debian/
           
           # 获取版本号
-          VERSION=$(git describe --tags --always 2>/dev/null || echo "2.3.2")
+          VERSION=$(git describe --tags --always 2>/dev/null)
           VERSION=${VERSION#v}
           VERSION=${VERSION%_zh}
           
@@ -102,7 +102,7 @@ jobs:
           echo "builder ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
           # 获取版本号
-          VERSION=$(git describe --tags --always 2>/dev/null || echo "2.3.2")
+          VERSION=$(git describe --tags --always 2>/dev/null)
           VERSION=${VERSION#v}
           VERSION=${VERSION%_zh}
 
@@ -173,7 +173,7 @@ jobs:
           rpmdev-setuptree
           
           # 获取版本号
-          VERSION=$(git describe --tags --always 2>/dev/null || echo "2.3.2")
+          VERSION=$(git describe --tags --always 2>/dev/null)
           VERSION=${VERSION#v}
           VERSION=${VERSION%_zh}
           
@@ -185,7 +185,7 @@ jobs:
             --exclude='.git' \
             --exclude='debian' \
             --exclude='pkg' \
-            --transform "s|^|NsCDE-zh-${VERSION}_zh/|" \
+            --transform "s|^|NsCDE-zh-v${VERSION}/|" \
             .
           
           # 验证源码包内容
@@ -236,7 +236,7 @@ jobs:
           cp -r pkg/debian ./debian/
           
           # 获取版本号
-          VERSION=$(git describe --tags --always 2>/dev/null || echo "2.3.2")
+          VERSION=$(git describe --tags --always 2>/dev/null)
           VERSION=${VERSION#v}
           VERSION=${VERSION%_zh}
           

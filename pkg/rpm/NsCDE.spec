@@ -53,7 +53,7 @@ lightweight hybrid desktop environment.
 
 
 %prep
-autosetup -p1 -n %{name}-v%{version}
+%autosetup -p1 -n %{name}-v%{version}
 
 
 %build
