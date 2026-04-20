@@ -88,6 +88,13 @@ Required for `make install`:
 5. FvwmScript translations must be concise to avoid UI clipping
 
 ## Versioning & Tags
-- Tags follow format: `vX.Y.Z_zh` (e.g., `v2.3.2_zh`)
-- CI builds packages for Debian, Ubuntu, Arch, Fedora/RHEL from tags
+- Tags follow format: `vX.Y.Z_zh` (e.g., `v2.3.3_zh`)
+- CI builds packages for Debian, Ubuntu, Arch, Fedora RPM from tags
 - Version info embedded via `git describe` during configure
+
+## CI/CD Workflow
+- Workflow: `.github/workflows/build-packages.yml`
+- prepare job extracts version from tag or `configure.ac`
+- `DEBIAN_FRONTEND=noninteractive TZ=Asia/Shanghai` required for apt operations
+- RPM spec file (`pkg/rpm/NsCDE.spec`) uses `NsCDE` not `NsCDE-zh` for internal paths
+- PKGBUILD source URL format: `v${pkgver}.tar.gz` (not `v${pkgver}_zh.tar.gz`)
