@@ -200,22 +200,14 @@ jobs:
   build-rpm:
     needs: prepare
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        container:
-          - image: fedora:latest
-            suffix: fedora
-          - image: opensuse/tumbleweed:latest
-            suffix: opensuse
-    container: ${{ matrix.container.image }}
+    container: fedora:latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Install build dependencies (Fedora)
-        if: matrix.container.suffix == 'fedora'
+      - name: Install build dependencies
         run: |
           dnf install -y \
             rpm-build rpmdevtools autoconf automake gcc make \
@@ -223,17 +215,6 @@ jobs:
             libXpm-devel glibc-headers python3-PyQt5 python3-psutil \
             python3-pyxdg python3-pyyaml stalonetray xsettingsd \
             xterm xdotool xdg-utils groff-base dejavu-serif-fonts \
-            wget
-
-      - name: Install build dependencies (openSUSE)
-        if: matrix.container.suffix == 'opensuse'
-        run: |
-          zypper -n install \
-            rpm-build autoconf automake gcc make \
-            ksh gettext-tools libX11-devel libXt-devel libXext-devel \
-            libXpm-devel glibc-devel python3-pyqt5 python3-psutil \
-            python3-pyxdg python3-PyYAML stalonetray xsettingsd \
-            xterm xdotool xdg-utils groff-full dejavu-fonts-ttf \
             wget
 
       - name: Build RPM package
@@ -266,7 +247,7 @@ jobs:
       - name: Upload RPM artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.container.suffix }}-rpm-packages
+          name: fedora-rpm-packages
           path: /tmp/rpm-artifacts/*.rpm
           retention-days: 5
           if-no-files-found: warn
