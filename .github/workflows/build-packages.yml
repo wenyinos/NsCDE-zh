@@ -48,6 +48,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+          TZ: Asia/Shanghai
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -126,6 +129,9 @@ jobs:
           if-no-files-found: warn
 
       - name: Test installation
+        env:
+          DEBIAN_FRONTEND: noninteractive
+          TZ: Asia/Shanghai
         run: |
           if ls *.deb 1>/dev/null 2>&1; then
             apt-get install -y ./*.deb || echo "Installation test completed (dependency issues expected in CI)"
