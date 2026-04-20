@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: WenyiOS <wenyiios@github.com>
 Build-Depends:
  libc6-dev, libxext-dev, x11proto-dev, libx11-dev, libxpm-dev, ksh | ksh93,
- autotools-dev, automake, build-essential, debhelper-compat (= 11), gettext
+ autotools-dev, autoconf, automake, build-essential, debhelper-compat (= 13), gettext
 Standards-Version: 4.5.0
 Homepage: https://github.com/wenyinos/NsCDE-zh
 

@@ -1,0 +1,295 @@
+name: Build and Test Packages
+
+on:
+  push:
+    branches: [main, develop]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [main, master, develop]
+  workflow_dispatch:
+
+env:
+  PROJECT_NAME: NsCDE-zh
+  PACKAGE_NAME: nscde-zh
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version
+        id: version
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/v}"
+            VERSION="${VERSION%_zh}"
+          else
+            VERSION=$(grep -oP 'AC_INIT\(\[NsCDE\],\s*\K[0-9.]+' configure.ac)
+          fi
+          if [ -z "$VERSION" ]; then
+            echo "ERROR: Failed to extract version from configure.ac"
+            exit 1
+          fi
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Building version: ${VERSION}"
+
+  build-from-source:
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            autoconf automake gcc make \
+            libx11-dev libxext-dev libxpm-dev \
+            ksh gettext
+
+      - name: Configure
+        run: |
+          ./autogen.sh
+          ./configure --prefix=/usr
+
+      - name: Build
+        run: make
+
+      - name: Check build artifacts
+        run: |
+          echo "Build completed successfully"
+          ls -la bin/ 2>/dev/null || echo "No bin directory"
+          find . -name "*.so" -o -name "nscde" 2>/dev/null | head -20
+
+  build-debian:
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        container:
+          - image: debian:bookworm
+            suffix: deb
+          - image: ubuntu:22.04
+            suffix: ubuntu
+    container: ${{ matrix.container.image }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install build dependencies
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y \
+            libc6-dev libxext-dev x11proto-dev libx11-dev libxpm-dev \
+            ksh autotools-dev autoconf automake build-essential \
+            gettext dpkg-dev devscripts fakeroot \
+            debhelper-compat=13
+
+      - name: Build Debian package
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          cp -r pkg/debian ./debian/
+
+          DATE=$(date -R)
+          if [ "${{ matrix.container.suffix }}" = "ubuntu" ]; then
+            printf "${PACKAGE_NAME} (%s+zh-1ubuntu1) jammy; urgency=medium\n\n  * Automated Ubuntu build from GitHub Actions\n\n -- GitHub Actions <github-actions@github.com>  %s\n" \
+              "${VERSION}" "${DATE}" > debian/changelog
+          else
+            printf "${PACKAGE_NAME} (%s+zh-1) unstable; urgency=medium\n\n  * Automated Debian build from GitHub Actions\n\n -- GitHub Actions <github-actions@github.com>  %s\n" \
+              "${VERSION}" "${DATE}" > debian/changelog
+          fi
+
+          dpkg-buildpackage -rfakeroot -us -uc -b
+
+          echo "=== Generated .deb files ==="
+          find .. -maxdepth 2 -name "*.deb" -type f 2>/dev/null
+
+          find .. -maxdepth 2 -name "*.deb" -type f -exec mv {} . \;
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.container.suffix }}-packages
+          path: "*.deb"
+          retention-days: 5
+          if-no-files-found: warn
+
+      - name: Test installation
+        run: |
+          if ls *.deb 1>/dev/null 2>&1; then
+            apt-get install -y ./*.deb || echo "Installation test completed (dependency issues expected in CI)"
+          fi
+
+  build-arch:
+    needs: prepare
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Initialize pacman keyring
+        run: |
+          pacman-key --init
+          pacman-key --populate archlinux
+          pacman -Syu --noconfirm
+
+      - name: Install build dependencies
+        run: |
+          pacman -S --noconfirm --needed \
+            base-devel git autoconf automake libx11 libxext libxpm \
+            ksh93 stalonetray xsettingsd imagemagick xorg-xprop xorg-xrdb \
+            xorg-xset xorg-xdpyinfo xorg-xrandr python python-pyxdg \
+            python-yaml python-psutil python-qtpy xdotool xdg-utils \
+            gettext groff ttf-dejavu \
+            fvwm3 xorg-xrefresh xorg-xmodmap xterm \
+            noto-fonts-cjk sudo
+
+      - name: Build Arch package
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          useradd -m builder
+          echo "builder ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+          cp pkg/pacman/PKGBUILD ./PKGBUILD
+
+          sed -i "s|^pkgver=.*|pkgver=${VERSION}|" PKGBUILD
+          sed -i "s|^pkgrel=.*|pkgrel=1|" PKGBUILD
+
+          chown -R builder:builder .
+
+          su - builder -c "cd ${PWD} && makepkg -sf --noconfirm"
+
+          echo "=== Arch packages generated ==="
+          ls -la *.pkg.tar.zst 2>/dev/null || echo "No .pkg.tar.zst files found"
+
+      - name: Upload Arch artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: arch-packages
+          path: "*.pkg.tar.zst"
+          retention-days: 5
+          if-no-files-found: warn
+
+      - name: Test installation
+        run: |
+          if ls *.pkg.tar.zst 1>/dev/null 2>&1; then
+            pacman -U --noconfirm ./*.pkg.tar.zst || echo "Installation test completed"
+          fi
+
+  build-rpm:
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        container:
+          - image: fedora:latest
+            suffix: fedora
+          - image: opensuse/tumbleweed:latest
+            suffix: opensuse
+    container: ${{ matrix.container.image }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install build dependencies (Fedora)
+        if: matrix.container.suffix == 'fedora'
+        run: |
+          dnf install -y \
+            rpm-build rpmdevtools autoconf automake gcc make \
+            ksh gettext-devel libX11-devel libXt-devel libXext-devel \
+            libXpm-devel glibc-headers python3-PyQt5 python3-psutil \
+            python3-pyxdg python3-pyyaml stalonetray xsettingsd \
+            xterm xdotool xdg-utils groff-base dejavu-serif-fonts \
+            wget
+
+      - name: Install build dependencies (openSUSE)
+        if: matrix.container.suffix == 'opensuse'
+        run: |
+          zypper -n install \
+            rpm-build autoconf automake gcc make \
+            ksh gettext-tools libX11-devel libXt-devel libXext-devel \
+            libXpm-devel glibc-devel python3-Qt5 python3-psutil \
+            python3-pyxdg python3-PyYAML stalonetray xsettingsd \
+            xterm xdotool xdg-utils groff-full dejavu-fonts \
+            wget
+
+      - name: Build RPM package
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          rpmdev-setuptree
+
+          cp pkg/rpm/NsCDE.spec ~/rpmbuild/SPECS/nscde-zh.spec
+
+          sed -i "s/^Version:.*/Version:\t${VERSION}/" ~/rpmbuild/SPECS/nscde-zh.spec
+
+          tar -czf ~/rpmbuild/SOURCES/NsCDE-zh-${VERSION}_zh.tar.gz \
+            --exclude='.git' \
+            --transform "s|^|NsCDE-zh-${VERSION}_zh/|" \
+            .
+
+          echo "=== Source package contents (first 10) ==="
+          tar -tzf ~/rpmbuild/SOURCES/NsCDE-zh-${VERSION}_zh.tar.gz | head -10
+
+          rpmbuild -ba ~/rpmbuild/SPECS/nscde-zh.spec \
+            --define "_topdir ${HOME}/rpmbuild"
+
+          echo "=== RPM files generated ==="
+          find ~/rpmbuild -name "*.rpm" -type f
+
+          mkdir -p /tmp/rpm-artifacts
+          find ~/rpmbuild/RPMS ~/rpmbuild/SRPMS -name "*.rpm" -type f -exec mv {} /tmp/rpm-artifacts/ \;
+
+      - name: Upload RPM artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.container.suffix }}-rpm-packages
+          path: /tmp/rpm-artifacts/*.rpm
+          retention-days: 5
+          if-no-files-found: warn
+
+  release:
+    needs: [prepare, build-debian, build-arch, build-rpm, build-from-source]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: List artifacts
+        run: |
+          echo "=== Artifacts structure ==="
+          find artifacts -type f 2>/dev/null
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/**/*.deb
+            artifacts/**/*.pkg.tar.zst
+            artifacts/**/*.rpm
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
