@@ -27,7 +27,7 @@ Requires: python3-yaml PyQt5 qt5-qtstyleplugins dex-autostart groff-base dejavu-
 Requires: google-noto-sans-cjk-fonts google-noto-sans-cjk-vf-fonts google-noto-sans-mono-cjk-vf-fonts google-noto-sans-mono-fonts
 %endif
 %if 0%{?suse_version}
-Requires: python3-qt5 python3-pyaml libqt5-qtstyleplugins-platformtheme-gtk2 dex groff-full dejavu-fonts
+Requires: python3-pyqt5 python3-PyYAML libqt5-qtstyleplugins-platformtheme-gtk2 dex groff-full dejavu-fonts-ttf
 Requires: noto-sans-cjk-fonts
 %endif
 Suggests:	qt5ct
