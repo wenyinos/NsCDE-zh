@@ -66,15 +66,15 @@ autoreconf -ivf
 
 %files
 %{_bindir}/*
-%{_libexecdir}/%{name}/
-%{_libdir}/%{name}/
+%{_libexecdir}/NsCDE/
+%{_libdir}/NsCDE/
 %{_datadir}/applications/
 %{_datadir}/desktop-directories/
 %{_datadir}/xsessions/nscde.desktop
 %{_datadir}/icons/NsCDE/
 %{_datadir}/doc/nscde/
 %{_datadir}/locale/*
-%{_datadir}/%{name}/
+%{_datadir}/NsCDE/
 %{_sysconfdir}/xdg/menus/nscde-applications.menu
 
 %changelog
