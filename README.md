@@ -32,15 +32,15 @@ sudo apt install ./nscde-zh_*.deb
 
 ### From RPM Package
 
-[![RPM](https://img.shields.io/badge/RPM-v2.3.2_zh-blue)](https://github.com/wenyinos/NsCDE-zh/releases/download/v2.3.2_zh/NsCDE-2.3.2-1.zh.fc43.x86_64.rpm)
+[![RPM](https://img.shields.io/badge/RPM-v2.3.3_zh-blue)](https://github.com/wenyinos/NsCDE-zh/releases/download/v2.3.3_zh/NsCDE-2.3.3-1.zh.fc43.x86_64.rpm)
 
 ```bash
 # 直接下载安装
-sudo dnf install https://github.com/wenyinos/NsCDE-zh/releases/download/v2.3.2_zh/NsCDE-2.3.2-1.zh.fc43.x86_64.rpm
+sudo dnf install https://github.com/wenyinos/NsCDE-zh/releases/download/v2.3.3_zh/NsCDE-2.3.3-1.zh.fc43.x86_64.rpm
 
 # 或下载后安装
-wget https://github.com/wenyinos/NsCDE-zh/releases/download/v2.3.2_zh/NsCDE-2.3.2-1.zh.fc43.x86_64.rpm
-sudo dnf install NsCDE-2.3.2-1.zh.fc43.x86_64.rpm
+wget https://github.com/wenyinos/NsCDE-zh/releases/download/v2.3.3_zh/NsCDE-2.3.3-1.zh.fc43.x86_64.rpm
+sudo dnf install NsCDE-2.3.3-1.zh.fc43.x86_64.rpm
 ```
 
 ### From Arch Linux (AUR)
