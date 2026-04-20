@@ -5,7 +5,7 @@ Summary:	Not so Common Desktop Environment - Chinese Localization
 
 License:	GPLv3
 URL:		https://github.com/wenyinos/NsCDE-zh
-Source0:	%{url}/archive/refs/tags/v%{version}_zh/%{name}-%{version}.tar.gz
+Source0:	%{url}/archive/refs/tags/v%{version}_zh/%{name}-%{version}_zh.tar.gz
 
 BuildRequires:  ksh
 BuildRequires:  gcc
@@ -20,7 +20,7 @@ BuildRequires:  glibc-headers
 BuildRequires:  glibc-devel
 %endif
 Requires:	xterm ksh sed fvwm3 cpp xsettingsd stalonetray dunst xclip xdotool
-Requires:	python3-pyxdg python3-psutil qt5ct
+Requires:	python3-pyxdg python3-psutil
 Requires:	qterminal pcmanfm-qt gvim pavucontrol-qt arandr kcalc
 %if 0%{?fedora} || 0%{?rhel_version} || 0%{?centos_version}
 Requires: python3-yaml PyQt5 qt5-qtstyleplugins dex-autostart groff-base dejavu-serif-fonts
@@ -30,6 +30,7 @@ Requires: google-noto-sans-cjk-fonts google-noto-sans-cjk-vf-fonts google-noto-s
 Requires: python3-qt5 python3-pyaml libqt5-qtstyleplugins-platformtheme-gtk2 dex groff-full dejavu-fonts
 Requires: noto-sans-cjk-fonts
 %endif
+Suggests:	qt5ct
 Requires:	%{_bindir}/convert
 Requires:	%{_bindir}/import
 Requires:	%{_bindir}/xrdb
@@ -70,7 +71,7 @@ autoreconf -ivf
 %{_datadir}/applications/
 %{_datadir}/desktop-directories/
 %{_datadir}/xsessions/nscde.desktop
-%{_datadir}/icons/
+%{_datadir}/icons/NsCDE/
 %{_datadir}/doc/nscde/
 %{_datadir}/locale/*
 %{_datadir}/%{name}/

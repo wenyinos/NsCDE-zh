@@ -2,271 +2,50 @@ name: Build and Test Packages
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
     tags:
       - 'v*'
   pull_request:
-    branches: [ main, master, develop ]
+    branches: [main, master, develop]
   workflow_dispatch:
 
+env:
+  PROJECT_NAME: NsCDE-zh
+  PACKAGE_NAME: nscde-zh
+
 jobs:
-  # Debian/Ubuntu 包构建
-  build-debian:
+  prepare:
     runs-on: ubuntu-latest
-    container: debian:bookworm
-
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Install build dependencies
+      - name: Extract version
+        id: version
         run: |
-          apt-get update
-          apt-get install -y \
-            libc6-dev libxext-dev x11proto-dev libx11-dev libxpm-dev \
-            ksh autotools-dev automake build-essential debhelper-compat=13 \
-            gettext dpkg-dev devscripts
-
-      - name: Build Debian package
-        run: |
-          # 准备 debian 目录
-          cp -r pkg/debian ./debian/
-          
-          # 获取版本号
-          VERSION=$(git describe --tags --always 2>/dev/null || echo "2.3.1")
-          VERSION=${VERSION#v}
-          
-          # 手动创建 changelog
-          DATE=$(date -R)
-          printf "nscde-zh (%s-1) unstable; urgency=medium\n\n  * Automated build from GitHub Actions\n\n -- GitHub Actions <github-actions@github.com>  %s\n" "${VERSION}" "${DATE}" > debian/changelog
-          
-          # 构建包
-          dpkg-buildpackage -rfakeroot -us -uc -b
-          
-          # 调试：列出生成的文件（包括父目录）
-          echo "=== All .deb files ==="
-          cd .. && find . -maxdepth 3 -name "*.deb" -type f 2>/dev/null && cd -
-          
-          # 移动 .deb 文件到当前目录
-          cd .. && mv nscde*.deb NsCDE-zh/ 2>/dev/null || true && cd -
-
-      - name: Upload Debian artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: debian-packages
-          path: "*.deb"
-          retention-days: 5
-          if-no-files-found: warn
-
-      - name: Test installation
-        run: |
-          if ls *.deb 1> /dev/null 2>&1; then
-            apt-get install -y ./nscde-zh_*.deb || echo "Installation test completed (dependency issues expected in CI)"
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/v}"
+            VERSION="${VERSION%_zh}"
+          else
+            VERSION=$(grep -oP 'AC_INIT\(\[NsCDE\],\s*\K[0-9.]+' configure.ac)
           fi
-
-  # Arch Linux 包构建
-  build-arch:
-    runs-on: ubuntu-latest
-    container: archlinux:latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Initialize pacman keyring
-        run: |
-          pacman-key --init
-          pacman-key --populate archlinux
-          pacman -Syu --noconfirm
-
-      - name: Install build dependencies
-        run: |
-          pacman -S --noconfirm --needed \
-            base-devel git autoconf automake libx11 libxext libxpm \
-            ksh stalonetray xsettingsd imagemagick xorg-xprop xorg-xrdb \
-            xorg-xset xorg-xdpyinfo xorg-xrandr python python-pyxdg \
-            python-yaml python-psutil python-qtpy xdotool xdg-utils \
-            gettext groff ttf-dejavu \
-            fvwm3 xorg-xrefresh xorg-xmodmap xterm \
-            noto-fonts-cjk
-
-      - name: Build Arch package
-        run: |
-          # 创建非 root 用户用于构建
-          useradd -m builder
-          echo "builder ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
-
-          # 获取版本号
-          VERSION=$(git describe --tags --always 2>/dev/null || echo "2.3.1")
-          VERSION=${VERSION#v}
-
-          # 准备 PKGBUILD
-          cp pkg/pacman/PKGBUILD ./PKGBUILD
-          
-          # 更新版本信息
-          sed -i "s|^pkgver=.*|pkgver=${VERSION}|" PKGBUILD
-          sed -i "s|^pkgrel=.*|pkgrel=1|" PKGBUILD
-          
-          # 修正依赖包名（fonts-noto-cjk -> noto-fonts-cjk）
-          sed -i "s|'fonts-noto-cjk'|'noto-fonts-cjk'|" PKGBUILD
-          
-          # 更新 source URL（使用正确的 tag 格式 vX.Y.Z_zh）
-          sed -i "s|v2.3.1_zh.tar.gz|v${VERSION}_zh.tar.gz|" PKGBUILD
-          
-          # 更新 build() 和 package() 中的目录名（添加 _zh 后缀）
-          sed -i "s|NsCDE-zh-\$pkgver|NsCDE-zh-\${pkgver}_zh|g" PKGBUILD
-
-          # 设置目录权限
-          chown -R builder:builder .
-
-          # 使用非 root 用户构建
-          su - builder -c "cd $PWD && makepkg -sf --noconfirm"
-          
-          # 调试：列出生成的文件
-          echo "=== Arch packages generated ==="
-          ls -la *.pkg.tar.zst 2>/dev/null || echo "No .pkg.tar.zst files found"
-
-      - name: Upload Arch artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: arch-packages
-          path: "*.pkg.tar.zst"
-          retention-days: 5
-          if-no-files-found: warn
-
-      - name: Test installation
-        run: |
-          if ls *.pkg.tar.zst 1> /dev/null 2>&1; then
-            pacman -U --noconfirm *.pkg.tar.zst || echo "Installation test completed"
+          if [ -z "$VERSION" ]; then
+            echo "ERROR: Failed to extract version from configure.ac"
+            exit 1
           fi
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Building version: ${VERSION}"
 
-  # Fedora/RHEL RPM 包构建
-  build-rpm-fedora:
-    runs-on: ubuntu-latest
-    container: fedora:latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Install build dependencies
-        run: |
-          dnf install -y \
-            rpm-build rpmdevtools autoconf automake gcc make \
-            ksh gettext-devel libX11-devel libXt-devel libXext-devel \
-            libXpm-devel glibc-headers python3-PyQt5 python3-psutil \
-            python3-pyxdg python3-pyyaml stalonetray xsettingsd \
-            xterm xdotool xdg-utils groff-base dejavu-serif-fonts \
-            wget || true
-
-      - name: Build RPM package
-        run: |
-          # 设置 RPM 构建环境
-          rpmdev-setuptree
-          
-          # 获取版本号
-          VERSION=$(git describe --tags --always 2>/dev/null || echo "2.3.1")
-          VERSION=${VERSION#v}
-          
-          # 准备 spec 文件
-          cp pkg/rpm/NsCDE.spec ~/rpmbuild/SPECS/NsCDE.spec
-          
-          # 创建源码包（目录名必须匹配 autosetup -n 参数）
-          tar -czf ~/rpmbuild/SOURCES/NsCDE-${VERSION}.tar.gz \
-            --exclude='.git' \
-            --exclude='debian' \
-            --exclude='pkg' \
-            --transform "s|^|NsCDE-${VERSION}_zh/|" \
-            .
-          
-          # 验证源码包内容
-          echo "=== Source package contents ==="
-          tar -tzf ~/rpmbuild/SOURCES/NsCDE-${VERSION}.tar.gz | head -5
-          
-          # 构建 RPM
-          rpmbuild -ba ~/rpmbuild/SPECS/NsCDE.spec \
-            --define "version ${VERSION}" \
-            --define "_topdir ${HOME}/rpmbuild"
-          
-          # 调试：列出生成的文件
-          echo "=== RPM files generated ==="
-          find ~/rpmbuild -name "*.rpm" -type f
-
-      - name: Upload RPM artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: fedora-rpm-packages
-          path: |
-            ~/rpmbuild/RPMS/**/*.rpm
-            ~/rpmbuild/SRPMS/**/*.rpm
-          retention-days: 5
-          if-no-files-found: warn
-
-  # Ubuntu 特定构建
-  build-ubuntu:
-    runs-on: ubuntu-latest
-    container: ubuntu:22.04
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Install build dependencies
-        run: |
-          apt-get update
-          apt-get install -y \
-            libc6-dev libxext-dev libx11-dev libxpm-dev \
-            ksh autotools-dev automake build-essential debhelper-compat=13 \
-            gettext dpkg-dev fakeroot devscripts
-
-      - name: Build Ubuntu package
-        run: |
-          # 准备 debian 目录
-          cp -r pkg/debian ./debian/
-          
-          # 获取版本号
-          VERSION=$(git describe --tags --always 2>/dev/null || echo "2.3.1")
-          VERSION=${VERSION#v}
-          
-          # 手动创建 changelog
-          DATE=$(date -R)
-          printf "nscde-zh (%s-1ubuntu1) jammy; urgency=medium\n\n  * Automated Ubuntu build from GitHub Actions\n\n -- GitHub Actions <github-actions@github.com>  %s\n" "${VERSION}" "${DATE}" > debian/changelog
-          
-          # 构建包
-          dpkg-buildpackage -rfakeroot -us -uc -b
-          
-          # 调试：列出生成的文件（包括父目录）
-          echo "=== All .deb files ==="
-          cd .. && find . -maxdepth 3 -name "*.deb" -type f 2>/dev/null && cd -
-          
-          # 移动 .deb 文件到当前目录
-          cd .. && mv nscde*.deb NsCDE-zh/ 2>/dev/null || true && cd -
-
-      - name: Upload Ubuntu artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ubuntu-packages
-          path: "*.deb"
-          retention-days: 5
-          if-no-files-found: warn
-
-  # 源码编译测试
   build-from-source:
+    needs: prepare
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Install dependencies
         run: |
@@ -290,9 +69,204 @@ jobs:
           ls -la bin/ 2>/dev/null || echo "No bin directory"
           find . -name "*.so" -o -name "nscde" 2>/dev/null | head -20
 
-  # 发布包（仅在打标签时）
+  build-debian:
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        container:
+          - image: debian:bookworm
+            suffix: deb
+          - image: ubuntu:22.04
+            suffix: ubuntu
+    container: ${{ matrix.container.image }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install build dependencies
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y \
+            libc6-dev libxext-dev x11proto-dev libx11-dev libxpm-dev \
+            ksh autotools-dev autoconf automake build-essential \
+            gettext dpkg-dev devscripts fakeroot \
+            debhelper-compat=13
+
+      - name: Build Debian package
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          cp -r pkg/debian ./debian/
+
+          DATE=$(date -R)
+          if [ "${{ matrix.container.suffix }}" = "ubuntu" ]; then
+            printf "${PACKAGE_NAME} (%s+zh-1ubuntu1) jammy; urgency=medium\n\n  * Automated Ubuntu build from GitHub Actions\n\n -- GitHub Actions <github-actions@github.com>  %s\n" \
+              "${VERSION}" "${DATE}" > debian/changelog
+          else
+            printf "${PACKAGE_NAME} (%s+zh-1) unstable; urgency=medium\n\n  * Automated Debian build from GitHub Actions\n\n -- GitHub Actions <github-actions@github.com>  %s\n" \
+              "${VERSION}" "${DATE}" > debian/changelog
+          fi
+
+          dpkg-buildpackage -rfakeroot -us -uc -b
+
+          echo "=== Generated .deb files ==="
+          find .. -maxdepth 2 -name "*.deb" -type f 2>/dev/null
+
+          find .. -maxdepth 2 -name "*.deb" -type f -exec mv {} . \;
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.container.suffix }}-packages
+          path: "*.deb"
+          retention-days: 5
+          if-no-files-found: warn
+
+      - name: Test installation
+        run: |
+          if ls *.deb 1>/dev/null 2>&1; then
+            apt-get install -y ./*.deb || echo "Installation test completed (dependency issues expected in CI)"
+          fi
+
+  build-arch:
+    needs: prepare
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Initialize pacman keyring
+        run: |
+          pacman-key --init
+          pacman-key --populate archlinux
+          pacman -Syu --noconfirm
+
+      - name: Install build dependencies
+        run: |
+          pacman -S --noconfirm --needed \
+            base-devel git autoconf automake libx11 libxext libxpm \
+            ksh93 stalonetray xsettingsd imagemagick xorg-xprop xorg-xrdb \
+            xorg-xset xorg-xdpyinfo xorg-xrandr python python-pyxdg \
+            python-yaml python-psutil python-qtpy xdotool xdg-utils \
+            gettext groff ttf-dejavu \
+            fvwm3 xorg-xrefresh xorg-xmodmap xterm \
+            noto-fonts-cjk sudo
+
+      - name: Build Arch package
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          useradd -m builder
+          echo "builder ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+          cp pkg/pacman/PKGBUILD ./PKGBUILD
+
+          sed -i "s|^pkgver=.*|pkgver=${VERSION}|" PKGBUILD
+          sed -i "s|^pkgrel=.*|pkgrel=1|" PKGBUILD
+
+          chown -R builder:builder .
+
+          su - builder -c "cd ${PWD} && makepkg -sf --noconfirm"
+
+          echo "=== Arch packages generated ==="
+          ls -la *.pkg.tar.zst 2>/dev/null || echo "No .pkg.tar.zst files found"
+
+      - name: Upload Arch artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: arch-packages
+          path: "*.pkg.tar.zst"
+          retention-days: 5
+          if-no-files-found: warn
+
+      - name: Test installation
+        run: |
+          if ls *.pkg.tar.zst 1>/dev/null 2>&1; then
+            pacman -U --noconfirm ./*.pkg.tar.zst || echo "Installation test completed"
+          fi
+
+  build-rpm:
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        container:
+          - image: fedora:latest
+            suffix: fedora
+          - image: opensuse/tumbleweed:latest
+            suffix: opensuse
+    container: ${{ matrix.container.image }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install build dependencies (Fedora)
+        if: matrix.container.suffix == 'fedora'
+        run: |
+          dnf install -y \
+            rpm-build rpmdevtools autoconf automake gcc make \
+            ksh gettext-devel libX11-devel libXt-devel libXext-devel \
+            libXpm-devel glibc-headers python3-PyQt5 python3-psutil \
+            python3-pyxdg python3-pyyaml stalonetray xsettingsd \
+            xterm xdotool xdg-utils groff-base dejavu-serif-fonts \
+            wget
+
+      - name: Install build dependencies (openSUSE)
+        if: matrix.container.suffix == 'opensuse'
+        run: |
+          zypper -n install \
+            rpm-build autoconf automake gcc make \
+            ksh gettext-tools libX11-devel libXt-devel libXext-devel \
+            libXpm-devel glibc-devel python3-Qt5 python3-psutil \
+            python3-pyxdg python3-PyYAML stalonetray xsettingsd \
+            xterm xdotool xdg-utils groff-full dejavu-fonts \
+            wget
+
+      - name: Build RPM package
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          rpmdev-setuptree
+
+          cp pkg/rpm/NsCDE.spec ~/rpmbuild/SPECS/nscde-zh.spec
+
+          sed -i "s/^Version:.*/Version:\t${VERSION}/" ~/rpmbuild/SPECS/nscde-zh.spec
+
+          tar -czf ~/rpmbuild/SOURCES/NsCDE-zh-${VERSION}_zh.tar.gz \
+            --exclude='.git' \
+            --transform "s|^|NsCDE-zh-${VERSION}_zh/|" \
+            .
+
+          echo "=== Source package contents (first 10) ==="
+          tar -tzf ~/rpmbuild/SOURCES/NsCDE-zh-${VERSION}_zh.tar.gz | head -10
+
+          rpmbuild -ba ~/rpmbuild/SPECS/nscde-zh.spec \
+            --define "_topdir ${HOME}/rpmbuild"
+
+          echo "=== RPM files generated ==="
+          find ~/rpmbuild -name "*.rpm" -type f
+
+          mkdir -p /tmp/rpm-artifacts
+          find ~/rpmbuild/RPMS ~/rpmbuild/SRPMS -name "*.rpm" -type f -exec mv {} /tmp/rpm-artifacts/ \;
+
+      - name: Upload RPM artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.container.suffix }}-rpm-packages
+          path: /tmp/rpm-artifacts/*.rpm
+          retention-days: 5
+          if-no-files-found: warn
+
   release:
-    needs: [build-debian, build-arch, build-rpm-fedora, build-ubuntu, build-from-source]
+    needs: [prepare, build-debian, build-arch, build-rpm, build-from-source]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
 
@@ -302,36 +276,18 @@ jobs:
         with:
           path: artifacts
 
-      - name: Debug artifacts structure
+      - name: List artifacts
         run: |
           echo "=== Artifacts structure ==="
-          find artifacts -type f 2>/dev/null | head -50
-
-      - name: Delete existing release assets
-        run: |
-          # 获取已存在的 release assets 并删除
-          ASSETS=$(curl -sL -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${{ github.repository }}/releases/tags/v2.3.1_zh/assets" 2>/dev/null)
-          
-          echo "Existing assets: $ASSETS"
-          
-          # 删除不需要的 assets
-          for asset_id in $(echo "$ASSETS" | python3 -c "import sys,json; [print(a['id']) for a in json.load(sys.stdin) if any(x in a['name'] for x in ['debug', 'dbgsym', 'src.rpm'])]"); do
-            echo "Deleting asset $asset_id"
-            curl -sL -X DELETE \
-              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              "https://api.github.com/repos/${{ github.repository }}/releases/assets/$asset_id"
-          done
+          find artifacts -type f 2>/dev/null
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            artifacts/debian-packages/nscde-zh_2.3.1-1_amd64.deb
-            artifacts/ubuntu-packages/nscde-zh_2.3.1-1ubuntu1_amd64.deb
-            artifacts/arch-packages/nscde-zh-2.3.1-1-x86_64.pkg.tar.zst
-            artifacts/fedora-rpm-packages/RPMS/x86_64/NsCDE-2.3.1-1.fc43.x86_64.rpm
+            artifacts/**/*.deb
+            artifacts/**/*.pkg.tar.zst
+            artifacts/**/*.rpm
           draft: false
           prerelease: false
           generate_release_notes: true
