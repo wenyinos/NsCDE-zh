@@ -300,7 +300,7 @@ jobs:
             # Create a tarball of the current source to simulate a distfile
             mkdir -p /usr/ports/distfiles
             tar -czf /usr/ports/distfiles/NsCDE-zh-${{ needs.prepare.outputs.version }}_zh.tar.gz \
-              -C ${GITHUB_WORKSPACE} . --exclude .git
+              --exclude .git -C ${GITHUB_WORKSPACE} .
             
             # Build the package
             # NO_CHECKSUM is used because we generated the distfile locally
