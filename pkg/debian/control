@@ -3,7 +3,7 @@ Section: x11
 Priority: optional
 Maintainer: WenyiOS <wenyiios@github.com>
 Build-Depends:
- libc6-dev, libxext-dev, x11proto-dev, libx11-dev, libxpm-dev, ksh93,
+ libc6-dev, libxext-dev, x11proto-dev, libx11-dev, libxpm-dev, ksh,
  autotools-dev, autoconf, automake, build-essential, debhelper-compat (= 13), gettext
 Standards-Version: 4.5.0
 Homepage: https://github.com/wenyinos/NsCDE-zh
@@ -12,7 +12,7 @@ Package: nscde-zh
 Architecture: any
 Multi-Arch: foreign
 Depends:
- libc6, fvwm | fvwm3, ksh93, stalonetray, xsettingsd, imagemagick,
+ libc6, fvwm | fvwm3, ksh, stalonetray, xsettingsd, imagemagick,
  x11-xserver-utils, x11-utils, cpp, xterm, python3, python3-xdg,
  python3-yaml, python3-psutil, python3-pyqt5, xdotool, xdg-utils,
  gettext, fonts-noto-cjk, fonts-noto-cjk-extra, fonts-dejavu-core, groff-base, groff,
