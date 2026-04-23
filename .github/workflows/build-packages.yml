@@ -265,9 +265,12 @@ jobs:
           usesh: true
           prepare: |
             pkg update
-            # Install essential build and runtime tools
+            # Install essential build and runtime tools, including git for ports tree
             pkg install -y ksh93 gsed autoconf automake gmake gettext-tools \
-              python3 pkgconf libX11 libXext libXpm fvwm3 xsettingsd stalonetray
+              python3 pkgconf libX11 libXext libXpm fvwm3 xsettingsd stalonetray git
+            
+            # Fetch ports tree infrastructure (depth 1 to save time/space)
+            git clone --depth 1 https://git.FreeBSD.org/ports.git /usr/ports
             
             # Install standard python modules
             pkg install -y py311-psutil py311-pyxdg py311-pyyaml || \
