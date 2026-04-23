@@ -252,8 +252,51 @@ jobs:
           retention-days: 5
           if-no-files-found: warn
 
+  build-freebsd:
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build FreeBSD package
+        uses: vmactions/freebsd-vm@v1
+        with:
+          usesh: true
+          prepare: |
+            pkg install -y ksh93 gsed autoconf automake gmake gettext-tools \
+              python3 py311-psutil py311-pyxdg py311-yaml py311-qt5-widgets \
+              pkgconf libX11 libXext libXpm fvwm2 xsettingsd stalonetray
+          run: |
+            # Prepare the port build environment
+            mkdir -p /usr/ports/x11-wm/nscde-zh
+            cp -r pkg/freebsd/* /usr/ports/x11-wm/nscde-zh/
+            
+            # We want to build the LOCAL code, not fetch from GitHub
+            # Use the current directory as WRKSRC
+            cd /usr/ports/x11-wm/nscde-zh
+            
+            # Create a tarball of the current source to simulate a distfile
+            tar -czf /usr/ports/distfiles/NsCDE-zh-${{ needs.prepare.outputs.version }}_zh.tar.gz \
+              -C ${GITHUB_WORKSPACE} . --exclude .git
+            
+            # Build the package
+            # NO_CHECKSUM is used because we generated the distfile locally
+            make package NO_CHECKSUM=yes BATCH=yes
+            
+            # Copy the resulting package to the workspace
+            cp work/pkg/*.pkg ${GITHUB_WORKSPACE}/
+
+      - name: Upload FreeBSD artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: freebsd-packages
+          path: "*.pkg"
+          retention-days: 5
+          if-no-files-found: warn
+
   release:
-    needs: [prepare, build-debian, build-arch, build-rpm, build-from-source]
+    needs: [prepare, build-debian, build-arch, build-rpm, build-freebsd, build-from-source]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
 
@@ -275,6 +318,7 @@ jobs:
             artifacts/**/*.deb
             artifacts/**/*.pkg.tar.zst
             artifacts/**/*.rpm
+            artifacts/**/*.pkg
           draft: false
           prerelease: false
           generate_release_notes: true
