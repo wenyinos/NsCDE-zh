@@ -1,7 +1,7 @@
 Source: nscde-zh
 Section: x11
 Priority: optional
-Maintainer: WenyiOS <wenyiios@github.com>
+Maintainer: wenyinos <admin@wenyinos.com>
 Build-Depends:
  libc6-dev, libxext-dev, x11proto-dev, libx11-dev, libxpm-dev, ksh,
  autotools-dev, autoconf, automake, build-essential, debhelper-compat (= 13), gettext
