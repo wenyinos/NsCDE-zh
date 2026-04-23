@@ -19,7 +19,7 @@ LIB_DEPENDS=	libX11.so:x11/libX11 \
 		libXpm.so:x11/libXpm
 RUN_DEPENDS=	ksh93:shells/ksh93 \
 		gsed:textproc/gsed \
-		fvwm2:x11-wm/fvwm2 \
+		fvwm3:x11-wm/fvwm3 \
 		xsettingsd:x11/xsettingsd \
 		stalonetray:x11/stalonetray \
 		python3:lang/python3 \

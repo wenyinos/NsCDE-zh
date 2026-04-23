@@ -264,9 +264,13 @@ jobs:
         with:
           usesh: true
           prepare: |
+            pkg update
             pkg install -y ksh93 gsed autoconf automake gmake gettext-tools \
-              python3 py311-psutil py311-pyxdg py311-yaml py311-qt5-widgets \
-              pkgconf libX11 libXext libXpm fvwm2 xsettingsd stalonetray
+              python3 pkgconf libX11 libXext libXpm fvwm3 xsettingsd stalonetray
+            
+            # Try installing python modules with 3.11 first, then 3.9 as fallback
+            pkg install -y py311-psutil py311-pyxdg py311-pyyaml py311-qt5-widgets || \
+            pkg install -y py39-psutil py39-pyxdg py39-pyyaml py39-qt5-widgets
           run: |
             # Prepare the port build environment
             mkdir -p /usr/ports/x11-wm/nscde-zh
