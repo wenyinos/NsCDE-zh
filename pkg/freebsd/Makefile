@@ -1,11 +1,11 @@
 # FreeBSD Port for NsCDE-zh
-# Author: WenyiOS <wenyiios@github.com>
+# Author: wenyinos <admin@wenyinos.com>
 
 PORTNAME=	NsCDE-zh
 DISTVERSION=	2.3.3
 CATEGORIES=	x11-wm
 
-MAINTAINER=	wenyiios@github.com
+MAINTAINER=	admin@wenyinos.com
 COMMENT=	Retro UNIX desktop environment (CDE look) - Chinese Localization
 WWW=		https://github.com/wenyinos/NsCDE-zh
 
