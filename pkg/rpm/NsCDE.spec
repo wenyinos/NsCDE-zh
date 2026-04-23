@@ -79,10 +79,10 @@ autoreconf -ivf
 %{_sysconfdir}/xdg/menus/nscde-applications.menu
 
 %changelog
-* Wed Apr 15 2026 WenyiOS <wenyiios@github.com>  - 2.3.2-1
+* Wed Apr 15 2026 wenyinos <admin@wenyinos.com>  - 2.3.2-1
 - Update to 2.3.2 release
 
-* Wed Apr 15 2026 WenyiOS <wenyiios@github.com>  - 2.3.1-1
+* Wed Apr 15 2026 wenyinos <admin@wenyinos.com>  - 2.3.1-1
 - Chinese localization version
 - Add full Chinese (zh) translation support
 - Fix build system to compile and install Chinese locales
