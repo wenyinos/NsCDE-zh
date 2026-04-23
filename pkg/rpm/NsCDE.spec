@@ -58,14 +58,15 @@ lightweight hybrid desktop environment.
 
 %build
 autoreconf -ivf
-%configure --prefix=/usr --sysconfdir=/etc
+%configure --prefix=/usr --sysconfdir=/etc --libexecdir=%{_libexecdir}/NsCDE
 %make_build
 
 %install
 %make_install
 
 %files
-%{_bindir}/*
+%{_bindir}/nscde
+%{_bindir}/nscde_fvwmclnt
 %{_libexecdir}/NsCDE/
 %{_libdir}/NsCDE/
 %{_datadir}/applications/
