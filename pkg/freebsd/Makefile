@@ -1,0 +1,46 @@
+# FreeBSD Port for NsCDE-zh
+# Author: WenyiOS <wenyiios@github.com>
+
+PORTNAME=	NsCDE-zh
+DISTVERSION=	2.3.3
+CATEGORIES=	x11-wm
+
+MAINTAINER=	wenyiios@github.com
+COMMENT=	Retro UNIX desktop environment (CDE look) - Chinese Localization
+WWW=		https://github.com/wenyinos/NsCDE-zh
+
+LICENSE=	GPLv3
+LICENSE_FILE=	${WRKSRC}/COPYING
+
+BUILD_DEPENDS=	ksh93:shells/ksh93 \
+		gsed:textproc/gsed
+LIB_DEPENDS=	libX11.so:x11/libX11 \
+		libXext.so:x11/libXext \
+		libXpm.so:x11/libXpm
+RUN_DEPENDS=	ksh93:shells/ksh93 \
+		gsed:textproc/gsed \
+		fvwm2:x11-wm/fvwm2 \
+		xsettingsd:x11/xsettingsd \
+		stalonetray:x11/stalonetray \
+		python3:lang/python3 \
+		${PYTHON_PKGNAMEPREFIX}psutil>=0:sysutils/py-psutil@${PY_FLAVOR} \
+		${PYTHON_PKGNAMEPREFIX}xdg>=0:devel/py-xdg@${PY_FLAVOR} \
+		${PYTHON_PKGNAMEPREFIX}yaml>=0:devel/py-yaml@${PY_FLAVOR} \
+		${PYTHON_PKGNAMEPREFIX}pyqt5>=0:devel/py-qt5-widgets@${PY_FLAVOR} \
+		gettext:devel/gettext \
+		noto-basic>0:x11-fonts/noto-basic \
+		noto-cjk>0:x11-fonts/noto-cjk
+
+USES=		autoreconf gettext-tools gmake iconv localbase python xorg
+USE_GITHUB=	yes
+GH_ACCOUNT=	wenyinos
+GH_TAGNAME=	v${DISTVERSION}_zh
+USE_XORG=	x11 xext xpm
+
+GNU_CONFIGURE=	yes
+CONFIGURE_ARGS=	--libexecdir=${PREFIX}/lib
+
+pre-configure:
+	(cd ${WRKSRC} && ./autogen.sh)
+
+.include <bsd.port.mk>

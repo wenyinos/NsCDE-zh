@@ -1,0 +1,13 @@
+NsCDE-zh is a retro but powerful UNIX desktop environment which resembles the
+CDE look (and partially feel) but with a more powerful and flexible framework
+beneath-the-surface, more suited for 21st century unix-like and Linux systems
+and user requirements than original CDE.
+
+This version is specifically localized for Simplified Chinese users,
+providing Noto Sans CJK fonts and comprehensive zh_CN translations.
+
+Features:
+- Retro CDE look and feel with modern functionality
+- FVWM-based lightweight desktop environment
+- GTK2/GTK3/Qt4/Qt5 theme integration
+- Full Simplified Chinese translation support
