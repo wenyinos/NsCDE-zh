@@ -264,7 +264,13 @@ jobs:
         with:
           usesh: true
           prepare: |
-            pkg update
+            # Force-refresh pkg metadata; cached VM repo state can become truncated.
+            pkg bootstrap -f -y
+            pkg update -f || {
+              rm -f /var/db/pkg/repo-*.sqlite /var/db/pkg/repo-*.meta
+              rm -f /var/cache/pkg/*.pkg /var/cache/pkg/*.txz
+              pkg update -f
+            }
             # Install essential build and runtime tools, including git for ports tree
             pkg install -y ksh93 gsed autoconf automake gmake gettext-tools \
               python3 pkgconf libX11 libXext libXpm fvwm3 xsettingsd stalonetray git \
