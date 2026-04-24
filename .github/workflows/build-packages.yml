@@ -291,24 +291,8 @@ jobs:
             git clone --depth 1 https://git.FreeBSD.org/ports.git /usr/ports
             
             # Install standard python modules
-            pkg install -y py311-psutil py311-pyxdg py311-pyyaml || \
-            pkg install -y py39-psutil py39-pyxdg py39-pyyaml || true
-            
-            # Dynamically find and install PyQt5 widgets or similar
-            QT5_PKG=$(pkg search -q "py3*-qt5-widgets" | head -n 1)
-            if [ -z "$QT5_PKG" ]; then
-              QT5_PKG=$(pkg search -q "py3*-qt5-gui" | head -n 1)
-            fi
-            if [ -z "$QT5_PKG" ]; then
-              QT5_PKG=$(pkg search -q "py3*-qt5" | head -n 1)
-            fi
-            
-            if [ -n "$QT5_PKG" ]; then
-              echo "Installing PyQt5 package: $QT5_PKG"
-              pkg install -y "$QT5_PKG"
-            else
-              echo "Warning: Could not find a suitable PyQt5 package"
-            fi
+            pkg install -y py311-psutil py311-pyxdg py311-pyyaml py311-qt5-pyqt || \
+            pkg install -y py39-psutil py39-pyxdg py39-pyyaml py39-qt5-pyqt || true
           run: |
             # Prepare the port build environment
             mkdir -p /usr/ports/x11-wm/nscde-zh

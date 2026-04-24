@@ -26,7 +26,7 @@ RUN_DEPENDS=	ksh93:shells/ksh93 \
 		${PYTHON_PKGNAMEPREFIX}psutil>=0:sysutils/py-psutil@${PY_FLAVOR} \
 		${PYTHON_PKGNAMEPREFIX}pyxdg>=0:devel/py-pyxdg@${PY_FLAVOR} \
 		${PYTHON_PKGNAMEPREFIX}pyyaml>=0:devel/py-pyyaml@${PY_FLAVOR} \
-		${PYTHON_PKGNAMEPREFIX}qt5>=0:devel/py-qt5@${PY_FLAVOR} \
+		${PYTHON_PKGNAMEPREFIX}qt5-pyqt>=0:devel/py-qt5-pyqt@${PY_FLAVOR} \
 		gettext:devel/gettext \
 		noto-basic>0:x11-fonts/noto-basic \
 		noto-sc>0:x11-fonts/noto-sc
