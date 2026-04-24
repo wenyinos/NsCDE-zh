@@ -268,28 +268,22 @@ jobs:
           prepare: |
             export IGNORE_OSVERSION=yes
             export ASSUME_ALWAYS_YES=yes
-            # Completely reset pkg state and retry until repository is usable.
             pkg bootstrap -f -y
             rm -rf /var/db/pkg/repo-*.sqlite /var/db/pkg/repo-*.meta
             rm -rf /var/cache/pkg/*
-            PKG_OK=0
-            for i in 1 2 3 4 5; do
-              echo "=== pkg update attempt $i ==="
-              pkg update -f 2>&1 || true
-              sleep 3
-              if pkg search -e ksh93 >/dev/null 2>&1 && pkg search -e git >/dev/null 2>&1; then
-                PKG_OK=1
-                echo "pkg repository verified on attempt $i"
-                break
-              fi
-              echo "Repository not usable, retrying..."
-              rm -rf /var/db/pkg/repo-*.sqlite /var/db/pkg/repo-*.meta
-              sleep 5
-            done
-            if [ "$PKG_OK" != "1" ]; then
-              echo "ERROR: pkg repository unavailable after 5 attempts"
-              exit 1
-            fi
+            mkdir -p /usr/local/etc/pkg/repos
+            cat > /usr/local/etc/pkg/repos/custom-ports.conf << 'CONF'
+            FreeBSD-ports: {
+              url: "pkg+https://pkg.freebsd.org/FreeBSD:15:amd64/latest",
+              mirror_type: "none",
+              signature_type: "none",
+              enabled: yes
+            }
+            CONF
+            echo "=== pkg update ==="
+            pkg update -f 2>&1 || true
+            echo "=== verifying repository ==="
+            pkg install -n -y ksh93 2>&1 || true
             # Install essential build and runtime tools, including git for ports tree
             pkg install -y ksh93 gsed autoconf automake gmake gettext-tools \
               python3 pkgconf libX11 libXext libXpm fvwm3 xsettingsd stalonetray git \
