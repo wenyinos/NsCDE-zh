@@ -1,3 +1,9 @@
+nscde-zh (2.3.4+zh-1) unstable; urgency=low
+  * Update to v2.3.4_zh release
+  * Fix FreeBSD package dependencies and CI build reliability
+
+ -- wenyinos.com <admin@wenyinos.com>  Sat, 25 Apr 2026 00:00:00 +0000
+
 nscde-zh (2.3.2+zh-1) unstable; urgency=low
   * Update to v2.3.2_zh release
 
@@ -201,4 +207,3 @@ nscde-zh (2.0-1) unstable; urgency=low
   * First RPM and DEB packages, fully functional examples
   
  -- Hegel3DReloaded <nscde@protonmail.com>  Wed, 10 Nov 2021 04:31:32 +0100
-

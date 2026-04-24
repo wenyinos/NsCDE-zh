@@ -6,7 +6,7 @@ dnl Author: Hegel3DReloaded
 dnl Licence: GPLv3
 dnl
 
-AC_INIT([NsCDE], 2.3.3, [nscde@protonmail.com])
+AC_INIT([NsCDE], 2.3.4, [nscde@protonmail.com])
 
 AC_CONFIG_AUX_DIR(ac-aux)
 
@@ -492,4 +492,3 @@ Locale:               ${my_localedir}
 Docs:                 ${my_docdir}
 *********************************************************************
 "
-
