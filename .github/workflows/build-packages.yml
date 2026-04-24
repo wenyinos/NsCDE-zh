@@ -262,10 +262,12 @@ jobs:
       - name: Build FreeBSD package
         uses: vmactions/freebsd-vm@v1
         with:
-          release: '14.2'
+          release: '15.0'
           usesh: true
           disable-cache: true
           prepare: |
+            export IGNORE_OSVERSION=yes
+            export ASSUME_ALWAYS_YES=yes
             # Force-refresh pkg metadata; cached VM repo state can become truncated.
             pkg bootstrap -f -y
             pkg update -f
