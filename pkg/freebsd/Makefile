@@ -43,4 +43,12 @@ CONFIGURE_ARGS=	--libexecdir=${PREFIX}/lib
 pre-configure:
 	(cd ${WRKSRC} && ./autogen.sh)
 
+post-install:
+	(cd ${STAGEDIR}${PREFIX} && \
+		${FIND} . \( -type f -o -type l \) | \
+		${SED} 's,^./,,' | ${SORT} > ${TMPPLIST})
+	(cd ${STAGEDIR}${PREFIX} && \
+		${FIND} . -type d -empty | \
+		${SED} 's,^./,@dir ,' | ${SORT} >> ${TMPPLIST})
+
 .include <bsd.port.mk>
