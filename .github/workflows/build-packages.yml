@@ -272,14 +272,12 @@ jobs:
             rm -rf /var/db/pkg/repo-*.sqlite /var/db/pkg/repo-*.meta
             rm -rf /var/cache/pkg/*
             mkdir -p /usr/local/etc/pkg/repos
-            cat > /usr/local/etc/pkg/repos/custom-ports.conf << 'CONF'
-            FreeBSD-ports: {
-              url: "pkg+https://pkg.freebsd.org/FreeBSD:15:amd64/latest",
-              mirror_type: "none",
-              signature_type: "none",
-              enabled: yes
-            }
-            CONF
+            echo 'FreeBSD-ports: {' > /usr/local/etc/pkg/repos/custom-ports.conf
+            echo '  url: "https://pkg.freebsd.org/FreeBSD:15:amd64/latest",' >> /usr/local/etc/pkg/repos/custom-ports.conf
+            echo '  mirror_type: "none",' >> /usr/local/etc/pkg/repos/custom-ports.conf
+            echo '  signature_type: "none",' >> /usr/local/etc/pkg/repos/custom-ports.conf
+            echo '  enabled: yes' >> /usr/local/etc/pkg/repos/custom-ports.conf
+            echo '}' >> /usr/local/etc/pkg/repos/custom-ports.conf
             echo "=== pkg update ==="
             pkg update -f 2>&1 || true
             echo "=== verifying repository ==="
