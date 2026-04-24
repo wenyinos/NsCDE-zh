@@ -262,6 +262,7 @@ jobs:
       - name: Build FreeBSD package
         uses: vmactions/freebsd-vm@v1
         with:
+          release: '14.2'
           usesh: true
           disable-cache: true
           prepare: |
