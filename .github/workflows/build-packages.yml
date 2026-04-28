@@ -282,37 +282,39 @@ jobs:
             pkg update -f 2>&1 || true
             echo "=== verifying repository ==="
             pkg install -n -y ksh93 2>&1 || true
-            # Install essential build and runtime tools, including git for ports tree
+            # Install essential build and runtime tools
             pkg install -y ksh93 gsed autoconf automake gmake gettext-tools \
-              python3 pkgconf libX11 libXext libXpm fvwm3 xsettingsd stalonetray git \
+              python3 pkgconf libX11 libXext libXpm fvwm3 xsettingsd stalonetray \
               noto-basic noto-sc
-            
-            # Fetch ports tree infrastructure (depth 1 to save time/space)
-            git clone --depth 1 https://git.FreeBSD.org/ports.git /usr/ports
             
             # Install standard python modules
             pkg install -y py311-psutil py311-pyxdg py311-pyyaml py311-qt5-pyqt || \
             pkg install -y py39-psutil py39-pyxdg py39-pyyaml py39-qt5-pyqt || true
           run: |
-            # Prepare the port build environment
-            mkdir -p /usr/ports/x11-wm/nscde-zh
-            cp -r pkg/freebsd/* /usr/ports/x11-wm/nscde-zh/
+            # Build and install directly without ports tree
+            cd ${GITHUB_WORKSPACE}
             
-            # We want to build the LOCAL code, not fetch from GitHub
-            # Use the current directory as WRKSRC
-            cd /usr/ports/x11-wm/nscde-zh
+            # Run autogen and configure
+            ./autogen.sh
+            ./configure --prefix=/usr --libexecdir=/usr/lib
             
-            # Create a tarball of the current source to simulate a distfile
-            mkdir -p /usr/ports/distfiles
-            tar -czf /usr/ports/distfiles/NsCDE-zh-${{ needs.prepare.outputs.version }}_zh.tar.gz \
-              --exclude .git -C ${GITHUB_WORKSPACE} .
+            # Build
+            make
             
-            # Build the package
-            # NO_CHECKSUM is used because we generated the distfile locally
-            make package NO_CHECKSUM=yes BATCH=yes
+            # Install to staging area
+            STAGEDIR=/tmp/stage
+            mkdir -p ${STAGEDIR}
+            make DESTDIR=${STAGEDIR} install
             
-            # Copy the resulting package to the workspace
-            cp work/pkg/*.pkg ${GITHUB_WORKSPACE}/
+            # Generate plist for package
+            cd ${STAGEDIR}
+            find . -type f -o -type l | sed 's,^./,,' | sort > /tmp/plist
+            find . -type d -empty | sed 's,^./,@dir ,' | sort >> /tmp/plist
+            
+            # Create package
+            pkg create -r ${STAGEDIR} -p /tmp/plist \
+              -o ${GITHUB_WORKSPACE} \
+              -M ${GITHUB_WORKSPACE}/pkg/freebsd/pkg-descr
 
       - name: Upload FreeBSD artifacts
         uses: actions/upload-artifact@v4
