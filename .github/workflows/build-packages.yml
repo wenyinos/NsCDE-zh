@@ -307,9 +307,9 @@ jobs:
             make DESTDIR=${STAGEDIR} install
             
             # Generate plist for package (files only, directories auto-detected)
-            # Paths must be relative to prefix (/usr), so strip leading usr/
+            # Use full relative path from stage root
             cd ${STAGEDIR}
-            find . -type f -o -type l | sed 's,^./,,' | sed 's,^usr/,,' | sort > /tmp/plist
+            find . -type f -o -type l | sed 's,^./,,' | sort > /tmp/plist
             
             # Create manifest with package metadata
             VERSION="${{ needs.prepare.outputs.version }}"
@@ -324,7 +324,7 @@ jobs:
             www = "https://github.com/wenyinos/NsCDE-zh"
             abi = "FreeBSD:*:*"
             arch = "freebsd:*:amd64"
-            prefix = "/usr"
+            prefix = "/"
             flatsize = ${FLATSIZE}
             MANIFEST_EOF
             
