@@ -307,8 +307,9 @@ jobs:
             make DESTDIR=${STAGEDIR} install
             
             # Generate plist for package (files only, directories auto-detected)
+            # Paths must be relative to prefix (/usr), so strip leading usr/
             cd ${STAGEDIR}
-            find . -type f -o -type l | sed 's,^./,,' | sort > /tmp/plist
+            find . -type f -o -type l | sed 's,^./,,' | sed 's,^usr/,,' | sort > /tmp/plist
             
             # Create manifest with package metadata
             VERSION="${{ needs.prepare.outputs.version }}"
