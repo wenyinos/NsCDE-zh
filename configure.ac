@@ -112,6 +112,8 @@ AS_IF([test "$PYTHON" != ":"],
 
 if test "x$PYTHON_SHEBANG" != "x"; then
 	PYTHON="$PYTHON_SHEBANG"
+elif test "x$PYTHON" != "x:"; then
+	PYTHON="/usr/bin/env python3"
 fi
 
 # Custom check to expand full path
@@ -227,8 +229,24 @@ fi
 
 AC_SUBST(XDG_CONF_DIRS)
 
+# Custom KSH shebang option
+AC_MSG_CHECKING(custom ksh shebang)
+AC_ARG_WITH([ksh-shebang],
+	AC_HELP_STRING([--with-ksh-shebang="STRING"],[How to call ksh in shell scripts
+                      (specified WITHOUT hash and exclamation mark). This disables ksh
+                      autodetection and fully trusts what is provided by the user.
+                      One example of this option can be: "/usr/bin/env ksh". ]),
+	[KSH_SHEBANG=$withval],
+	[KSH_SHEBANG=""])
+AC_MSG_RESULT($KSH_SHEBANG)
+
 # Dependencies
 AC_PATH_PROGS([KSH],[ksh93 ksh],[no])
+if test "x$KSH_SHEBANG" != "x"; then
+	KSH="$KSH_SHEBANG"
+elif test x"$KSH" != x"no"; then
+	KSH="/usr/bin/env ksh"
+fi
 AC_CHECK_PROGS(SED, sed gsed, "no")
 AC_CHECK_PROGS(FVWM, fvwm fvwm2 fvwm3 ${FVWM_BIN}, "no")
 AC_CHECK_PROGS(CPP, cpp /lib/cpp /usr/lib/cpp /usr/local/lib/cpp, "no")

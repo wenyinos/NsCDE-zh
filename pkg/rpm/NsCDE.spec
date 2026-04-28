@@ -2,7 +2,6 @@ Name:		NsCDE-zh
 Version:	2.3.5
 Release:	1%{?dist}
 Summary:	Not so Common Desktop Environment - Chinese Localization
-AutoReqProv:	no
 
 License:	GPLv3
 URL:		https://github.com/wenyinos/NsCDE-zh
