@@ -244,8 +244,6 @@ AC_MSG_RESULT($KSH_SHEBANG)
 AC_PATH_PROGS([KSH],[ksh93 ksh],[no])
 if test "x$KSH_SHEBANG" != "x"; then
 	KSH="$KSH_SHEBANG"
-elif test x"$KSH" != x"no"; then
-	KSH="/usr/bin/env ksh"
 fi
 AC_CHECK_PROGS(SED, sed gsed, "no")
 AC_CHECK_PROGS(FVWM, fvwm fvwm2 fvwm3 ${FVWM_BIN}, "no")

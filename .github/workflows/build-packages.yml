@@ -287,6 +287,9 @@ jobs:
               python3 pkgconf libX11 libXext libXpm fvwm3 xsettingsd stalonetray \
               noto-basic noto-sc
             
+            # Create ksh symlink for compatibility
+            ln -sf /usr/local/bin/ksh93 /usr/local/bin/ksh
+            
             # Install standard python modules
             pkg install -y py311-psutil py311-pyxdg py311-pyyaml py311-qt5-pyqt || \
             pkg install -y py39-psutil py39-pyxdg py39-pyyaml py39-qt5-pyqt || true
