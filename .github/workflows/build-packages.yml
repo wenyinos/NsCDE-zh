@@ -311,9 +311,11 @@ jobs:
             find . -type f -o -type l | sed 's,^./,,' | sort > /tmp/plist
             
             # Create manifest with package metadata
-            cat > /tmp/manifest << 'MANIFEST_EOF'
+            VERSION="${{ needs.prepare.outputs.version }}"
+            FLATSIZE=$(du -sk ${STAGEDIR} | cut -f1)
+            cat > /tmp/manifest << MANIFEST_EOF
             name = "nscde-zh"
-            version = "VERSION_PLACEHOLDER"
+            version = "${VERSION}"
             origin = "x11-wm/nscde-zh"
             comment = "Retro UNIX desktop environment (CDE look) - Chinese Localization"
             desc = "NsCDE-zh is a Chinese localization of NsCDE, a retro CDE-style desktop environment built on FVWM."
@@ -322,9 +324,8 @@ jobs:
             abi = "FreeBSD:*:*"
             arch = "freebsd:*:amd64"
             prefix = "/usr"
+            flatsize = ${FLATSIZE}
             MANIFEST_EOF
-            sed -i "s/VERSION_PLACEHOLDER/${{ needs.prepare.outputs.version }}/" /tmp/manifest
-            echo "flatsize = $(du -sk ${STAGEDIR} | cut -f1)" >> /tmp/manifest
             
             # Create package
             pkg create -m /tmp/manifest -r ${STAGEDIR} -p /tmp/plist \
