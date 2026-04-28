@@ -24,7 +24,7 @@ optdepends=('xclip: Copy screen, window of area shot to X11 clipboard'
 'gkrellm: System monitor package fits nicely with NsCDE')
 provides=('nscde-zh')
 source=($pkgname-$pkgver.tar.gz::https://github.com/wenyinos/NsCDE-zh/archive/refs/tags/v${pkgver}_zh.tar.gz)
-sha256sums=('SKIP')
+sha256sums=('2f11fa09bf115e86e1769561bd8bcabfb0f4aa65fc6b90fbf7d767cc1e77a895')
 
 build() {
   cd "$srcdir/NsCDE-zh-${pkgver}_zh"

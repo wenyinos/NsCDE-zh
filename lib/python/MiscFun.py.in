@@ -36,7 +36,7 @@ def execWithShellThread(cmd):
             #this doesnt seem to work
             print (cmd)
             print ('ERROR')
-            print (e.output)
+            print (e)
             p=''
         return p
 def checkFile(filename):
@@ -51,4 +51,3 @@ def checkDir(filename):
     else:
         print ('DIRECTORY NOT FOUND: '+filename)
         sys.exit()
-

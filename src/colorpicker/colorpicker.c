@@ -59,6 +59,10 @@ int main(int argc, char *argv[]) {
 	}
 
 	Display *display = XOpenDisplay(NULL);
+	if (!display) {
+		fprintf(stderr, "Error: cannot open display.\n");
+		return 1;
+	}
 	Window root = DefaultRootWindow(display);
 
 	Cursor cursor = XCreateFontCursor(display, 130);
@@ -67,23 +71,30 @@ int main(int argc, char *argv[]) {
 	XWindowAttributes gwa;
 	XGetWindowAttributes(display, root, &gwa);
 
-	XImage *image = XGetImage(display, root, 0, 0, gwa.width, gwa.height, AllPlanes, ZPixmap);
 	XGrabKeyboard(display, root, 0, GrabModeAsync, GrabModeAsync, CurrentTime);
 
 	for(;;) {
 		XEvent e;
 		XNextEvent(display, &e);
 		if (e.type == ButtonPress && e.xbutton.button == Button1) {
-				unsigned long pixel = XGetPixel(image, e.xbutton.x_root, e.xbutton.y_root);
-				if (output_format & 0x1) {
-					printf("%d,%d,%d ", (pixel >> 0x10) & 0xFF, (pixel >> 0x08) & 0xFF, pixel & 0xFF);
-				}
-				if (output_format & 0x10) {
-					printf("#%06X", pixel);
-				}
-				puts("");
-				if (one_shot) {
-					break;
+				XGetWindowAttributes(display, root, &gwa);
+				if (e.xbutton.x_root >= 0 && e.xbutton.x_root < gwa.width &&
+				    e.xbutton.y_root >= 0 && e.xbutton.y_root < gwa.height) {
+					XImage *image = XGetImage(display, root, 0, 0, gwa.width, gwa.height, AllPlanes, ZPixmap);
+					if (image) {
+						unsigned long pixel = XGetPixel(image, e.xbutton.x_root, e.xbutton.y_root);
+						if (output_format & 0x1) {
+							printf("%d,%d,%d ", (pixel >> 0x10) & 0xFF, (pixel >> 0x08) & 0xFF, pixel & 0xFF);
+						}
+						if (output_format & 0x10) {
+							printf("#%06X", pixel);
+						}
+						puts("");
+						XDestroyImage(image);
+					}
+					if (one_shot) {
+						break;
+					}
 				}
 		} else if (e.type == ButtonPress ||
 				(e.type == KeyPress && (e.xkey.keycode == 53 || quit_on_keypress))) {
@@ -96,9 +107,6 @@ int main(int argc, char *argv[]) {
 	XUngrabKeyboard(display, CurrentTime);
 
 	XFreeCursor(display, cursor);
-
-	XDestroyWindow(display, root);
-	XDestroyImage(image);
 
 	XCloseDisplay(display);
 }

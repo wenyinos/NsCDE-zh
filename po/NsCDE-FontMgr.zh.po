@@ -74,7 +74,7 @@ msgid "Select Fonts Manually|Use Selected Font Set|Remove Fontset"
 msgstr "手动选择字体|使用所选字体集|删除字体集"
 
 msgid " Save "
-msgstr "保存"
+msgstr " 保存 "
 
 msgid "Save Font Set ..."
 msgstr "保存字体集 ..."

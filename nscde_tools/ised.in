@@ -73,9 +73,14 @@ do
    esac
 done
 
-RESULT=$(cat "${IFILE}" | $SED $SEDOPTS "$SEDCODE")
-if (($TO_STDOUT == 0)); then
-   echo "$RESULT" > "$IFILE"
+if ((TO_STDOUT == 0)); then
+   tmpfile=$(mktemp "${IFILE}.XXXXXX") || exit 1
+   if $SED $SEDOPTS "$SEDCODE" "$IFILE" > "$tmpfile"; then
+      mv "$tmpfile" "$IFILE"
+   else
+      rm -f "$tmpfile"
+      exit 1
+   fi
 else
-   echo "$RESULT"
+   $SED $SEDOPTS "$SEDCODE" "$IFILE"
 fi

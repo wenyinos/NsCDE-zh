@@ -108,8 +108,8 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(machdepdir)"
 PROGRAMS = $(machdep_PROGRAMS)
-colorpicker_SOURCES = colorpicker.c
-colorpicker_OBJECTS = colorpicker.$(OBJEXT)
+am_colorpicker_OBJECTS = colorpicker.$(OBJEXT)
+colorpicker_OBJECTS = $(am_colorpicker_OBJECTS)
 colorpicker_LDADD = $(LDADD)
 am__DEPENDENCIES_1 =
 colorpicker_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -142,8 +142,8 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = colorpicker.c
-DIST_SOURCES = colorpicker.c
+SOURCES = $(colorpicker_SOURCES)
+DIST_SOURCES = $(colorpicker_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -319,7 +319,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 xsessiondir = @xsessiondir@
 machdepdir = $(NSCDE_TOOLSDIR)/$(OS_PLUS_MACHINE_ARCH)
-colorpicker_SOURCE = colorpicker.c
+colorpicker_SOURCES = colorpicker.c
 LDADD = $(X_LIB)
 all: all-am
 

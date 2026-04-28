@@ -35,10 +35,10 @@ msgid " Use a photo or picture"
 msgstr " 使用照片或图片："
 
 msgid "Background Variant: "
-msgstr "背景变体："
+msgstr "背景变体： "
 
 msgid "Picture Variant: "
-msgstr "图片变体："
+msgstr "图片变体： "
 
 msgid ""
 " Default for this Workspace| Background Variant 1| Background Variant 2| Backg"

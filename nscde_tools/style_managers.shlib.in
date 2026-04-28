@@ -11,22 +11,22 @@
 # Used in other API functions and in managers
 function FindPalettes
 {
-   if [ -z $NSCDE_ROOT ]; then
+   if [ -z "$NSCDE_ROOT" ]; then
       echo "No NSCDE_ROOT defined. Exiting."
       exit 2
    fi
 
-   if [ -z $NSCDE_DATADIR ]; then
+   if [ -z "$NSCDE_DATADIR" ]; then
       echo "No NSCDE_DATADIR defined. Exiting."
       exit 2
    fi
 
-   SysPalettes=$(ls -1 ${NSCDE_DATADIR}/palettes/*.dp | awk -F "/" '{print $NF}' | sed 's/\.dp$//g')
+   SysPalettes=$(ls -1 "${NSCDE_DATADIR}"/palettes/*.dp | awk -F "/" '{print $NF}' | sed 's/\.dp$//g')
 
    if [ -d "${FVWM_USERDIR}/palettes" ]; then
-      ls -1 ${FVWM_USERDIR}/palettes/*.dp > /dev/null 2>&1
+      ls -1 "${FVWM_USERDIR}"/palettes/*.dp > /dev/null 2>&1
       if (($? == 0)); then
-         UserPalettes=$(ls -1 ${FVWM_USERDIR}/palettes/*.dp | awk -F "/" '{print $NF}' | sed 's/\.dp$//g')
+         UserPalettes=$(ls -1 "${FVWM_USERDIR}"/palettes/*.dp | awk -F "/" '{print $NF}' | sed 's/\.dp$//g')
       fi
    fi
 }
@@ -35,22 +35,22 @@ function FindPalettes
 # Used in other API functions and in managers
 function FindBackdrops
 {
-   if [ -z $NSCDE_ROOT ]; then
+   if [ -z "$NSCDE_ROOT" ]; then
       echo "No NSCDE_ROOT defined. Exiting."
       exit 2
    fi
 
-   if [ -z $NSCDE_DATADIR ]; then
+   if [ -z "$NSCDE_DATADIR" ]; then
       echo "No NSCDE_DATADIR defined. Exiting."
       exit 2
    fi
 
-   SysBackdrops=$(ls -1 ${NSCDE_DATADIR}/backdrops/*.pm | awk -F "/" '{print $NF}' | sed 's/\.pm$//g')
+   SysBackdrops=$(ls -1 "${NSCDE_DATADIR}"/backdrops/*.pm | awk -F "/" '{print $NF}' | sed 's/\.pm$//g')
 
    if [ -d "${FVWM_USERDIR}/backdrops" ]; then
-      ls -1 ${FVWM_USERDIR}/backdrops/*.pm > /dev/null 2>&1
+      ls -1 "${FVWM_USERDIR}"/backdrops/*.pm > /dev/null 2>&1
       if (($? == 0)); then
-         UserBackdrops=$(ls -1 ${FVWM_USERDIR}/backdrops/*.pm | awk -F "/" '{print $NF}' | sed 's/\.pm$//g')
+         UserBackdrops=$(ls -1 "${FVWM_USERDIR}"/backdrops/*.pm | awk -F "/" '{print $NF}' | sed 's/\.pm$//g')
       fi
    fi
 }
@@ -59,22 +59,22 @@ function FindBackdrops
 # Used in other API functions and in managers
 function FindPhotos
 {
-   if [ -z $NSCDE_ROOT ]; then
+   if [ -z "$NSCDE_ROOT" ]; then
       echo "No NSCDE_ROOT defined. Exiting."
       exit 2
    fi
 
-   if [ -z $NSCDE_DATADIR ]; then
+   if [ -z "$NSCDE_DATADIR" ]; then
       echo "No NSCDE_DATADIR defined. Exiting."
       exit 2
    fi
 
-   SysPhotos=$(ls -1 ${NSCDE_DATADIR}/photos/*.png | awk -F "/" '{print $NF}' | sed 's/\.png$//g')
+   SysPhotos=$(ls -1 "${NSCDE_DATADIR}"/photos/*.png | awk -F "/" '{print $NF}' | sed 's/\.png$//g')
 
    if [ -d "${FVWM_USERDIR}/photos" ]; then
-      ls -1 ${FVWM_USERDIR}/photos/*.png > /dev/null 2>&1
+      ls -1 "${FVWM_USERDIR}"/photos/*.png > /dev/null 2>&1
       if (($? == 0)); then
-         UserPhotos=$(ls -1 ${FVWM_USERDIR}/photos/*.png | awk -F "/" '{print $NF}' | sed 's/\.png$//g')
+         UserPhotos=$(ls -1 "${FVWM_USERDIR}"/photos/*.png | awk -F "/" '{print $NF}' | sed 's/\.png$//g')
       fi
    fi
 }
@@ -150,7 +150,7 @@ function GeneratePaletteMenu
    for palette in $SysPalettes $UserPalettes
    do
       @ECHONE@ "${palette}|"
-   done | $NSCDE_TOOLSDIR/ised -c 's/|$/\n/g' -o -f -
+   done | "${NSCDE_TOOLSDIR}/ised" -c 's/|$/\n/g' -o -f -
 }
 
 # Generates Backdrop Menu for ColorMgr and BackdropMgr List widgets
@@ -161,7 +161,7 @@ function GenerateBackdropMenu
    for backdrop in $SysBackdrops $UserBackdrops
    do
       @ECHONE@ "${backdrop}|"
-   done | $NSCDE_TOOLSDIR/ised -c 's/|$/\n/g' -o -f -
+   done | "${NSCDE_TOOLSDIR}/ised" -c 's/|$/\n/g' -o -f -
 }
 
 # Generates Photo Menu for ColorMgr and BackdropMgr List widgets
@@ -172,7 +172,7 @@ function GeneratePhotoMenu
    for photo in $SysPhotos $UserPhotos
    do
       @ECHONE@ "${photo}|"
-   done | $NSCDE_TOOLSDIR/ised -c 's/|$/\n/g' -o -f -
+   done | "${NSCDE_TOOLSDIR}/ised" -c 's/|$/\n/g' -o -f -
 }
 
 # Takes Number from FvwmScript List widget and finds base name of the Palette
@@ -186,8 +186,8 @@ function GetPaletteByNumber
    for palette in $SysPalettes $UserPalettes
    do
       (( cnt = cnt + 1 ))
-      if [ $Palettenum == $cnt ]; then
-         echo $palette
+      if [ "$Palettenum" == "$cnt" ]; then
+         echo "$palette"
       fi
    done
 }
@@ -203,8 +203,8 @@ function GetBackdropByNumber
    for backdrop in $SysBackdrops $UserBackdrops
    do
       (( cnt = cnt + 1 ))
-      if [ $Backdropnum == $cnt ]; then
-         echo $backdrop
+      if [ "$Backdropnum" == "$cnt" ]; then
+         echo "$backdrop"
       fi
    done
 }
@@ -220,8 +220,8 @@ function GetPhotoByNumber
    for photo in $SysPhotos $UserPhotos
    do
       (( cnt = cnt + 1 ))
-      if [ $Photonum == $cnt ]; then
-         echo $photo
+      if [ "$Photonum" == "$cnt" ]; then
+         echo "$photo"
       fi
    done
 }
@@ -240,4 +240,3 @@ function GetPaletteByName
       fi
    done
 }
-

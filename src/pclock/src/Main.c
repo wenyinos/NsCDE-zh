@@ -25,6 +25,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
+#include <limits.h>
 #include <getopt.h>
 #include <sys/time.h>
 
@@ -43,6 +45,7 @@ static void Version(void);
 static void Usage(void);
 static void SetOptions(int, char *[]);
 static void StringCopy(char *, const char *);
+static int ParseIntOption(const char *, const char *, int, int);
 
 /*****************************************************************************/
 
@@ -205,7 +208,7 @@ SetOptions(int ac, char *av[])
       break;
 
     case OPT_HANDS_WIDTH:
-      option.hand_width = atoi(optarg);
+      option.hand_width = ParseIntOption("--hands-width", optarg, 0, SIZE);
       break;
 
     case 'h':
@@ -214,11 +217,11 @@ SetOptions(int ac, char *av[])
       break;
 
     case OPT_HOUR_HAND_LENGTH:
-      option.hour_hand_length = atoi(optarg);
+      option.hour_hand_length = ParseIntOption("--hour-hand-length", optarg, 0, SIZE);
       break;
 
     case OPT_MINUTE_HAND_LENGTH:
-      option.minute_hand_length = atoi(optarg);
+      option.minute_hand_length = ParseIntOption("--minute-hand-length", optarg, 0, SIZE);
       break;
 
     case 'S':
@@ -226,11 +229,11 @@ SetOptions(int ac, char *av[])
       break;
 
     case OPT_SECOND_HAND_LENGTH:
-      option.second_hand_length = atoi(optarg);
+      option.second_hand_length = ParseIntOption("--second-hand-length", optarg, 0, SIZE);
       break;
 
     case OPT_SECOND_HAND_WIDTH:
-      option.second_hand_width = atoi(optarg);
+      option.second_hand_width = ParseIntOption("--second-hand-width", optarg, 0, SIZE);
       break;
 
     case 's':
@@ -266,6 +269,25 @@ StringCopy(char *destination, const char *source)
 {
   strncpy(destination, source, STRING_LENGTH);
   destination[STRING_LENGTH - 1] = '\0';
+}
+
+/*****************************************************************************/
+
+static int
+ParseIntOption(const char *optname, const char *value, int min, int max)
+{
+  char *endptr = NULL;
+  long parsed = 0;
+
+  errno = 0;
+  parsed = strtol(value, &endptr, 10);
+  if (errno != 0 || endptr == value || *endptr != '\0' || parsed < min || parsed > max) {
+    fprintf(stderr, "ERR: invalid value for %s: %s (expected %d..%d)\n",
+            optname, value, min, max);
+    exit(EXIT_FAILURE);
+  }
+
+  return (int) parsed;
 }
 
 /******************************************************************************

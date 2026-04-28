@@ -12,7 +12,7 @@ BuildRequires:  gcc
 BuildRequires:	autoconf
 BuildRequires:	automake
 BuildRequires:	make
-BuildRequires:	gettext libX11-devel libXt-devel libXext-devel libXpm-devel
+BuildRequires:	gettext libX11-devel libXext-devel libXpm-devel
 %if 0%{?fedora} || 0%{?rhel_version} || 0%{?centos_version}
 BuildRequires:  glibc-headers
 %endif
@@ -21,7 +21,7 @@ BuildRequires:  glibc-devel
 %endif
 Requires:	xterm ksh sed fvwm3 cpp xsettingsd stalonetray dunst xclip xdotool
 Requires:	python3-pyxdg python3-psutil
-Requires:	qterminal pcmanfm-qt gvim pavucontrol-qt arandr kcalc
+Recommends:	qterminal pcmanfm-qt gvim pavucontrol-qt arandr kcalc
 %if 0%{?fedora} || 0%{?rhel_version} || 0%{?centos_version}
 Requires: python3-yaml PyQt5 qt5-qtstyleplugins dex-autostart groff-base dejavu-serif-fonts
 Requires: google-noto-sans-cjk-fonts google-noto-sans-cjk-vf-fonts google-noto-sans-mono-cjk-vf-fonts google-noto-sans-mono-fonts
@@ -79,6 +79,10 @@ autoreconf -ivf
 %{_sysconfdir}/xdg/menus/nscde-applications.menu
 
 %changelog
+* Tue Apr 28 2026 wenyinos <admin@wenyinos.com>  - 2.3.4-1
+- Update to 2.3.4 release
+- Move desktop helper apps from hard Requires to Recommends
+
 * Wed Apr 15 2026 wenyinos <admin@wenyinos.com>  - 2.3.2-1
 - Update to 2.3.2 release
 

@@ -54,8 +54,7 @@ static GC gc;
 static Atom wm_delete_window;
 static Pixel back_pixel, hand_pixel, second_hand_pixel;
 static Pixmap back_pm, mask_pm, all_pm;
-static int old_hour = 0, old_minute = 0;
-static double old_second;
+static int old_hour = 0, old_minute = 0, old_second = -1;
 
 /*****************************************************************************/
 
@@ -167,6 +166,7 @@ CreateWindow(int ac, char *av[])
     exit(EXIT_FAILURE);
   }
   XSetWMName(display, window, &window_name);
+  XFree(window_name.value);
 
   gcm = GCForeground | GCBackground | GCGraphicsExposures;
   gcv.foreground = hand_pixel;

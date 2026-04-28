@@ -22,6 +22,10 @@ RUN_DEPENDS=	ksh93:shells/ksh93 \
 		fvwm3:x11-wm/fvwm3 \
 		xsettingsd:x11/xsettingsd \
 		stalonetray:x11/stalonetray \
+		xdotool:x11/xdotool \
+		xterm:x11/xterm \
+		graphics/ImageMagick7 \
+		groff:textproc/groff \
 		python3:lang/python3 \
 		${PYTHON_PKGNAMEPREFIX}psutil>=0:sysutils/py-psutil@${PY_FLAVOR} \
 		${PYTHON_PKGNAMEPREFIX}pyxdg>=0:devel/py-pyxdg@${PY_FLAVOR} \

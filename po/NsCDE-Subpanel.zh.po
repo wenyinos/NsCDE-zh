@@ -80,10 +80,10 @@ msgid "Subpanel Name:"
 msgstr "子面板名称："
 
 msgid "Subpanel Title List Width: "
-msgstr "子面板标题列表宽度："
+msgstr "子面板标题列表宽度： "
 
 msgid "This Subpanel is Enabled: "
-msgstr "此子面板已启用："
+msgstr "此子面板已启用： "
 
 msgid "Default"
 msgstr "默认"

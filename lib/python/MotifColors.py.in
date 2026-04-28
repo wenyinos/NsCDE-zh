@@ -305,7 +305,7 @@ def round_colors_6():
         sel[a]='#'+sel[a][1:3]+sel[a][5:7]+sel[a][9:11]
 
 def readPalette(filename):
-    with open(filename) as f:lines=f.read().splitlines() 
+    with open(filename, encoding='utf-8') as f:lines=f.read().splitlines() 
     return lines
     
 use_4_colors=False
@@ -339,15 +339,15 @@ def colorize_bg(infile,outfile,palettefile,n,colorsetnr):
         use_4_colors=False
     initcolors(palette)
     round_colors_6()
-    with open(infile) as f:lines=f.read().splitlines() 
-    for i in range(0,20): #color defs are somewheres in the first 20 lines or so
+    with open(infile, encoding='utf-8') as f:lines=f.read().splitlines() 
+    for i in range(min(20, len(lines))): #color defs are somewheres in the first 20 lines or so
         lines[i]=re.sub('ts_color',ts[colorsetnr],lines[i]) 
         lines[i]=re.sub('bg_color',bg[colorsetnr],lines[i]) 
         lines[i]=re.sub('bs_color',bs[colorsetnr],lines[i]) 
         lines[i]=re.sub('sel_color',sel[colorsetnr],lines[i]) 
-    with open(outfile, 'w') as f: 
+    with open(outfile, 'w', encoding='utf-8') as f: 
         for l in lines:
-            f.write(l)
+            f.write(l + '\n')
 
 
 
@@ -359,5 +359,4 @@ def colorize_bg(infile,outfile,palettefile,n,colorsetnr):
 if __name__ == '__main__':
 
     print ('Debug me')
-
 

@@ -18,7 +18,7 @@ EchoInfo=0
 
 # Load common functions
 if [ -f "${NSCDE_TOOLSDIR}/style_managers.shlib" ]; then
-   . ${NSCDE_TOOLSDIR}/style_managers.shlib
+   . "${NSCDE_TOOLSDIR}/style_managers.shlib"
 else
    echo "Error: cannot source ${NSCDE_TOOLSDIR}/style_managers.shlib."
    exit 1
@@ -31,8 +31,9 @@ fi
 # Sanity check file importing new pixmap for Backdrops
 function CheckBackdrop
 {
-   if [ -x $(type -p file) ]; then
-      file $1 | grep -q 'X pixmap image'
+   file_bin=$(type -p file)
+   if [ -n "$file_bin" ] && [ -x "$file_bin" ]; then
+      "$file_bin" "$1" | grep -q 'X pixmap image'
       if (($? == 0)); then
          echo "xpixmap"
       else
@@ -44,7 +45,8 @@ function CheckBackdrop
 # Sanity check file importing new Photo
 function CheckPicture
 {
-   if [ -x $(type -p file) ]; then
+   file_bin=$(type -p file)
+   if [ -n "$file_bin" ] && [ -x "$file_bin" ]; then
       echo "$1" | egrep -iq '\.(png|xpm|jpg|jpeg|gif|tiff)'
       if (($? == 0)); then
          echo "pic"
@@ -54,7 +56,7 @@ function CheckPicture
          else
             echo "conv"
          fi
-         echo "${1##*/}" | $NSCDE_TOOLSDIR/ised -c 's/\(.*\)\.\(.*$\)/\1/g' -o -f -
+         echo "${1##*/}" | "${NSCDE_TOOLSDIR}/ised" -c 's/\(.*\)\.\(.*$\)/\1/g' -o -f -
       else
          echo "notpic"
       fi
@@ -67,15 +69,15 @@ function GenerateBackdropPreview
       EchoInfo=0
    fi
 
-   GetBackdrop $1
+   GetBackdrop "$1"
 
-   if [ -z $Desk ]; then
+   if [ -z "$Desk" ]; then
       Desk=1
    fi
 
-   echo $Desk | grep -q ':'
+   echo "$Desk" | grep -q ':'
    if (($? == 0)); then
-      echo $Desk | while IFS=":" read deskno colorvariant
+      echo "$Desk" | while IFS=":" read deskno colorvariant
       do
          Desk=$deskno
          ColorDesk=$colorvariant
@@ -106,29 +108,29 @@ function GenerateBackdropPreview
    fi
 
    if (($PreviewMode == 0)); then
-      mkdir -p ${FVWM_USERDIR}/backer
-      ${NSCDE_TOOLSDIR}/palette_colorgen \
-       -p ${PaletteNamePath} -n $Ncolors \
-       -i ${BackdropNamePath} -P $ColorVariant \
-       -b > ${FVWM_USERDIR}/backer/Desk${Desk}-${1}.pm
+      mkdir -p "${FVWM_USERDIR}/backer"
+      "${NSCDE_TOOLSDIR}/palette_colorgen" \
+       -p "${PaletteNamePath}" -n "$Ncolors" \
+       -i "${BackdropNamePath}" -P "$ColorVariant" \
+       -b > "${FVWM_USERDIR}/backer/Desk${Desk}-${1}.pm"
 
-      grep -q "Colorset 3${Desk}" ${FVWM_USERDIR}/Backdrops.fvwmgen 2>/dev/null
+      grep -q "Colorset 3${Desk}" "${FVWM_USERDIR}/Backdrops.fvwmgen" 2>/dev/null
       if (($? == 0)); then
          OldBackdrop=$(egrep "Colorset 3${Desk}( bg \\$\[bg\.cs..\],)? (Tiled|Aspect)?Pixmap (.*)" "${FVWM_USERDIR}/Backdrops.fvwmgen")
-         $NSCDE_TOOLSDIR/ised -c "s/Colorset 3${Desk}\( bg \$\[bg\.cs..\],\)\? \(Tiled\|Aspect\)\?Pixmap \(.*\)/Colorset 3${Desk} TiledPixmap \$[FVWM_USERDIR]\/backer\/Desk${Desk}-${1}.pm/g" -f "${FVWM_USERDIR}/Backdrops.fvwmgen"
+         "${NSCDE_TOOLSDIR}/ised" -c "s/Colorset 3${Desk}\( bg \$\[bg\.cs..\],\)\? \(Tiled\|Aspect\)\?Pixmap \(.*\)/Colorset 3${Desk} TiledPixmap \$[FVWM_USERDIR]\/backer\/Desk${Desk}-${1}.pm/g" -f "${FVWM_USERDIR}/Backdrops.fvwmgen"
          if [ -f "${FVWM_USERDIR}/backer/${OldBackdrop##*/}" ] && [ "${OldBackdrop##*/}" != "Desk${Desk}-${1}.pm" ]; then
             rm -f "${FVWM_USERDIR}/backer/${OldBackdrop##*/}"
          fi
       else
-         echo "Colorset 3${Desk} TiledPixmap \$[FVWM_USERDIR]/backer/Desk${Desk}-${1}.pm" >> ${FVWM_USERDIR}/Backdrops.fvwmgen
+         echo "Colorset 3${Desk} TiledPixmap \$[FVWM_USERDIR]/backer/Desk${Desk}-${1}.pm" >> "${FVWM_USERDIR}/Backdrops.fvwmgen"
       fi
    else
-      mkdir -p ${FVWM_USERDIR}/tmp
-      ${NSCDE_TOOLSDIR}/palette_colorgen \
-       -p ${PaletteNamePath} -n $Ncolors \
-       -i ${BackdropNamePath} -P $ColorVariant \
-       -b > ${FVWM_USERDIR}/tmp/backer-${1}.pm
-       echo ${FVWM_USERDIR}/tmp/backer-${1}.pm
+      mkdir -p "${FVWM_USERDIR}/tmp"
+      "${NSCDE_TOOLSDIR}/palette_colorgen" \
+       -p "${PaletteNamePath}" -n "$Ncolors" \
+       -i "${BackdropNamePath}" -P "$ColorVariant" \
+       -b > "${FVWM_USERDIR}/tmp/backer-${1}.pm"
+       echo "${FVWM_USERDIR}/tmp/backer-${1}.pm"
    fi
 }
 
@@ -138,7 +140,7 @@ function GeneratePhotoPreview
       EchoInfo=0
    fi
 
-   GetPhoto $1
+   GetPhoto "$1"
 
    case $Desk in
       1) bgcs='\$\[bg\.cs40\]' ;;
@@ -152,11 +154,11 @@ function GeneratePhotoPreview
    esac
 
    if (($PreviewMode == 0)); then
-      grep -q "Colorset 3${Desk}" ${FVWM_USERDIR}/Backdrops.fvwmgen 2>/dev/null
+      grep -q "Colorset 3${Desk}" "${FVWM_USERDIR}/Backdrops.fvwmgen" 2>/dev/null
       if (($? == 0)); then
          if [ -s "$PhotoNamePath" ]; then
             if [ "x$ScreenXY" != "x" ]; then
-               convert -resize ${ScreenXY} "$PhotoNamePath" "${FVWM_USERDIR}/backer/Desk${Desk}-${PhotoNamePath##*/}"
+               convert -resize "${ScreenXY}" "$PhotoNamePath" "${FVWM_USERDIR}/backer/Desk${Desk}-${PhotoNamePath##*/}"
             else
                cp -f "$PhotoNamePath" "${FVWM_USERDIR}/backer/Desk${Desk}-${PhotoNamePath##*/}"
             fi
@@ -167,7 +169,7 @@ function GeneratePhotoPreview
             fi
             OldBackdrop=$(egrep "Colorset 3${Desk}( bg ${bgcs},)? (Tiled|Aspect)?Pixmap (.*)" "${FVWM_USERDIR}/Backdrops.fvwmgen")
             sededpath=$(echo "$ConvertedPhoto" | sed 's/\//\\\//g')
-            $NSCDE_TOOLSDIR/ised -c "s/Colorset 3${Desk}\( bg ${bgcs},\)\? \(Tiled\|Aspect\)\?Pixmap \(.*\)/Colorset 3${Desk} bg ${bgcs}, $PixmapVariant $sededpath/g" -f "${FVWM_USERDIR}/Backdrops.fvwmgen"
+            "${NSCDE_TOOLSDIR}/ised" -c "s/Colorset 3${Desk}\( bg ${bgcs},\)\? \(Tiled\|Aspect\)\?Pixmap \(.*\)/Colorset 3${Desk} bg ${bgcs}, $PixmapVariant $sededpath/g" -f "${FVWM_USERDIR}/Backdrops.fvwmgen"
             if [ -f "${FVWM_USERDIR}/backer/${OldBackdrop##*/}" ] && [[ "${OldBackdrop##*/}" != "Desk${Desk}-${1}."@(png|xpm) ]]; then
                rm -f "${FVWM_USERDIR}/backer/${OldBackdrop##*/}"
             fi
@@ -177,7 +179,7 @@ function GeneratePhotoPreview
       else
          if [ -s "$PhotoNamePath" ]; then
             if [ "x$ScreenXY" != "x" ]; then
-               convert -resize $ScreenXY "$PhotoNamePath" "${FVWM_USERDIR}/backer/Desk${Desk}-${PhotoNamePath##*/}"
+               convert -resize "${ScreenXY}" "$PhotoNamePath" "${FVWM_USERDIR}/backer/Desk${Desk}-${PhotoNamePath##*/}"
             else
                cp -f "$PhotoNamePath" "${FVWM_USERDIR}/backer/Desk${Desk}-${PhotoNamePath##*/}"
             fi
@@ -187,7 +189,7 @@ function GeneratePhotoPreview
                echo "Error: convert of photo $PhotoNamePath did not suceeded."
             fi
             bgcs_clean=$(echo "${bgcs}" | sed 's/\\//g')
-            echo "Colorset 3${Desk} bg ${bgcs_clean}, $PixmapVariant $ConvertedPhoto" >> ${FVWM_USERDIR}/Backdrops.fvwmgen
+            echo "Colorset 3${Desk} bg ${bgcs_clean}, $PixmapVariant $ConvertedPhoto" >> "${FVWM_USERDIR}/Backdrops.fvwmgen"
          else
             echo "Error getting image path for $1."
          fi
@@ -195,9 +197,9 @@ function GeneratePhotoPreview
 
    else
       # Must be the same width size as ItemDraw preview wiget (4) in FvwmScript BackdropMgr
-      mkdir -p ${FVWM_USERDIR}/tmp
-      convert -resize 260 $PhotoNamePath ${FVWM_USERDIR}/tmp/backer-${1}.png
-      echo ${FVWM_USERDIR}/tmp/backer-${1}.png
+      mkdir -p "${FVWM_USERDIR}/tmp"
+      convert -resize 260 "$PhotoNamePath" "${FVWM_USERDIR}/tmp/backer-${1}.png"
+      echo "${FVWM_USERDIR}/tmp/backer-${1}.png"
    fi
 }
 
@@ -231,10 +233,10 @@ do
          export EchoInfo=1
       ;;
       C)
-         CheckBackdrop $OPTARG
+         CheckBackdrop "$OPTARG"
       ;;
       T)
-         CheckPicture $OPTARG
+         CheckPicture "$OPTARG"
       ;;
       c)
          Ncolors="$OPTARG"
@@ -252,10 +254,10 @@ do
          GenerateBackdropPreview "$OPTARG"
       ;;
       x)
-         export ScreenXY=$OPTARG
+         export ScreenXY="$OPTARG"
       ;;
       a)
-         export PixmapVariant=$OPTARG
+         export PixmapVariant="$OPTARG"
       ;;
       s)
          GeneratePhotoPreview "$OPTARG"
@@ -273,7 +275,7 @@ do
          GetPhoto "$OPTARG"
       ;;
       n)
-         GetBackdropByNumber $OPTARG
+         GetBackdropByNumber "$OPTARG"
       ;;
       h)
          echo "Usage: ${0##*/} <options ...>"

@@ -48,7 +48,7 @@ def cmdoptions():
     return conffile, typecf, section, key, value, removekey
 
 def removew(d):
-    for k, v in d.iteritems():
+    for k, v in d.items():
         if isinstance(v, dict):
             removew(v)
         else:
@@ -82,7 +82,7 @@ def main ():
     if typecf == 'properties':
         try:
             with open(conffile, 'r+') as cff:
-                props = dict(line.split('=', 1) for line in cff)
+                props = dict(line.split('=', 1) for line in cff if '=' in line)
                 checkprops = props
                 checkprops = [x.strip() for x in checkprops]
                 if not key in checkprops:
@@ -97,8 +97,7 @@ def main ():
                                 cff.write(key + ' = ' + value + '\n')
                         else:
                             cff.write(dkey + '=' + val)
-            cff.close()
-        except:
+        except (FileNotFoundError, PermissionError, IOError, OSError, ValueError):
             print ("Cannot open file", conffile, "trying to create it.")
             fh = open(conffile, 'w')
             fh.write(key + ' = ' + value + '\n')
@@ -106,6 +105,4 @@ def main ():
 
 # Action ...
 if __name__ == '__main__':
-    cmdoptions()
     main()
-

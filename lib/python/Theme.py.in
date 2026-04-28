@@ -12,7 +12,6 @@ import Globals
 import os
 from MotifColors import colorize_bg
 from os.path import expanduser
-from MiscFun import *
 import ThemeGtk
 import shutil
 
@@ -27,9 +26,11 @@ class Theme():
         homedotthemes=os.path.join(userhome,'.themes')
         if not os.path.exists(homedotthemes):
             print ('Dot themes dir not found. Creating: '+homedotthemes)
-            try: os.makedirs(homedotthemes)
-            except OSError as e: sys.stderr.write("Failed to create ~/.themes stop.\n"), e
-            sys.exit(2)
+            try:
+                os.makedirs(homedotthemes)
+            except OSError as e:
+                sys.stderr.write(f"Failed to create ~/.themes: {e}\n")
+                sys.exit(2)
 
         # if .themes/NsCDE not exist: copy
         if os.path.exists(homedotthemes):
@@ -74,4 +75,3 @@ class Theme():
             filename=os.path.join(Globals.userthemedir,'gtk-3.20/cdecolors.css')
             ThemeGtk.gengtk3colors(filename,self.opts)
             ThemeGtk.updateThemeImages(self.opts)
-

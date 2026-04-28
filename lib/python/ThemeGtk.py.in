@@ -13,14 +13,15 @@ import sys
 import shutil
 
 try:
-   from PyQt4 import QtCore, QtGui
-except ImportError:
    from PyQt5 import QtCore, QtGui
+   MASK_OUT_COLOR = QtCore.Qt.MaskOutColor
+except ImportError:
+   from PyQt6 import QtCore, QtGui
+   MASK_OUT_COLOR = QtCore.Qt.MaskMode.MaskOutColor
 
 from SpritesGtk2 import spriteLWHXYgtk2
 import MotifColors
 import Globals
-from MiscFun import *
 
 # Generate gtkrc-2.0 #######################################
 # generates only the color definitions cdecolors.rc
@@ -147,7 +148,7 @@ def gengtk3colors(filename,opts):
             f.write(l)
 
 def replaceColorsInPixmap(pixmap,fromcolor,tocolor):
-        mask = pixmap.createMaskFromColor(QtGui.QColor(fromcolor), QtCore.Qt.MaskOutColor)
+        mask = pixmap.createMaskFromColor(QtGui.QColor(fromcolor), MASK_OUT_COLOR)
         p = QtGui.QPainter(pixmap)
         p.setPen(QtGui.QColor(tocolor))
         p.drawPixmap(pixmap.rect(), mask, mask.rect())
@@ -232,4 +233,3 @@ def updateThemeImages(opts):
         img=tmppixmap.copy(rect)
         targetimagefile=os.path.join(targetdir,label+'.png')
         img.save(targetimagefile)
-

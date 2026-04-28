@@ -6,12 +6,12 @@
 # Licence: GPLv3
 #
 
-if [ -z $NSCDE_ROOT ]; then
+if [ -z "$NSCDE_ROOT" ]; then
    echo "Error: NSCDE_ROOT is not set. Exiting."
    exit 2
 fi
 
-if [ -z $NSCDE_DATADIR ]; then
+if [ -z "$NSCDE_DATADIR" ]; then
    echo "Error: NSCDE_DATADIR is not set. Exiting."
    exit 2
 fi
@@ -30,24 +30,24 @@ FNUMS=$(echo "$FNAMES" | sort -u | grep -En '.*')
 
 function findfontsets
 {
-   if [ -z $NSCDE_ROOT ]; then
+   if [ -z "$NSCDE_ROOT" ]; then
       echo "No NSCDE_ROOT defined. Exiting."
       exit 2
    fi
 
-   if [ -z $NSCDE_DATADIR ]; then
+   if [ -z "$NSCDE_DATADIR" ]; then
       echo "No NSCDE_DATADIR defined. Exiting."
       exit 2
    fi
 
-   SysFontsetsOut=$(ls -1 ${NSCDE_DATADIR}/fontsets/*.fontset)
+   SysFontsetsOut=$(ls -1 "${NSCDE_DATADIR}"/fontsets/*.fontset)
    SysFontsets=$(echo "$SysFontsetsOut" | awk -F "/" '{print $NF}' | sed 's/\.fontset$//g')
    SysFontsetsCnt=$(echo "$SysFontsetsOut" | wc -l)
 
    if [ -d "${FVWM_USERDIR}/fontsets" ]; then
-      ls -1 ${FVWM_USERDIR}/fontsets/*.fontset > /dev/null 2>&1
+      ls -1 "${FVWM_USERDIR}"/fontsets/*.fontset > /dev/null 2>&1
       if (($? == 0)); then
-         UserFontsetsOut=$(ls -1 ${FVWM_USERDIR}/fontsets/*.fontset)
+         UserFontsetsOut=$(ls -1 "${FVWM_USERDIR}"/fontsets/*.fontset)
          UserFontsets=$(echo "$UserFontsetsOut" | awk -F "/" '{print $NF}' | sed 's/\.fontset$//g')
          UserFontsetsCnt=$(echo "$UserFontsetsOut" | wc -l)
       else
@@ -66,16 +66,16 @@ function fontsetsmenu
    for fontset in $SysFontsets $UserFontsets
    do
       @ECHONE@ "${fontset}|"
-   done | $NSCDE_TOOLSDIR/ised -c 's/|$/\n/g' -o -f -
+   done | "${NSCDE_TOOLSDIR}/ised" -c 's/|$/\n/g' -o -f -
 
-   echo $fontsetsnum
+   echo "$fontsetsnum"
 }
 
 function getfontsetname
 {
    findfontsets
    FontsetName=$(echo "$SysFontsets" "$UserFontsets" | tr ' ' '\n' | grep -En '.*' | egrep "^${FontsetNum}:" | cut -d":" -f2)
-   echo $FontsetName
+   echo "$FontsetName"
    if [ -s "$NSCDE_DATADIR/fontsets/${FontsetName}.fontset" ]; then
       echo "${NSCDE_DATADIR}/fontsets/"
    elif [ -s "${FVWM_USERDIR}/fontsets/${FontsetName}.fontset" ]; then
@@ -87,7 +87,7 @@ function getfontsetnum
 {
    findfontsets
    FontsetNum=$(echo "$SysFontsets" "$UserFontsets" | tr ' ' '\n' | grep -En '.*' | egrep "^[[:digit:]]+:${FontsetFindName}$" | cut -d":" -f1)
-   echo $FontsetNum
+   echo "$FontsetNum"
 }
 
 function getfontnumber
@@ -96,9 +96,9 @@ function getfontnumber
    do
       # Handle fonts with aliases separated by a comma
       FontNum=$fontnum
-      fnname=$(getfontname $fontnum)
+      fnname=$(getfontname "$fontnum")
       if [ "${fnname}" == "${SelectedFont}" ]; then
-         echo ${fontnum}
+         echo "${fontnum}"
       fi
    done
 }
@@ -119,7 +119,7 @@ function menugen
 {
    echo "$FNAMES" | sort -u | while IFS=":" read fontname styles
    do
-      echo $fontname | grep -q ','
+      echo "$fontname" | grep -q ','
       if (($? == 0)); then
          fontname=$(echo "$fontname" | awk -F"," '{ print $NF }')
       fi
@@ -128,17 +128,17 @@ function menugen
    done
 
    echo "$fontnames" | sed 's/^|//g'
-   echo $fntcnt
+   echo "$fntcnt"
 }
 
 StylesFmt=0
 function getfontstyles
 {
    stylelist=""
-   echo $FONTS | egrep "$SelectedFont" | while IFS=":" read fontname styles
+   echo "$FONTS" | egrep "$SelectedFont" | while IFS=":" read fontname styles
    do
-      styles=$(echo $styles | sed 's/style=//g')
-      echo $fontname | grep -q ','
+      styles=$(echo "$styles" | sed 's/style=//g')
+      echo "$fontname" | grep -q ','
       if (($? == 0)); then
          fontname=$(echo "$fontname" | awk -F"," '{ print $NF }')
       fi
@@ -177,7 +177,7 @@ function splitfontstr
    # Call getfontnumber
    fontnumber=$(getfontnumber)
    if [ "x$fontnumber" != "x" ]; then
-      echo $fontnumber
+      echo "$fontnumber"
    else
       echo 0
    fi
@@ -187,14 +187,14 @@ function splitfontstr
    StylesFmt="list"
    StylesOut=$(IFS=" " getfontstyles | grep -En '.*' | egrep "^[1-9]{1,}:${RevFontStyle}$" | cut -d":" -f1)
    if [ "x$StylesOut" != "x" ]; then
-      echo $StylesOut
+      echo "$StylesOut"
    else
       echo 1
    fi
-   echo $RevFontSize
+   echo "$RevFontSize"
 
-   echo $RevFontName
-   echo $RevFontStyle
+   echo "$RevFontName"
+   echo "$RevFontStyle"
 }
 
 function matchfont
@@ -221,7 +221,7 @@ function genxresourcedefs
    echo '! Licence: GPLv3'
    echo '!'
 
-   if [ -n $XFT_USE_DPI ]; then
+   if [ -n "$XFT_USE_DPI" ]; then
       echo "$XFT_USE_DPI" | egrep -q "^[[:digit:]]+$"
       if (($? == 0)); then
          @ECHONE@ "\nXft.dpi: ${XFT_USE_DPI}\n\n"
@@ -239,7 +239,7 @@ function genxresourcedefs
          cppfvar=$(echo "$fvar" | sed 's/\./_/g' | tr '[a-z]' '[A-Z]' | sed 's/ $//g')
          cppfname=$(echo "$xftstr" | cut -d":" -f2)
          cppfstyle=$(echo "$xftstr" | cut -d":" -f4)
-         cppfsize=$(echo "$xftstr" | cut -d":" -f5 | $NSCDE_TOOLSDIR/ised -c 's/size=\(.*\)/\1/g; s/\([[:digit:]]\+\)\.\([[:digit:]]\+\)/\1/g' -o -f -)
+         cppfsize=$(echo "$xftstr" | cut -d":" -f5 | "${NSCDE_TOOLSDIR}/ised" -c 's/size=\(.*\)/\1/g; s/\([[:digit:]]\+\)\.\([[:digit:]]\+\)/\1/g' -o -f -)
          echo "#define ${cppfvar}_NAME" "$cppfname"
          echo "#define ${cppfvar}_STYLE" "$cppfstyle"
          echo "#define ${cppfvar}_SIZE" "$cppfsize"
@@ -264,7 +264,7 @@ function miscintegrations
    DunstFont=$(echo "$XftFontStr" | awk -F: '{ print $2, $4, $5 }' | sed 's/pixelsize=//g; s/size=//g')
    if [ -r "$FVWM_USERDIR/Dunst.conf" ]; then
       if [ -n $NewFont ]; then
-         $NSCDE_TOOLSDIR/confset -t ini -c "$FVWM_USERDIR/Dunst.conf" -s global -k font -v "$DunstFont"
+         "${NSCDE_TOOLSDIR}/confset" -t ini -c "$FVWM_USERDIR/Dunst.conf" -s global -k font -v "$DunstFont"
       fi
    fi
 }
@@ -334,4 +334,3 @@ do
       ;;
    esac
 done
-

@@ -18,6 +18,28 @@
 
 ---
 
+## 处理状态更新（2026-04-28）
+
+### 已处理完成
+
+- ✅ Critical：`C1-C15`（15/15）
+- ✅ High：`H1-H22`（22/22）
+
+### 本轮补齐（High 尾项）
+
+- `nscde_tools/bootstrap.in`
+- `nscde_tools/style_managers.shlib.in`
+- `nscde_tools/fontmgr.in`
+- `nscde_tools/colormgr.in`
+- `nscde_tools/backdropmgr.in`
+
+### 说明
+
+- 本报告正文保留审计时的问题描述与修复建议，作为审计基线。
+- 上述状态反映当前仓库修复进度（截至 2026-04-28）。
+
+---
+
 ## 一、🔴 Critical 问题（必须立即修复）
 
 ### C1. `nscde_tools/ised.in:76-78` — 竞态条件导致数据丢失

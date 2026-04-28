@@ -26,7 +26,7 @@ msgid "Default"
 msgstr "默认"
 
 msgid "Configuration Section: "
-msgstr "配置部分："
+msgstr "配置部分： "
 
 msgid " Window Behavior| Window Icons| Page Edges| Animation"
 msgstr " 窗口行为| 窗口图标| 页面边缘| 动画"
