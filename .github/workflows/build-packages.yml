@@ -306,15 +306,29 @@ jobs:
             mkdir -p ${STAGEDIR}
             make DESTDIR=${STAGEDIR} install
             
-            # Generate plist for package
+            # Generate plist for package (files only, directories auto-detected)
             cd ${STAGEDIR}
             find . -type f -o -type l | sed 's,^./,,' | sort > /tmp/plist
-            find . -type d -empty | sed 's,^./,@dir ,' | sort >> /tmp/plist
+            
+            # Create manifest with package metadata
+            cat > /tmp/manifest << 'MANIFEST_EOF'
+            name = "nscde-zh"
+            version = "VERSION_PLACEHOLDER"
+            origin = "x11-wm/nscde-zh"
+            comment = "Retro UNIX desktop environment (CDE look) - Chinese Localization"
+            desc = "NsCDE-zh is a Chinese localization of NsCDE, a retro CDE-style desktop environment built on FVWM."
+            maintainer = "admin@wenyinos.com"
+            www = "https://github.com/wenyinos/NsCDE-zh"
+            abi = "FreeBSD:*:*"
+            arch = "freebsd:*:amd64"
+            prefix = "/usr"
+            MANIFEST_EOF
+            sed -i "s/VERSION_PLACEHOLDER/${{ needs.prepare.outputs.version }}/" /tmp/manifest
+            echo "flatsize = $(du -sk ${STAGEDIR} | cut -f1)" >> /tmp/manifest
             
             # Create package
-            pkg create -r ${STAGEDIR} -p /tmp/plist \
-              -o ${GITHUB_WORKSPACE} \
-              -M ${GITHUB_WORKSPACE}/pkg/freebsd/pkg-descr
+            pkg create -m /tmp/manifest -r ${STAGEDIR} -p /tmp/plist \
+              -o ${GITHUB_WORKSPACE}
 
       - name: Upload FreeBSD artifacts
         uses: actions/upload-artifact@v4
