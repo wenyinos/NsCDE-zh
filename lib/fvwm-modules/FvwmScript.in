@@ -5,7 +5,7 @@
 OS_PLUS_MACHINE_ARCH=$(uname -sm | tr ' ' '_')
 if [ -x "$NSCDE_LIBDIR/$OS_PLUS_MACHINE_ARCH/XOverrideFontCursor.so" ]; then
    if [ "x$LD_PRELOAD" != "x" ]; then
-      echo "$LD_PRELOAD" | egrep -q "XOverrideFontCursor\.so"
+      echo "$LD_PRELOAD" | grep -E -q "XOverrideFontCursor\.so"
       if (($? != 0)); then
          ld_preload_wc=$(echo "$LD_PRELOAD" | wc -c)
          ld_preload_lastchar=$(($ld_preload_wc - 1))
@@ -13,7 +13,7 @@ if [ -x "$NSCDE_LIBDIR/$OS_PLUS_MACHINE_ARCH/XOverrideFontCursor.so" ]; then
          if [ "$ld_preload_lastletter" == ":" ]; then
             export LD_PRELOAD="$LD_PRELOAD:$NSCDE_LIBDIR/$OS_PLUS_MACHINE_ARCH/XOverrideFontCursor.so"
          else
-            echo "$LD_PRELOAD" | egrep -q ' '
+            echo "$LD_PRELOAD" | grep -E -q ' '
             if (($? == 0)); then
                new_ld_preload=$(echo "$LD_PRELOAD" | tr ' ' ':')
                export LD_PRELOAD="$new_ld_preload:$NSCDE_LIBDIR/$OS_PLUS_MACHINE_ARCH/XOverrideFontCursor.so"

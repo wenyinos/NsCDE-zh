@@ -15,7 +15,6 @@ import sys
 import os
 
 def execWithShell1(cmd):
-    print (cmd)
     #cmd='echo hello'
     print (subprocess.check_output(cmd, shell=True))
 
@@ -44,10 +43,10 @@ def checkFile(filename):
         return filename
     else:
         print ('FILE NOT FOUND: '+filename)
-        sys.exit()
+        sys.exit(1)
 def checkDir(filename):
     if os.path.isdir(filename):
         return filename
     else:
         print ('DIRECTORY NOT FOUND: '+filename)
-        sys.exit()
+        sys.exit(1)

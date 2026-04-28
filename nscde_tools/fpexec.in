@@ -18,7 +18,7 @@ else
    UserActionFile="/dev/null"
 fi
 
-ActionLine=$(egrep "^${Button},.*,${MouseBtn},.*,.*" $UserActionFile $SysActionFile | head -1)
+ActionLine=$(grep -E "^${Button},.*,${MouseBtn},.*,.*" $UserActionFile $SysActionFile | head -1)
 if [ "x${ActionLine}" != "x" ]; then
    echo $ActionLine | while IFS="," read button icon mousebutton check cmd
    do
@@ -27,7 +27,7 @@ if [ "x${ActionLine}" != "x" ]; then
       elif [ "$check" == "FVWM" ]; then
          # Find the docs if this was mouse button 3
          if [ "${cmd%% *}" == "f_FrontPanelPropsMenu" ] && [ "$mousebutton" == "M3" ]; then
-            ExamineActionLine=$(egrep "^${Button},.*,M1,.*,.*" $UserActionFile $SysActionFile | head -1)
+            ExamineActionLine=$(grep -E "^${Button},.*,M1,.*,.*" $UserActionFile $SysActionFile | head -1)
             ExamineActionLine="${ExamineActionLine//\"}"
             if [ "${ExamineActionLine##*,}" != "__APPCMD8__" ]; then
                if [[ "$ExamineActionLine" =~ f_DisplayURL ]]; then

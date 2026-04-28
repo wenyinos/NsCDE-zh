@@ -116,8 +116,7 @@ style "cde_style_sel_{a}"
 """.format(**locals())
 
     with open(filename, 'w') as f: 
-        for l in lines:
-            f.write(l)
+        f.write(lines)
 
 # Generate gtkrc 3 color definitions
 def gengtk3colors(filename,opts):
@@ -144,8 +143,7 @@ def gengtk3colors(filename,opts):
 """.format(**locals())
 
     with open(filename, 'w') as f: 
-        for l in lines:
-            f.write(l)
+        f.write(lines)
 
 def replaceColorsInPixmap(pixmap,fromcolor,tocolor):
         mask = pixmap.createMaskFromColor(QtGui.QColor(fromcolor), MASK_OUT_COLOR)
@@ -154,82 +152,38 @@ def replaceColorsInPixmap(pixmap,fromcolor,tocolor):
         p.drawPixmap(pixmap.rect(), mask, mask.rect())
         p.end()
 
-def updateThemeImages(opts):
+def _apply_colorset(opts, colorset_num, motifcolors):
     gtk2resourcedir=os.path.join(Globals.userthemedir,'img2')
     gtk2resourcefile=os.path.join(gtk2resourcedir,'resource.indexed.png')
-    print (gtk2resourcefile)
+    colormap =[     
+        ['#000100','fg_color_'+str(colorset_num)], 
+        ['#69605b','bs_color_'+str(colorset_num)], 
+        ['#a9988d','sel_color_'+str(colorset_num)], 
+        ['#eda86e','bg_color_1'], 
+        ['#c5b3a8','bg_color_'+str(colorset_num)], 
+        ['#e7ded7','ts_color_'+str(colorset_num)]
+    ]
+
+    tmppixmap=QtGui.QPixmap(gtk2resourcefile)
+    if tmppixmap.isNull():
+        print("Warning: Could not load pixmap " + gtk2resourcefile)
+        return
+    for i in range(len(colormap)):
+        fromcolor=colormap[i][0]
+        tocolor=motifcolors[colormap[i][1]]
+        replaceColorsInPixmap(tmppixmap,fromcolor,tocolor)
+
+    targetdir=os.path.join(gtk2resourcedir,'colorset'+str(colorset_num))
+
+    for l in spriteLWHXYgtk2:
+        label=l[0]
+        rect=QtCore.QRect(l[3],l[4],l[1],l[2])
+        img=tmppixmap.copy(rect)
+        targetimagefile=os.path.join(targetdir,label+'.png')
+        img.save(targetimagefile)
+
+def updateThemeImages(opts):
+    print (os.path.join(Globals.userthemedir,'img2','resource.indexed.png'))
     motifcolors=Globals.colorshash
-
-    colormap =[     
-        ['#000100','fg_color_5'], 
-        ['#69605b','bs_color_5'], 
-        ['#a9988d','sel_color_5'], 
-        ['#eda86e','bg_color_1'], 
-        ['#c5b3a8','bg_color_5'], 
-        ['#e7ded7','ts_color_5']
-    ]
-
-    tmppixmap=QtGui.QPixmap(gtk2resourcefile)
-    for i in range(len(colormap)):
-        fromcolor=colormap[i][0] #['#464D54','bs_color_3']
-        tocolor=motifcolors[colormap[i][1]]#motifcolors[ts_color_4]=#72ab84
-        replaceColorsInPixmap(tmppixmap,fromcolor,tocolor)
-
-    targetdir=os.path.join(gtk2resourcedir,'colorset5')
-
-    for l in spriteLWHXYgtk2:
-        label=l[0]
-        rect=QtCore.QRect(l[3],l[4],l[1],l[2]) #qrect=xywh i prefer WxH+x+y
-        img=tmppixmap.copy(rect)
-        targetimagefile=os.path.join(targetdir,label+'.png')
-        img.save(targetimagefile)
-
-    colormap =[     
-        ['#000100','fg_color_6'], 
-        ['#69605b','bs_color_6'], 
-        ['#a9988d','sel_color_6'], 
-        ['#eda86e','bg_color_1'], 
-        ['#c5b3a8','bg_color_6'], 
-        ['#e7ded7','ts_color_6']
-    ]
-
-    tmppixmap=QtGui.QPixmap(gtk2resourcefile)
-    for i in range(len(colormap)):
-        fromcolor=colormap[i][0] #['#464D54','bs_color_3']
-        tocolor=motifcolors[colormap[i][1]]#motifcolors[ts_color_4]=#72ab84
-        replaceColorsInPixmap(tmppixmap,fromcolor,tocolor)
-
-    targetdir=os.path.join(gtk2resourcedir,'colorset6')
-    print (targetdir)
-
-    for l in spriteLWHXYgtk2:
-        label=l[0]
-        rect=QtCore.QRect(l[3],l[4],l[1],l[2]) #qrect=xywh i prefer WxH+x+y
-        img=tmppixmap.copy(rect)
-        targetimagefile=os.path.join(targetdir,label+'.png')
-        img.save(targetimagefile)
-
-    colormap =[     
-        ['#000100','fg_color_4'], 
-        ['#69605b','bs_color_4'], 
-        ['#a9988d','sel_color_4'], 
-        ['#eda86e','bg_color_1'], 
-        ['#c5b3a8','bg_color_4'], 
-        ['#e7ded7','ts_color_4']
-    ]
-
-    tmppixmap=QtGui.QPixmap(gtk2resourcefile)
-    for i in range(len(colormap)):
-        fromcolor=colormap[i][0] #['#464D54','bs_color_3']
-        tocolor=motifcolors[colormap[i][1]]#motifcolors[ts_color_4]=#72ab84
-        replaceColorsInPixmap(tmppixmap,fromcolor,tocolor)
-
-    targetdir=os.path.join(gtk2resourcedir,'colorset4')
-    print (targetdir)
-
-    for l in spriteLWHXYgtk2:
-        label=l[0]
-        rect=QtCore.QRect(l[3],l[4],l[1],l[2]) #qrect=xywh i prefer WxH+x+y
-        img=tmppixmap.copy(rect)
-        targetimagefile=os.path.join(targetdir,label+'.png')
-        img.save(targetimagefile)
+    for colorset_num in [5, 6, 4]:
+        _apply_colorset(opts, colorset_num, motifcolors)

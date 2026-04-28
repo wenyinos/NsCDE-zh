@@ -44,7 +44,7 @@ Cursor XCreateFontCursor(
             if (dpy->cursor_font == None) return None;
         }
 
-        match = strncmp("FvwmScript", __progname, 10);
+        match = strcmp("FvwmScript", __progname);
         if (which == XC_hand2 && match == 0)
         {
            #ifdef DEBUG

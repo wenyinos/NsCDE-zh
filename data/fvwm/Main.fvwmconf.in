@@ -162,7 +162,7 @@ DestroyFunc f_WorkspaceNames
 AddToFunc f_WorkspaceNames
 + I f_SetWSMConf
 + I Echo NsCDE: Setting Workspace Names, using WSM.conf from $[infostore.wsmconf]
-+ I PipeRead 'egrep "^WSP:.*:" $[infostore.wsmconf] | sort -t: -nk2 | \
++ I PipeRead 'grep -E "^WSP:.*:" $[infostore.wsmconf] | sort -t: -nk2 | \
               awk -F: \'{ if ($$$1 == \"WSP\") print \"DesktopName\", ($$$2 - 1), $$$3 }\' | \
               head -$[infostore.desknum]'
 

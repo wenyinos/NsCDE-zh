@@ -16,17 +16,17 @@ shift 1
 function find_cmd_in_subpanel
 {
    if [ -e "${FVWM_USERDIR}/Subpanels.actions" ]; then
-      RawStr=$(egrep "^S${SubpanelNo},ENTRY,.*,.*,.*" "${FVWM_USERDIR}/Subpanels.actions" | sed -n ${LineInSubpanel}p | cut -d"," -f6)
+      RawStr=$(grep -E "^S${SubpanelNo},ENTRY,.*,.*,.*" "${FVWM_USERDIR}/Subpanels.actions" | sed -n ${LineInSubpanel}p | cut -d"," -f6)
       if [ "x$RawStr" == "x" ]; then
-         RawStr=$(egrep "^S${SubpanelNo},ENTRY,.*,.*,.*" "${NSCDE_DATADIR}/defaults/Subpanels.actions" | sed -n ${LineInSubpanel}p | cut -d"," -f6)
+         RawStr=$(grep -E "^S${SubpanelNo},ENTRY,.*,.*,.*" "${NSCDE_DATADIR}/defaults/Subpanels.actions" | sed -n ${LineInSubpanel}p | cut -d"," -f6)
       fi
    else
-      RawStr=$(egrep "^S${SubpanelNo},ENTRY,.*,.*,.*" "${NSCDE_DATADIR}/defaults/Subpanels.actions" | sed -n ${LineInSubpanel}p | cut -d"," -f6)
+      RawStr=$(grep -E "^S${SubpanelNo},ENTRY,.*,.*,.*" "${NSCDE_DATADIR}/defaults/Subpanels.actions" | sed -n ${LineInSubpanel}p | cut -d"," -f6)
    fi
 
    if [ "x$RawStr" != "x" ]; then
       Str="$(echo "$RawStr" | tr -d '\042\134')"
-      echo "$Str" | egrep -q '\$\[infostore\..*\]'
+      echo "$Str" | grep -E -q '\$\[infostore\..*\]'
       if (($? == 0)); then
          # Push it trough FVWM to get infostore variable resolved.
          $NSCDE_ROOT/bin/nscde_fvwmclnt "PipeRead \"$NSCDE_TOOLSDIR/fpdoc -fp $Str\""
@@ -82,7 +82,7 @@ function find_in_nscde_manual
 
    for strs in $Str
    do
-      egrep -w -- "$strs" "${NSCDE_DATADIR}/help/fp_help.catalog" >/dev/null 2>&1
+      grep -E -w -- "$strs" "${NSCDE_DATADIR}/help/fp_help.catalog" >/dev/null 2>&1
       if (($? == 0)); then
          check_catalog="$strs"
          break
@@ -90,7 +90,7 @@ function find_in_nscde_manual
    done
 
    if [ "x$check_catalog" != "x" ]; then
-      check_catalog=$(egrep "$check_catalog" "${NSCDE_DATADIR}/help/fp_help.catalog" | head -1)
+      check_catalog=$(grep -E "$check_catalog" "${NSCDE_DATADIR}/help/fp_help.catalog" | head -1)
       help_text=$(echo "$check_catalog" | cut -d"," -f2)
       help_page=$(echo "$check_catalog" | cut -d"," -f3)
       echo "f_DisplayURL \"\$[gt.${help_text}]\" ${help_page}"
@@ -180,24 +180,24 @@ function locate_man_candidate
    SaveStr="$Str"
 
    # Stip path if it exists
-   echo "${Str%% *}" | egrep -q "^/"
+   echo "${Str%% *}" | grep -E -q "^/"
    if (($? == 0)); then
       Str=${Str##*/}
    fi
 
-   echo "${Str}" | egrep -q -- "^Exec exec "
+   echo "${Str}" | grep -E -q -- "^Exec exec "
    if (($? == 0)); then
       Str=$(echo "$Str" | sed 's/^Exec exec //g')
    fi
 
-   echo "${Str%% *}" | egrep -q -- "="
+   echo "${Str%% *}" | grep -E -q -- "="
    if (($? == 0)); then
       Str0="${Str% *}"
       Str1="${Str0#* }"
       Str="${Str0%% *}"
    fi
 
-   echo "${Str% *}" | egrep -q -- "nscde_fvwmclnt"
+   echo "${Str% *}" | grep -E -q -- "nscde_fvwmclnt"
    if (($? == 0)); then
       EndStr="${Str##* }"
       if [ "$EndStr" == "menu://applications/" ]; then
@@ -219,12 +219,12 @@ function locate_man_candidate
       fi
    fi
 
-   echo "${Str% *}" | egrep -q -- " "
+   echo "${Str% *}" | grep -E -q -- " "
    if (($? == 0)); then
       Str="${Str%% *}"
    fi
 
-   echo "${Str}" | egrep -q -- " "
+   echo "${Str}" | grep -E -q -- " "
    if (($? == 0)); then
       Str="${Str%% *}"
    fi

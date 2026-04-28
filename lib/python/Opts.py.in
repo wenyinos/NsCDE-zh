@@ -64,15 +64,15 @@ class Opts():
     # has to be globals for other files also to use
 
     @classmethod
-    def paletteFile2Ix(self,palettefilename):
+    def paletteFile2Ix(cls,palettefilename):
         return Globals.palettes.index(palettefilename)
 
     @classmethod
-    def ix2PaletteFile(self,ix):
+    def ix2PaletteFile(cls,ix):
         return Globals.palettes[ix]
 
     @classmethod
-    def lastPaletteIx(self):
+    def lastPaletteIx(cls):
         return len(Globals.palettes)-1
 
 def main():

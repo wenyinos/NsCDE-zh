@@ -526,7 +526,7 @@ function walk_and_change_pathnames_in_files
  ! -name "WSM.conf" ! -name "Xsettingsd.conf" ! -name "GeoDB.ini" ! -name "Stalonetray.conf" \
  ! -name NsCDE-Subpanels.conf ! -name "*.fontset" ! -name ".FvwmConsole-History" \
  ! -name "*Font-*.fvwmgen" ! -name NsCDE.rasi | \
- egrep -v '\.\/(app-defaults|templates\/app-defaults|palettes|backdrops|photos|icons\/\.theme)')
+ grep -E -v '\.\/(app-defaults|templates\/app-defaults|palettes|backdrops|photos|icons\/\.theme)')
 
    for ftp in $files_to_process
    do
@@ -540,7 +540,7 @@ function walk_and_change_pathnames_in_files
       $ISED -c 's/\(^Btn.*\),\(CDE\)\(\/.*\.pm\),\(M1,.*,.*\)/\1,NsCDE\3,\4/g' -f FrontPanel.actions
       cat FrontPanel.actions | while IFS="," read Btn fpicon mice chk cmdrest
       do
-         echo "$fpicon" | egrep -q 'NsCDE\/'
+         echo "$fpicon" | grep -E -q 'NsCDE\/'
          if (($? == 0)); then
             $textn "Processing "; @ECHONE@ "$fpicon"; $textn " for button "; echo "$Btn"
             if [ ! -f "$NSCDE_DATADIR/icons/$fpicon" ]; then
@@ -573,7 +573,7 @@ function walk_and_change_pathnames_in_files
       $ISED -c 's/\(^S[[:digit:]]\+,ENTRY,.*,.*,\)CDE\(\/.*\.pm,.*\)/\1NsCDE\2/g' -f Subpanels.actions
       cat Subpanels.actions | while IFS="," read S ENTRY name spec subicon cmdrest
       do
-         echo "$subicon" | egrep -q '^NsCDE\/SDt.*\.pm'
+         echo "$subicon" | grep -E -q '^NsCDE\/SDt.*\.pm'
          if (($? == 0)); then
             $textn "Processing "; @ECHONE@ "$subicon"; $textn " for entry "; echo "$name"
             if [ ! -f "$NSCDE_DATADIR/icons/$subicon" ]; then

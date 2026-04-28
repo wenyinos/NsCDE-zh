@@ -44,7 +44,7 @@ function add_subpanel
    if (($SubpLocalDefCheck == 0)); then
       if [ -r "$NSCDE_DATADIR/defaults/Subpanels.actions" ]; then
          echo "" >> "$FVWM_USERDIR/Subpanels.actions"
-         egrep "^S${SubpanelNo},(NAME|WIDTH|ENABLED|ENTRY),.*" "$NSCDE_DATADIR/defaults/Subpanels.actions" >> "$FVWM_USERDIR/Subpanels.actions"
+         grep -E "^S${SubpanelNo},(NAME|WIDTH|ENABLED|ENTRY),.*" "$NSCDE_DATADIR/defaults/Subpanels.actions" >> "$FVWM_USERDIR/Subpanels.actions"
          $NSCDE_TOOLSDIR/ised -c "s/^S${SubpanelNo},ENABLED,0/S${SubpanelNo},ENABLED,1/g" -f "$FVWM_USERDIR/Subpanels.actions"
       else
          echo "ERROR: Cannot open $NSCDE_DATADIR/defaults/Subpanels.actions for reading."
@@ -67,7 +67,7 @@ function delete_subpanel
    if (($SubpLocalDefCheck == 0)); then
       if [ -r "$NSCDE_DATADIR/defaults/Subpanels.actions" ]; then
          echo "" >> "$FVWM_USERDIR/Subpanels.actions"
-         egrep "^S${SubpanelNo},(NAME|WIDTH|ENABLED|ENTRY),.*" "$NSCDE_DATADIR/defaults/Subpanels.actions" >> "$FVWM_USERDIR/Subpanels.actions"
+         grep -E "^S${SubpanelNo},(NAME|WIDTH|ENABLED|ENTRY),.*" "$NSCDE_DATADIR/defaults/Subpanels.actions" >> "$FVWM_USERDIR/Subpanels.actions"
          $NSCDE_TOOLSDIR/ised -c "s/^S${SubpanelNo},ENABLED,1/S${SubpanelNo},ENABLED,0/g" -f "$FVWM_USERDIR/Subpanels.actions"
       else
          echo "ERROR: Cannot open $NSCDE_DATADIR/defaults/Subpanels.actions for reading."
@@ -79,13 +79,13 @@ function delete_subpanel
 
 function reset_this_button
 {
-   echo "$BUTTONTYPE" | cut -d"." -f 3 | egrep -q '(icon|applet)'
+   echo "$BUTTONTYPE" | cut -d"." -f 3 | grep -E -q '(icon|applet)'
    if (($? != 0)); then
       BUTTONTYPE="default"
    fi
 
    if [ -r "$FVWM_USERDIR/FrontPanel.actions" ]; then
-      egrep -q "^Btn${PanelNo},__APPLET__,M1,.*,.*" "$FVWM_USERDIR/FrontPanel.actions"
+      grep -E -q "^Btn${PanelNo},__APPLET__,M1,.*,.*" "$FVWM_USERDIR/FrontPanel.actions"
       if (($? == 0)); then
          RestartFP=1
       else
@@ -94,7 +94,7 @@ function reset_this_button
 
       if [ "$BUTTONTYPE" == "icon" ]; then
          if [ -r "$NSCDE_DATADIR/defaults/FrontPanel.actions" ]; then
-            egrep -q "^Btn${PanelNo},__APPLET__,M1,.*,.*" "$NSCDE_DATADIR/defaults/FrontPanel.actions"
+            grep -E -q "^Btn${PanelNo},__APPLET__,M1,.*,.*" "$NSCDE_DATADIR/defaults/FrontPanel.actions"
             if (($? == 0)); then
                RestartFP=1
             else
@@ -111,7 +111,7 @@ function reset_this_button
          fi
       fi
 
-      egrep -q "^Btn${PanelNo},.*" "$FVWM_USERDIR/FrontPanel.actions"
+      grep -E -q "^Btn${PanelNo},.*" "$FVWM_USERDIR/FrontPanel.actions"
       FPA_RETVAL=$?
       if ((FPA_RETVAL == 0)); then
          $NSCDE_TOOLSDIR/ised -c "/^Btn${PanelNo},.*/d" -f "$FVWM_USERDIR/FrontPanel.actions"
@@ -133,10 +133,10 @@ function reset_this_button
 
 function manage_launcher
 {
-   OldNumOut=$(egrep "^([[:space:]])?InfoStoreAdd FP.${2}LaunchersNum [[:digit:]].*" "$FVWM_USERDIR/NsCDE.conf")
+   OldNumOut=$(grep -E "^([[:space:]])?InfoStoreAdd FP.${2}LaunchersNum [[:digit:]].*" "$FVWM_USERDIR/NsCDE.conf")
    ADDLNCH_RETVAL=$?
    OldNum=$(echo "${OldNumOut#*LaunchersNum }" | awk '{ print $1 }')
-   echo "$OldNum" | egrep -q '^[[:digit:]]+$'
+   echo "$OldNum" | grep -E -q '^[[:digit:]]+$'
    if (($? == 0)); then
       if [ "$1" == "add" ] && [ $OldNum -lt 10 ]; then
          NewNum=$(($OldNum + 1))
@@ -244,44 +244,44 @@ function move_launcher
       touch "$FVWM_USERDIR/Subpanels.actions"
    fi
 
-   old_need_fpa_from_sys=$(egrep -c "^Btn${OldPos},.*,M(1|3)" "$FVWM_USERDIR/FrontPanel.actions")
+   old_need_fpa_from_sys=$(grep -E -c "^Btn${OldPos},.*,M(1|3)" "$FVWM_USERDIR/FrontPanel.actions")
    if (($old_need_fpa_from_sys != 2)); then
       $NSCDE_TOOLSDIR/ised -c "/^Btn${OldPos},.*/d" -f "$FVWM_USERDIR/FrontPanel.actions"
-      sed -n '$p' "$FVWM_USERDIR/FrontPanel.actions" | egrep '^$'
+      sed -n '$p' "$FVWM_USERDIR/FrontPanel.actions" | grep -E '^$'
       if (($? != 0)); then
          echo "" >> "$FVWM_USERDIR/FrontPanel.actions"
       fi
-      egrep "^Btn${OldPos},.*" "$NSCDE_DATADIR/defaults/FrontPanel.actions" >> "$FVWM_USERDIR/FrontPanel.actions"
+      grep -E "^Btn${OldPos},.*" "$NSCDE_DATADIR/defaults/FrontPanel.actions" >> "$FVWM_USERDIR/FrontPanel.actions"
    fi
 
-   old_need_spa_from_sys=$(egrep -c "^S${OldPos},(NAME|WIDTH|ENABLED)" "$FVWM_USERDIR/Subpanels.actions")
+   old_need_spa_from_sys=$(grep -E -c "^S${OldPos},(NAME|WIDTH|ENABLED)" "$FVWM_USERDIR/Subpanels.actions")
    if (($old_need_spa_from_sys != 3)); then
       $NSCDE_TOOLSDIR/ised -c "/^S${OldPos},.*/d" -f "$FVWM_USERDIR/Subpanels.actions"
-      sed -n '$p' "$FVWM_USERDIR/Subpanels.actions" | egrep '^$'
+      sed -n '$p' "$FVWM_USERDIR/Subpanels.actions" | grep -E '^$'
       if (($? != 0)); then
          echo "" >> "$FVWM_USERDIR/Subpanels.actions"
       fi
-      egrep "^S${OldPos},.*,.*" "$NSCDE_DATADIR/defaults/Subpanels.actions" >> "$FVWM_USERDIR/Subpanels.actions"
+      grep -E "^S${OldPos},.*,.*" "$NSCDE_DATADIR/defaults/Subpanels.actions" >> "$FVWM_USERDIR/Subpanels.actions"
    fi
 
-   new_need_fpa_from_sys=$(egrep -c "^Btn${NewPos},.*,M(1|3)" "$FVWM_USERDIR/FrontPanel.actions")
+   new_need_fpa_from_sys=$(grep -E -c "^Btn${NewPos},.*,M(1|3)" "$FVWM_USERDIR/FrontPanel.actions")
    if (($new_need_fpa_from_sys != 2)); then
       $NSCDE_TOOLSDIR/ised -c "/^Btn${NewPos},.*/d" -f "$FVWM_USERDIR/FrontPanel.actions"
-      sed -n '$p' "$FVWM_USERDIR/FrontPanel.actions" | egrep '^$'
+      sed -n '$p' "$FVWM_USERDIR/FrontPanel.actions" | grep -E '^$'
       if (($? != 0)); then
          echo "" >> "$FVWM_USERDIR/FrontPanel.actions"
       fi
-      egrep "^Btn${NewPos},.*" "$NSCDE_DATADIR/defaults/FrontPanel.actions" >> "$FVWM_USERDIR/FrontPanel.actions"
+      grep -E "^Btn${NewPos},.*" "$NSCDE_DATADIR/defaults/FrontPanel.actions" >> "$FVWM_USERDIR/FrontPanel.actions"
    fi
 
-   new_need_spa_from_sys=$(egrep -c "^S${NewPos},(NAME|WIDTH|ENABLED)" "$FVWM_USERDIR/Subpanels.actions")
+   new_need_spa_from_sys=$(grep -E -c "^S${NewPos},(NAME|WIDTH|ENABLED)" "$FVWM_USERDIR/Subpanels.actions")
    if (($new_need_spa_from_sys != 3)); then
       $NSCDE_TOOLSDIR/ised -c "/^S${NewPos},.*/d" -f "$FVWM_USERDIR/Subpanels.actions"
-      sed -n '$p' "$FVWM_USERDIR/Subpanels.actions" | egrep '^$'
+      sed -n '$p' "$FVWM_USERDIR/Subpanels.actions" | grep -E '^$'
       if (($? != 0)); then
          echo "" >> "$FVWM_USERDIR/Subpanels.actions"
       fi
-      egrep "^S${NewPos},.*,.*" "$NSCDE_DATADIR/defaults/Subpanels.actions" >> "$FVWM_USERDIR/Subpanels.actions"
+      grep -E "^S${NewPos},.*,.*" "$NSCDE_DATADIR/defaults/Subpanels.actions" >> "$FVWM_USERDIR/Subpanels.actions"
    fi
 
    if ((${PanelNo} == ${OldPos})); then
@@ -304,21 +304,21 @@ function move_launcher
       $NSCDE_ROOT/bin/nscde_fvwmclnt "f_ReloadSwitchedSubpanels $OldPos $NewPos"
    fi
 
-   old_type=$(egrep "^Btn${OldPos},.*,M1.*" "$FVWM_USERDIR/FrontPanel.actions" | cut -d, -f2)
-   new_type=$(egrep "^Btn${NewPos},.*,M1.*" "$FVWM_USERDIR/FrontPanel.actions" | cut -d, -f2)
+   old_type=$(grep -E "^Btn${OldPos},.*,M1.*" "$FVWM_USERDIR/FrontPanel.actions" | cut -d, -f2)
+   new_type=$(grep -E "^Btn${NewPos},.*,M1.*" "$FVWM_USERDIR/FrontPanel.actions" | cut -d, -f2)
 
    if [ -e "$FVWM_USERDIR/Subpanels.actions" ]; then
-      old_subpanel_enabled=$(egrep "^S${OldPos},ENABLED" "$FVWM_USERDIR/Subpanels.actions" | cut -d, -f3)
+      old_subpanel_enabled=$(grep -E "^S${OldPos},ENABLED" "$FVWM_USERDIR/Subpanels.actions" | cut -d, -f3)
       if [ "$old_subpanel_enabled" != "1" ] && [ "$old_subpanel_enabled" != "0" ]; then
-         old_subpanel_enabled=$(egrep "^S${OldPos},ENABLED" "$NSCDE_DATADIR/defaults/Subpanels.actions" | cut -d, -f3)
+         old_subpanel_enabled=$(grep -E "^S${OldPos},ENABLED" "$NSCDE_DATADIR/defaults/Subpanels.actions" | cut -d, -f3)
       fi
-      new_subpanel_enabled=$(egrep "^S${NewPos},ENABLED" "$FVWM_USERDIR/Subpanels.actions" | cut -d, -f3)
+      new_subpanel_enabled=$(grep -E "^S${NewPos},ENABLED" "$FVWM_USERDIR/Subpanels.actions" | cut -d, -f3)
       if [ "$new_subpanel_enabled" != "1" ] && [ "$new_subpanel_enabled" != "0" ]; then
-         new_subpanel_enabled=$(egrep "^S${NewPos},ENABLED" "$NSCDE_DATADIR/defaults/Subpanels.actions" | cut -d, -f3)
+         new_subpanel_enabled=$(grep -E "^S${NewPos},ENABLED" "$NSCDE_DATADIR/defaults/Subpanels.actions" | cut -d, -f3)
       fi
    else
-      old_subpanel_enabled=$(egrep "^S${OldPos},ENABLED" "$NSCDE_DATADIR/defaults/Subpanels.actions" | cut -d, -f3)
-      new_subpanel_enabled=$(egrep "^S${NewPos},ENABLED" "$NSCDE_DATADIR/defaults/Subpanels.actions" | cut -d, -f3)
+      old_subpanel_enabled=$(grep -E "^S${OldPos},ENABLED" "$NSCDE_DATADIR/defaults/Subpanels.actions" | cut -d, -f3)
+      new_subpanel_enabled=$(grep -E "^S${NewPos},ENABLED" "$NSCDE_DATADIR/defaults/Subpanels.actions" | cut -d, -f3)
    fi
 
    if [ "$old_type" == "__APPLET__" ] || [ "$new_type" == "__APPLET__" ] || [ "$new_subpanel_enabled" == 1 ] || [ "$old_subpanel_enabled" == 1 ]; then
@@ -337,7 +337,7 @@ do
       p)
          SubpanelNo=$OPTARG
          PanelNo=$SubpanelNo
-         SubpLocalDefCheck=$(egrep "^S${SubpanelNo},(NAME|WIDTH|ENABLED),.*" "$FVWM_USERDIR/Subpanels.actions" 2>/dev/null | wc -l)
+         SubpLocalDefCheck=$(grep -E "^S${SubpanelNo},(NAME|WIDTH|ENABLED),.*" "$FVWM_USERDIR/Subpanels.actions" 2>/dev/null | wc -l)
 
          if (($SubpLocalDefCheck != 0)) && (($SubpLocalDefCheck != 3)); then
             echo "ERROR: invalid configuration for subpanel ${SubpanelNo} in $FVWM_USERDIR/Subpanels.actions."

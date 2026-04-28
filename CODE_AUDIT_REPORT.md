@@ -24,6 +24,7 @@
 
 - ✅ Critical：`C1-C15`（15/15）
 - ✅ High：`H1-H22`（22/22）
+- ✅ Medium：`M1-M32`（32/32）（不含打包配置和上游问题）
 
 ### 本轮补齐（High 尾项）
 
@@ -33,10 +34,67 @@
 - `nscde_tools/colormgr.in`
 - `nscde_tools/backdropmgr.in`
 
+### Medium 修复详情（2026-04-28）
+
+#### Shell 脚本（11项）
+
+| 文件 | 问题 | 修复 |
+|------|------|------|
+| `backdropmgr.in:165,186` | `if (($? == 0)) then` 缺分号 | ✅ 加 `;` |
+| `backdropmgr.in:50,53,119,170` | `egrep` 已废弃 | ✅ 改为 `grep -E` |
+| `fontmgr.in:239` | `tr '[a-z]' '[A-Z]'` 语法错误 | ✅ 改为 `tr 'a-z' 'A-Z'` |
+| `fontmgr.in:266` | `if [ -n $NewFont ]` 永远为真 | ✅ 加引号 `"$NewFont"` |
+| `colormgr.in:227` | `mv` 目标路径未加引号 | ✅ 加引号 |
+| `style_managers.shlib.in:24,48,72` | `ls -1` 输出解析不可靠 | ✅ 用 glob 替代 |
+| `sysinfo.in:26,34` | 裸 `except:` | ✅ 改为 `except Exception:` |
+| `sysinfo.in:43` | swap 百分比计算错误 | ✅ 移除 `/ 1024 / 1024` |
+| `chtheme.in:278` | `/usr/bin/cpp` 硬编码 | ✅ 改为 `@CPP@` |
+| 全局 169 处 | `egrep` 已废弃 | ✅ 批量改为 `grep -E` |
+
+#### Python 代码（12项）
+
+| 文件 | 问题 | 修复 |
+|------|------|------|
+| `MotifColors.py.in:56-63` | `int2hex()` 浮点精度问题 | ✅ 用 `format(n, '04x')` |
+| `MotifColors.py.in:349-350` | 文件句柄泄漏（无 `with`） | ✅ 已使用 `with` |
+| `ThemeGtk.py.in:117-119` | 逐字符写文件 | ✅ 直接 `f.write(lines)` |
+| `ThemeGtk.py.in:156-234` | 三段近乎相同的代码块 | ✅ 提取 `_apply_colorset()` |
+| `ThemeGtk.py.in:171,195,220` | QPixmap 无存在性检查 | ✅ 检查 `isNull()` |
+| `Theme.py.in:46` | `shutil.rmtree` 无安全检查 | ✅ 断言路径在用户目录内 |
+| `Opts.py.in:67-68` | `@classmethod` 用 `self` 而非 `cls` | ✅ 改为 `cls` |
+| `MiscFun.py.in:18` | 调试 `print(cmd)` 残留 | ✅ 删除 |
+| `MiscFun.py.in:47,53` | `sys.exit()` 无退出码 | ✅ 改为 `sys.exit(1)` |
+| `palette_colorgen.in:628-637` | 文件句柄泄漏 | ✅ 使用 `with` |
+| `palette_colorgen.in:760-772` | 用 `NameError` 做控制流 | ✅ 初始化默认值 |
+
+#### C 源码（3项）
+
+| 文件 | 问题 | 修复 |
+|------|------|------|
+| `colorpicker.c:33,43-46` | `output_format` 位操作语义不清 | ✅ 改用布尔变量 |
+| `Graphics.c:339-354` | `GetColor` 失败静默返回黑色 | ✅ 已有错误日志（保留） |
+| `XOverrideFontCursor.c:47` | `strncmp` 前缀匹配可能误触发 | ✅ 改用 `strcmp` |
+
+#### 翻译文件（2项）
+
+| 文件 | 问题 | 修复 |
+|------|------|------|
+| `NsCDE-FontMgr.zh.po` | 元数据仍为原始作者 | ✅ 更新为 `Wenyin Root` |
+| `NsCDE-GWM.zh.po` | 元数据仍为原始作者 | ✅ 更新为 `Wenyin Root` |
+
+#### 未修复项（需报告上游）
+
+| 文件 | 问题 | 说明 |
+|------|------|------|
+| `NsCDE.zh.po:1365` | 上游 typo "Fifeteen" | 需报告上游 |
+| `NsCDE.zh.po:959,962` | 上游语法错误 "it's" → "its" | 需报告上游 |
+
 ### 说明
 
 - 本报告正文保留审计时的问题描述与修复建议，作为审计基线。
 - 上述状态反映当前仓库修复进度（截至 2026-04-28）。
+- 打包配置问题不在本轮修复范围内。
+- 上游翻译问题需提交到 NsCDE 上游仓库。
 
 ---
 

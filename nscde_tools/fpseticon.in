@@ -24,7 +24,7 @@ if [ "$Button" == "pre" ]; then
       echo "InfoStoreRemove FP.Btn${btn}.content"
    done
 
-   egrep "^Btn.*,__APPLET__,M1,.*,.*" "$UserActionFile" | while IFS="," read button icon mousebutton check cmd
+   grep -E "^Btn.*,__APPLET__,M1,.*,.*" "$UserActionFile" | while IFS="," read button icon mousebutton check cmd
    do
       if [ "$mousebutton" == "M1" ] && [ "${icon}" == "__APPLET__" ]; then
          echo "InfoStoreAdd FP.${button}.type applet"
@@ -35,13 +35,13 @@ if [ "$Button" == "pre" ]; then
    # Hardcoded special case to choose pcmanfm or pcmanfm-qt as Application Manager
    # because this two are only that fits the role. If none of this is installed,
    # editor icon and default editor will be placed on the button.
-   Btn8FromUser=$(egrep "^Btn.*,__ICON8__,M1,__SPECIAL8__,__APPCMD8__$" "$UserActionFile")
+   Btn8FromUser=$(grep -E "^Btn.*,__ICON8__,M1,__SPECIAL8__,__APPCMD8__$" "$UserActionFile")
    if (($? == 0)); then
       ParseFile="$UserActionFile"
    else
       ParseFile="$SysActionFile"
    fi
-   egrep "^Btn.*,__ICON8__,M1,__SPECIAL8__,__APPCMD8__$" "$ParseFile" | while IFS="," read button icon mousebutton check cmd
+   grep -E "^Btn.*,__ICON8__,M1,__SPECIAL8__,__APPCMD8__$" "$ParseFile" | while IFS="," read button icon mousebutton check cmd
    do
       if [ "$icon" == "__ICON8__" ]; then
          if [ "x$NSCDE_HAS_APPMGR" == "x1" ]; then
@@ -54,7 +54,7 @@ if [ "$Button" == "pre" ]; then
       echo "InfoStoreAdd FP.${button}.content \"Icon ${icon}\""
    done
 
-   egrep -i "^Btn.*,*.(x?pm|png),M1,.*,.*" "$UserActionFile" | while IFS="," read button icon mousebutton check cmd
+   grep -E -i "^Btn.*,*.(x?pm|png),M1,.*,.*" "$UserActionFile" | while IFS="," read button icon mousebutton check cmd
    do
       if [ "$mousebutton" == "M1" ] && [ "${icon}" != "__APPLET__" ]; then
          echo "InfoStoreAdd FP.${button}.type icon"
@@ -62,7 +62,7 @@ if [ "$Button" == "pre" ]; then
       fi
    done
    # This is needed for Btn8 - special case
-   egrep -i "^Btn.*,__APPLET__,M1,.*,.*" "$UserActionFile" | while IFS="," read button icon mousebutton check cmd
+   grep -E -i "^Btn.*,__APPLET__,M1,.*,.*" "$UserActionFile" | while IFS="," read button icon mousebutton check cmd
    do
       if [ "$mousebutton" == "M1" ] && [ "${icon}" == "__APPLET__" ]; then
          echo "InfoStoreAdd FP.${button}.type applet"
@@ -70,7 +70,7 @@ if [ "$Button" == "pre" ]; then
       fi
    done
 else
-   ActionLine=$(egrep "^${Button},.*,.*,.*,.*" $UserActionFile $SysActionFile | head -1)
+   ActionLine=$(grep -E "^${Button},.*,.*,.*,.*" $UserActionFile $SysActionFile | head -1)
    if [ "x${ActionLine}" != "x" ]; then
       echo $ActionLine | while IFS="," read button icon mousebutton check cmd
       do
@@ -93,7 +93,7 @@ else
             fi
          fi
          if [ "$mousebutton" == "M1" ] && [ "${icon}" == "__APPLET__" ]; then
-            egrep -q "^${Button},__APPLET__,.*,.*,.*" $SysActionFile
+            grep -E -q "^${Button},__APPLET__,.*,.*,.*" $SysActionFile
             if (($? != 0)); then
                echo "InfoStoreAdd FP.${Button}.type applet"
                echo "InfoStoreAdd FP.${Button}.content ${check//\|/,}"

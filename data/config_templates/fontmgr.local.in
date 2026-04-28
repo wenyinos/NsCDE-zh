@@ -8,9 +8,9 @@
 
 FontFile="$1"
 if [ -r "$FontFile" ]; then
-   NewMonoFont=$(egrep 'InfoStoreAdd font\.monospaced\.normal\.medium' "$FontFile" | \
+   NewMonoFont=$(grep -E 'InfoStoreAdd font\.monospaced\.normal\.medium' "$FontFile" | \
     awk -F'xft:' '{ print $2 }' | awk -F: '{ print $1, $4 }' | sed 's/size=//g;s/"//g')
-   NewFont=$(egrep 'InfoStoreAdd font\.variable\.normal\.medium' "$FontFile" | \
+   NewFont=$(grep -E 'InfoStoreAdd font\.variable\.normal\.medium' "$FontFile" | \
     awk -F'xft:' '{ print $2 }' | awk -F: '{ print $1, $4 }' | sed 's/size=//g;s/"//g')
 else
    exit 2

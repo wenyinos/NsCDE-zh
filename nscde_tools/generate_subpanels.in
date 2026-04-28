@@ -51,7 +51,7 @@ do
    if [ "x$SYSMODE" == "x1" ]; then
       spactfile="$NSCDE_DATADIR/defaults/Subpanels.actions"
    else
-      egrep -q "^S${subpn},NAME," "$FVWM_USERDIR/Subpanels.actions"
+      grep -E -q "^S${subpn},NAME," "$FVWM_USERDIR/Subpanels.actions"
       if (($? == 0)); then
          spactfile="$FVWM_USERDIR/Subpanels.actions"
       else
@@ -59,13 +59,13 @@ do
       fi
    fi
 
-   Name=$(egrep "S${subpn},NAME," $spactfile | cut -d"," -f3)
+   Name=$(grep -E "S${subpn},NAME," $spactfile | cut -d"," -f3)
    if [ "x${Name}" == "x" ]; then
-      Name=$(egrep "S${subpn},NAME," "$NSCDE_DATADIR/defaults/Subpanels.actions" | cut -d"," -f3)
+      Name=$(grep -E "S${subpn},NAME," "$NSCDE_DATADIR/defaults/Subpanels.actions" | cut -d"," -f3)
    fi
 
-   Width=$(egrep "S${subpn},WIDTH," $spactfile | cut -d"," -f3)
-   echo $Width | egrep -q '^[[:digit:]]+$'
+   Width=$(grep -E "S${subpn},WIDTH," $spactfile | cut -d"," -f3)
+   echo $Width | grep -E -q '^[[:digit:]]+$'
    if (($? != 0)); then
       Width=194
    fi
@@ -80,11 +80,11 @@ do
       fi
    fi
 
-   EntryRows=$(egrep "^S${subpn},ENTRY," $spactfile | wc -l)
+   EntryRows=$(grep -E "^S${subpn},ENTRY," $spactfile | wc -l)
    Rows=$(($EntryRows + 3))
 
-   Enabled=$(egrep "S${subpn},ENABLED," $spactfile | cut -d"," -f3)
-   echo "$Enabled" | egrep -q '0|1'
+   Enabled=$(grep -E "S${subpn},ENABLED," $spactfile | cut -d"," -f3)
+   echo "$Enabled" | grep -E -q '0|1'
    if (($? != 0)); then
       Enabled=0
    fi
@@ -119,7 +119,7 @@ do
    echo ""
 
    id=1
-   egrep -v '^#' $spactfile | ${NSCDE_TOOLSDIR}/ised -c 's/\\"/\\\\\\"/g' -o -f - | egrep "^S${subpn},ENTRY,.*,.*,.*,.*" | \
+   grep -E -v '^#' $spactfile | ${NSCDE_TOOLSDIR}/ised -c 's/\\"/\\\\\\"/g' -o -f - | grep -E "^S${subpn},ENTRY,.*,.*,.*,.*" | \
    while IFS="," read subp esign title check iconfile cmdargs
    do
       subp="${subp##*S}"

@@ -30,7 +30,8 @@ int main(int argc, char *argv[]) {
 	int opt;
 	int one_shot = 0;
 	int quit_on_keypress = 0;
-	int output_format = 0x11;
+	int output_hex = 1;
+	int output_rgb = 1;
 	while ((opt = getopt(argc, argv, "oqhrd")) != -1) {
 		switch(opt) {
 			case 'o':
@@ -40,10 +41,10 @@ int main(int argc, char *argv[]) {
 				quit_on_keypress = 1;
 				break;
 			case 'r':
-				output_format &= 0x1;
+				output_hex = 0;
 				break;
 			case 'd':
-				output_format &= 0x10;
+				output_rgb = 0;
 				break;
 			case 'h':
 				printf( "colorpicker [options]\n"
@@ -83,10 +84,10 @@ int main(int argc, char *argv[]) {
 					XImage *image = XGetImage(display, root, 0, 0, gwa.width, gwa.height, AllPlanes, ZPixmap);
 					if (image) {
 						unsigned long pixel = XGetPixel(image, e.xbutton.x_root, e.xbutton.y_root);
-						if (output_format & 0x1) {
+						if (output_rgb) {
 							printf("%d,%d,%d ", (pixel >> 0x10) & 0xFF, (pixel >> 0x08) & 0xFF, pixel & 0xFF);
 						}
-						if (output_format & 0x10) {
+						if (output_hex) {
 							printf("#%06X", pixel);
 						}
 						puts("");

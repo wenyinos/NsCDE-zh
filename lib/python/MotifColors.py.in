@@ -55,12 +55,7 @@ HEXNUM=[4096,256,16,1]
 
 def int2hex(n):
     if n==0: return '0000'
-    h=''
-    for a in HEXNUM:
-        i=int(float(n)/a)
-        h+=HEX[i]
-        n-=i*a
-    return h
+    return format(n, '04x')
 
 palette=[
 '#ed00a8007000',

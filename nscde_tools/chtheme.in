@@ -50,18 +50,18 @@ function xfunc
 function gtk2setup
 {
    if [ "x$do_gtk2" == "x1" ]; then
-      $NSCDE_TOOLSDIR/palette_colorgen -n $ncolors -p $palette_path -l | egrep -q '^fg_color_4.* #ffffffffffff'
+      $NSCDE_TOOLSDIR/palette_colorgen -n $ncolors -p $palette_path -l | grep -E -q '^fg_color_4.* #ffffffffffff'
       if (($? == 0)); then
          $NSCDE_TOOLSDIR/confset -t properties -c "$HOME/.gtkrc-2.0" -k gtk-application-prefer-dark-theme -v '1'
       else
          $NSCDE_TOOLSDIR/confset -t properties -c "$HOME/.gtkrc-2.0" -k gtk-application-prefer-dark-theme -v '0'
       fi
-      egrep -q "gtk-theme-name.*NsCDE" "$HOME/.gtkrc-2.0"
+      grep -E -q "gtk-theme-name.*NsCDE" "$HOME/.gtkrc-2.0"
       if (($? != 0)); then
          $NSCDE_TOOLSDIR/confset -t properties -c "$HOME/.gtkrc-2.0" -k gtk-theme-name -v ' "NsCDE"'
       fi
    
-      egrep -q "gtk-icon-theme-name.*NsCDE" "$HOME/.gtkrc-2.0" 2>/dev/null
+      grep -E -q "gtk-icon-theme-name.*NsCDE" "$HOME/.gtkrc-2.0" 2>/dev/null
       if (($? != 0)); then
          $NSCDE_TOOLSDIR/confset -t properties -c "$HOME/.gtkrc-2.0" -k gtk-icon-theme-name -v ' "NsCDE"'
       fi
@@ -72,19 +72,19 @@ function gtk3setup
 {
    if [ "x$do_gtk3" == "x1" ]; then
       mkdir -p "$HOME/.config/gtk-3.0"
-      $NSCDE_TOOLSDIR/palette_colorgen -n $ncolors -p $palette_path -l | egrep -q '^fg_color_4.* #ffffffffffff'
+      $NSCDE_TOOLSDIR/palette_colorgen -n $ncolors -p $palette_path -l | grep -E -q '^fg_color_4.* #ffffffffffff'
       if (($? == 0)); then
          $NSCDE_TOOLSDIR/confset -t ini -c "$HOME/.config/gtk-3.0/settings.ini" -s Settings -k gtk-application-prefer-dark-theme -v 1
       else
          $NSCDE_TOOLSDIR/confset -t ini -c "$HOME/.config/gtk-3.0/settings.ini" -s Settings -k gtk-application-prefer-dark-theme -v 0
       fi
    
-      egrep -q "gtk-theme-name.*NsCDE" "$HOME/.config/gtk-3.0/settings.ini"
+      grep -E -q "gtk-theme-name.*NsCDE" "$HOME/.config/gtk-3.0/settings.ini"
       if (($? != 0)); then
          $NSCDE_TOOLSDIR/confset -t ini -c "$HOME/.config/gtk-3.0/settings.ini" -s Settings -k gtk-theme-name -v NsCDE
       fi
    
-      egrep -q "gtk-icon-theme-name.*NsCDE" "$HOME/.config/gtk-3.0/settings.ini"
+      grep -E -q "gtk-icon-theme-name.*NsCDE" "$HOME/.config/gtk-3.0/settings.ini"
       if (($? != 0)); then
          $NSCDE_TOOLSDIR/confset -t ini -c "$HOME/.config/gtk-3.0/settings.ini" -s Settings -k gtk-icon-theme-name -v NsCDE
       fi
@@ -106,7 +106,7 @@ function gtk4setup
 
 function gtkvariants
 {
-   $NSCDE_TOOLSDIR/themegen $palette_path $ncolors $themegen_arg_gtk2 $themegen_arg_gtk3 | egrep -v '^/'
+   $NSCDE_TOOLSDIR/themegen $palette_path $ncolors $themegen_arg_gtk2 $themegen_arg_gtk3 | grep -E -v '^/'
 }
 
 function qt4setup
@@ -152,8 +152,8 @@ function qt5kvantumsetup
    
       STYLE5=$($NSCDE_TOOLSDIR/confget -c "$HOME/.config/qt5ct/qt5ct.conf" -s Interface -k stylesheets 2>/dev/null)
       STYLE5Status=$?
-      STYLE5Check1=$(echo "$STYLE5" | egrep -q '\/qss\/NsCDE-Kvantum\.qss'; echo $?)
-      STYLE5Check2=$(echo "$STYLE5" | egrep -q '@Invalid\(\)'; echo $?)
+      STYLE5Check1=$(echo "$STYLE5" | grep -E -q '\/qss\/NsCDE-Kvantum\.qss'; echo $?)
+      STYLE5Check2=$(echo "$STYLE5" | grep -E -q '@Invalid\(\)'; echo $?)
    
       if (($STYLE5Check1 != 0)); then
          if (($STYLE5Check2 == 0)); then
@@ -194,8 +194,8 @@ function qt6setup
    
       STYLE6=$($NSCDE_TOOLSDIR/confget -c "$HOME/.config/qt6ct/qt6ct.conf" -s Interface -k stylesheets 2>/dev/null)
       STYLE6Status=$?
-      STYLE6Check1=$(echo "$STYLE6" | egrep -q '\/qss\/NsCDE-Kvantum\.qss'; echo $?)
-      STYLE6Check2=$(echo "$STYLE6" | egrep -q '@Invalid\(\)'; echo $?)
+      STYLE6Check1=$(echo "$STYLE6" | grep -E -q '\/qss\/NsCDE-Kvantum\.qss'; echo $?)
+      STYLE6Check2=$(echo "$STYLE6" | grep -E -q '@Invalid\(\)'; echo $?)
    
       if (($STYLE6Check1 != 0)); then
          if (($STYLE6Check2 == 0)); then
@@ -275,7 +275,7 @@ function reload
 
    if [ "x$do_x" == "x1" ]; then
       cd $HOME
-      xrdb -remove; xrdb -cpp /usr/bin/cpp < $FVWM_USERDIR/Xdefaults
+      xrdb -remove; xrdb -cpp @CPP@ < $FVWM_USERDIR/Xdefaults
       nscde_fvwmclnt 'SetEnv XAPPLRESDIR $[FVWM_USERDIR]/app-defaults'
       cd - >/dev/null 2>&1
    fi
@@ -283,7 +283,7 @@ function reload
    if [ "x$do_gtk3" == "x1" ] || [ "x$do_gtk2" == "x1" ]; then
       nscde_fvwmclnt 'Test (EnvMatch infostore.nscde_use_xsettingsd 1) f_Xsettingsd stop'
       if [ -f "$FVWM_USERDIR/Xsettingsd.conf" ]; then
-         egrep -q '^Net\/palette_name[[:space:]]+"NsCDE"' $FVWM_USERDIR/Xsettingsd.conf
+         grep -E -q '^Net\/palette_name[[:space:]]+"NsCDE"' $FVWM_USERDIR/Xsettingsd.conf
          if (($? != 0)); then
             $NSCDE_TOOLSDIR/ised -c 's/\(^Net\/palette_name[[:space:]]\+\).*/\1"NsCDE"/g' -f $FVWM_USERDIR/Xsettingsd.conf
          fi
@@ -331,19 +331,19 @@ do
          xfunc
       ;;
       g)
-         echo "$OPTARG" | cut -d"," -f1 | egrep -q '(gtk2|False)'
+         echo "$OPTARG" | cut -d"," -f1 | grep -E -q '(gtk2|False)'
          if (($? == 0)); then
             do_gtk2=1
             themegen_arg_gtk2=$(echo "$OPTARG" | cut -d"," -f1)
             gtk2setup
          fi
-         echo "$OPTARG" | cut -d"," -f2 | egrep -q '(gtk3|False)'
+         echo "$OPTARG" | cut -d"," -f2 | grep -E -q '(gtk3|False)'
          if (($? == 0)); then
             do_gtk3=1
             themegen_arg_gtk3=$(echo "$OPTARG" | cut -d"," -f2)
             gtk3setup
          fi
-         echo "$OPTARG" | cut -d"," -f3 | egrep -q '(gtk4|False)'
+         echo "$OPTARG" | cut -d"," -f3 | grep -E -q '(gtk4|False)'
          if (($? == 0)); then
             do_gtk4=1
             themegen_arg_gtk4=$(echo "$OPTARG" | cut -d"," -f3)
@@ -352,25 +352,25 @@ do
          gtkvariants
       ;;
       q)
-         echo "$OPTARG" | cut -d"," -f1 | egrep -q 'qt4'
+         echo "$OPTARG" | cut -d"," -f1 | grep -E -q 'qt4'
          if (($? == 0)); then
             do_qt4=1
             themegen_arg_qt4=$(echo "$OPTARG" | cut -d"," -f1)
             qt4setup
          fi
-         echo "$OPTARG" | cut -d"," -f2 | egrep -q 'qt5g'
+         echo "$OPTARG" | cut -d"," -f2 | grep -E -q 'qt5g'
          if (($? == 0)); then
             do_qt5gtk=1
             themegen_arg_qt5=$(echo "$OPTARG" | cut -d"," -f2)
             qt5gtksetup
          fi
-         echo "$OPTARG" | cut -d"," -f2 | egrep -q 'qt5k'
+         echo "$OPTARG" | cut -d"," -f2 | grep -E -q 'qt5k'
          if (($? == 0)); then
             do_qt5kvantum=1
             themegen_arg_qt5=$(echo "$OPTARG" | cut -d"," -f2)
             qt5kvantumsetup
          fi
-         echo "$OPTARG" | cut -d"," -f3 | egrep -q 'qt6'
+         echo "$OPTARG" | cut -d"," -f3 | grep -E -q 'qt6'
          if (($? == 0)); then
             do_qt6=1
             themegen_arg_qt6=$(echo "$OPTARG" | cut -d"," -f3)

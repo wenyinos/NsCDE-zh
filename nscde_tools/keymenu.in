@@ -19,12 +19,12 @@ function config_for_menu
 {
    LINE="$1"
    if [ "x$UserLines" != "x" ]; then
-      keybind=$(echo "$UserLines" | egrep "$LINE" | awk '{ print $2, $3, $4 }')
+      keybind=$(echo "$UserLines" | grep -E "$LINE" | awk '{ print $2, $3, $4 }')
       if [ "x$keybind" == "x" ]; then
-         keybind=$(echo "$SysLines" | egrep "$LINE" | awk '{ print $2, $3, $4 }')
+         keybind=$(echo "$SysLines" | grep -E "$LINE" | awk '{ print $2, $3, $4 }')
       fi
    else
-      keybind=$(echo "$SysLines" | egrep "$LINE" | awk '{ print $2, $3, $4 }')
+      keybind=$(echo "$SysLines" | grep -E "$LINE" | awk '{ print $2, $3, $4 }')
    fi
 
    echo "$keybind" | while read key context modifiers
@@ -49,12 +49,12 @@ function config_for_keybinding
 {
    LINE="$1"
    if [ "x$UserLines" != "x" ]; then
-      keycfline=$(echo "$UserLines" | egrep "$LINE" | cut -d" " -f 2-)
+      keycfline=$(echo "$UserLines" | grep -E "$LINE" | cut -d" " -f 2-)
       if [ "x$keycfline" == "x" ]; then
-         keycfline=$(echo "$SysLines" | egrep "$LINE" | cut -d" " -f 2-)
+         keycfline=$(echo "$SysLines" | grep -E "$LINE" | cut -d" " -f 2-)
       fi
    else
-      keycfline=$(echo "$SysLines" | egrep "$LINE" | cut -d" " -f 2-)
+      keycfline=$(echo "$SysLines" | grep -E "$LINE" | cut -d" " -f 2-)
    fi
 
    echo "Silent Key $keycfline"
@@ -73,7 +73,7 @@ function enlist_kms
    SysLines=$(awk '{ print $1 }' < $NSCDE_DATADIR/defaults/Keymenu-${KeybindingsType}.actions)
 
    IFS="$OIFS"
-   KmsLines=$(@ECHONE@ "${SysLines}\n${UserLines}\n" | egrep "^km_" | sort -u)
+   KmsLines=$(@ECHONE@ "${SysLines}\n${UserLines}\n" | grep -E "^km_" | sort -u)
 }
 
 function fill_lines

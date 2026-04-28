@@ -21,12 +21,12 @@ function FindPalettes
       exit 2
    fi
 
-   SysPalettes=$(ls -1 "${NSCDE_DATADIR}"/palettes/*.dp | awk -F "/" '{print $NF}' | sed 's/\.dp$//g')
+   SysPalettes=$(for f in "${NSCDE_DATADIR}"/palettes/*.dp; do basename "$f" .dp; done)
 
    if [ -d "${FVWM_USERDIR}/palettes" ]; then
       ls -1 "${FVWM_USERDIR}"/palettes/*.dp > /dev/null 2>&1
       if (($? == 0)); then
-         UserPalettes=$(ls -1 "${FVWM_USERDIR}"/palettes/*.dp | awk -F "/" '{print $NF}' | sed 's/\.dp$//g')
+         UserPalettes=$(for f in "${FVWM_USERDIR}"/palettes/*.dp; do basename "$f" .dp; done)
       fi
    fi
 }
@@ -45,12 +45,12 @@ function FindBackdrops
       exit 2
    fi
 
-   SysBackdrops=$(ls -1 "${NSCDE_DATADIR}"/backdrops/*.pm | awk -F "/" '{print $NF}' | sed 's/\.pm$//g')
+   SysBackdrops=$(for f in "${NSCDE_DATADIR}"/backdrops/*.pm; do basename "$f" .pm; done)
 
    if [ -d "${FVWM_USERDIR}/backdrops" ]; then
       ls -1 "${FVWM_USERDIR}"/backdrops/*.pm > /dev/null 2>&1
       if (($? == 0)); then
-         UserBackdrops=$(ls -1 "${FVWM_USERDIR}"/backdrops/*.pm | awk -F "/" '{print $NF}' | sed 's/\.pm$//g')
+         UserBackdrops=$(for f in "${FVWM_USERDIR}"/backdrops/*.pm; do basename "$f" .pm; done)
       fi
    fi
 }
@@ -69,12 +69,12 @@ function FindPhotos
       exit 2
    fi
 
-   SysPhotos=$(ls -1 "${NSCDE_DATADIR}"/photos/*.png | awk -F "/" '{print $NF}' | sed 's/\.png$//g')
+   SysPhotos=$(for f in "${NSCDE_DATADIR}"/photos/*.png; do basename "$f" .png; done)
 
    if [ -d "${FVWM_USERDIR}/photos" ]; then
       ls -1 "${FVWM_USERDIR}"/photos/*.png > /dev/null 2>&1
       if (($? == 0)); then
-         UserPhotos=$(ls -1 "${FVWM_USERDIR}"/photos/*.png | awk -F "/" '{print $NF}' | sed 's/\.png$//g')
+         UserPhotos=$(for f in "${FVWM_USERDIR}"/photos/*.png; do basename "$f" .png; done)
       fi
    fi
 }

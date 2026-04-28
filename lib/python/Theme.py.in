@@ -44,7 +44,11 @@ class Theme():
                 print ('Trying to copy from default ')
                 shutil.copytree(Globals.themesrcdir,Globals.themedir,symlinks=True)
 
-            if os.path.lexists(Globals.userthemedir): shutil.rmtree(Globals.userthemedir)
+            if os.path.lexists(Globals.userthemedir):
+                userhome = os.path.expanduser('~')
+                assert Globals.userthemedir.startswith(userhome), \
+                    "userthemedir must be under user home directory"
+                shutil.rmtree(Globals.userthemedir)
             if self.opts.themeGtk2 == 'gtk2' or self.opts.themeGtk3 == 'gtk3':
                 shutil.copytree(os.path.join(Globals.themedir,'img'),os.path.join(Globals.userthemedir,'img'))
                 shutil.copytree(os.path.join(Globals.themedir,'img2'),os.path.join(Globals.userthemedir,'img2'))

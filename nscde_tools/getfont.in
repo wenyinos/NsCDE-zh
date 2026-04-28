@@ -68,10 +68,10 @@ function GetFont
    fi
 
    RequestedFont="font.${FnSpacing}.${FnType}.${FnSize}"
-   Catch=$(egrep "$RequestedFont" "$fncnffile")
+   Catch=$(grep -E "$RequestedFont" "$fncnffile")
    if (($? != 0)); then
-      if (($avoiddoublegrep == 1)); then
-         Catch=$(egrep "$RequestedFont" "$sysfncffile")
+      if (($avoiddoublgrep -E == 1)); then
+         Catch=$(grep -E "$RequestedFont" "$sysfncffile")
       fi
    fi
 
@@ -91,7 +91,7 @@ function GetFont
          echo $GetSize
       fi
    else
-      echo $GetSize | egrep -q '^([[:digit:]]+)(\.[[:digit:]]+)?$'
+      echo $GetSize | grep -E -q '^([[:digit:]]+)(\.[[:digit:]]+)?$'
       if (($? == 0)); then
          if (($NSCDE_FONT_DPI < 84)); then
             if [ "$FnSize" == "small" ]; then

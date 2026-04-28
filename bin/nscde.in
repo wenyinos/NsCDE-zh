@@ -30,8 +30,8 @@ else
 fi
 
 # Find out which DPI we are using.
-DpiInfo=$(LC_ALL=C xdpyinfo | egrep 'resolution:.*dots per inch' | awk '{ print $2 }')
-echo "${DpiInfo}" | egrep -q "^[[:digit:]]+x[[:digit:]]+$"
+DpiInfo=$(LC_ALL=C xdpyinfo | grep -E 'resolution:.*dots per inch' | awk '{ print $2 }')
+echo "${DpiInfo}" | grep -E -q "^[[:digit:]]+x[[:digit:]]+$"
 if (($? == 0)); then
    export DPI="${DpiInfo##*x}"
 else
@@ -53,7 +53,7 @@ export FVWM_USERDIR="${HOME}/.NsCDE"
 
 mkdir -p "${FVWM_USERDIR}/tmp"
 
-echo "$PATH" | egrep -q "@FULL_BINDIR@"
+echo "$PATH" | grep -E -q "@FULL_BINDIR@"
 if (($? != 0)); then
    export PATH="${PATH}:@FULL_BINDIR@"
 fi

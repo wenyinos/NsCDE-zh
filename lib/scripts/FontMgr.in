@@ -1751,7 +1751,7 @@ Widget 26
          # Xsettingsd Integration - only if $FVWM_USERDIR/Xsettingsd.conf is found
          If $XSETTINGSFILE <> {} Then
          Begin
-            Set $XsettingsParamExistanceCmd = {egrep -q '^([[:space:]]+)?Gtk\/FontName[[:space:]]+' "} $XSETTINGSFILE {"; echo $?}
+            Set $XsettingsParamExistanceCmd = {grep -E -q '^([[:space:]]+)?Gtk\/FontName[[:space:]]+' "} $XSETTINGSFILE {"; echo $?}
             Set $XsettingsParamExistance = (GetOutput $XsettingsParamExistanceCmd 1 1)
             If $XsettingsParamExistance == 0 Then
             Begin
@@ -1768,7 +1768,7 @@ Widget 26
             Set $CustomDPI = (GetOutput {echo "$XFT_USE_DPI"} 1 -1)
             If $CustomDPI <> {} Then
             Begin
-               Set $XsettingsDpiParamExistanceCmd = {egrep -q '^([[:space:]]+)?Xft\/DPI[[:space:]]+' "} $XSETTINGSFILE {"; echo $?}
+               Set $XsettingsDpiParamExistanceCmd = {grep -E -q '^([[:space:]]+)?Xft\/DPI[[:space:]]+' "} $XSETTINGSFILE {"; echo $?}
                Set $XsettingsDpiParamExistance = (GetOutput $XsettingsDpiParamExistanceCmd 1 1)
                If $XsettingsDpiParamExistance == 0 Then
                Begin

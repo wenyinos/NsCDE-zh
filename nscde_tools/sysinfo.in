@@ -23,7 +23,7 @@ print (platform.processor(), platform.machine(), os.uname()[4])
 try:
     # Internet (IP) Address
     print (socket.gethostbyname(socket.gethostname()))
-except:
+except Exception:
     print ("(none)")
 
 # Internet Domain
@@ -31,7 +31,7 @@ try:
     finddomain = socket.getfqdn(socket.gethostbyname(socket.gethostname()))
     domainpart = finddomain.split(".", 1)[1]
     print (domainpart)
-except:
+except Exception:
     print ("(none)")
 
 try:
@@ -40,7 +40,7 @@ try:
    physmem_mb = int(psutil.virtual_memory()[0] / 1024 / 1024)
    swapmem_mb = int(psutil.swap_memory()[0] / 1024 / 1024)
    swapmem_avail = int(psutil.swap_memory()[2] / 1024 / 1024)
-   swapmem_pct = int(psutil.swap_memory()[3] / 1024 / 1024)
+   swapmem_pct = int(psutil.swap_memory()[3])
 
    # Physical Memory (RAM)
    print (physmem_mb)

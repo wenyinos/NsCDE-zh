@@ -1341,7 +1341,7 @@ Widget 32
 
          If $GtkStr <> {00} Then
          Begin
-            Set $Foreground4Cmd = {$NSCDE_TOOLSDIR/palette_colorgen -n } $Ncolors { -p } $PalettePath { -l | egrep '^fg_color_4'}
+            Set $Foreground4Cmd = {$NSCDE_TOOLSDIR/palette_colorgen -n } $Ncolors { -p } $PalettePath { -l | grep -E '^fg_color_4'}
             Set $Foreground4 = (GetOutput $Foreground4Cmd 1 2)
          End
 
@@ -1361,13 +1361,13 @@ Widget 32
                Set $DoDark2 = (GetOutput {$NSCDE_TOOLSDIR/confset -t ini -c "$HOME/.config/gtk-3.0/settings.ini" -s Settings -k gtk-application-prefer-dark-theme -r} 1 -1)
             End
 
-            Set $CheckGtkrc2_a = (GetOutput {egrep -q "gtk-theme-name.*NsCDE" "$HOME/.gtkrc-2.0" 2>/dev/null ; echo $?} 1 -1)
+            Set $CheckGtkrc2_a = (GetOutput {grep -E -q "gtk-theme-name.*NsCDE" "$HOME/.gtkrc-2.0" 2>/dev/null ; echo $?} 1 -1)
             If $CheckGtkrc2_a <> 0 Then
             Begin
                Set $DoGtkrc2_a = (GetOutput {$NSCDE_TOOLSDIR/confset -t properties -c "$HOME/.gtkrc-2.0" -k gtk-theme-name -v ' "NsCDE"'} 1 -1)
             End
 
-            Set $CheckGtkrc2_b = (GetOutput {egrep -q "gtk-icon-theme-name.*NsCDE" "$HOME/.gtkrc-2.0" 2>/dev/null ; echo $?} 1 -1)
+            Set $CheckGtkrc2_b = (GetOutput {grep -E -q "gtk-icon-theme-name.*NsCDE" "$HOME/.gtkrc-2.0" 2>/dev/null ; echo $?} 1 -1)
             If $CheckGtkrc2_b <> 0 Then
             Begin
                Set $DoGtkrc2_b = (GetOutput {$NSCDE_TOOLSDIR/confset -t properties -c "$HOME/.gtkrc-2.0" -k gtk-icon-theme-name -v ' "NsCDE"'} 1 -1)
@@ -1379,12 +1379,12 @@ Widget 32
                Set $MkGtk3 = (GetOutput {mkdir -p "$HOME/.config/gtk-3.0"} 1 -1)
             End
 
-            Set $CheckGtkrc3a = (GetOutput {egrep -q "gtk-theme-name.*NsCDE" "$HOME/.config/gtk-3.0/settings.ini" 2>/dev/null ; echo $?} 1 -1)
+            Set $CheckGtkrc3a = (GetOutput {grep -E -q "gtk-theme-name.*NsCDE" "$HOME/.config/gtk-3.0/settings.ini" 2>/dev/null ; echo $?} 1 -1)
             If $CheckGtkrc3a <> 0 Then
             Begin
                Set $DoGtkrc3a = (GetOutput {$NSCDE_TOOLSDIR/confset -t ini -c "$HOME/.config/gtk-3.0/settings.ini" -s Settings -k gtk-theme-name -v NsCDE} 1 -1)
             End
-            Set $CheckGtkrc3b = (GetOutput {egrep -q "gtk-icon-theme-name.*NsCDE" "$HOME/.config/gtk-3.0/settings.ini" 2>/dev/null ; echo $?} 1 -1)
+            Set $CheckGtkrc3b = (GetOutput {grep -E -q "gtk-icon-theme-name.*NsCDE" "$HOME/.config/gtk-3.0/settings.ini" 2>/dev/null ; echo $?} 1 -1)
             If $CheckGtkrc3b <> 0 Then
             Begin
                Set $DoGtkrc3b = (GetOutput {$NSCDE_TOOLSDIR/confset -t ini -c "$HOME/.config/gtk-3.0/settings.ini" -s Settings -k gtk-icon-theme-name -v NsCDE} 1 -1)
@@ -1431,12 +1431,12 @@ Widget 32
                Set $DoDark1 = (GetOutput {$NSCDE_TOOLSDIR/confset -t properties -c "$HOME/.gtkrc-2.0" -k gtk-application-prefer-dark-theme -r} 1 -1)
             End
 
-            Set $CheckGtkrc2_a = (GetOutput {egrep -q "gtk-theme-name.*NsCDE" "$HOME/.gtkrc-2.0" 2>/dev/null ; echo $?} 1 -1)
+            Set $CheckGtkrc2_a = (GetOutput {grep -E -q "gtk-theme-name.*NsCDE" "$HOME/.gtkrc-2.0" 2>/dev/null ; echo $?} 1 -1)
             If $CheckGtkrc2_a <> 0 Then
             Begin
                Set $DoGtkrc2_a = (GetOutput {$NSCDE_TOOLSDIR/confset -t properties -c "$HOME/.gtkrc-2.0" -k gtk-theme-name -v ' "NsCDE"'} 1 -1)
             End
-            Set $CheckGtkrc2_b = (GetOutput {egrep -q "gtk-icon-theme-name.*NsCDE" "$HOME/.gtkrc-2.0" 2>/dev/null ; echo $?} 1 -1)
+            Set $CheckGtkrc2_b = (GetOutput {grep -E -q "gtk-icon-theme-name.*NsCDE" "$HOME/.gtkrc-2.0" 2>/dev/null ; echo $?} 1 -1)
             If $CheckGtkrc2_b <> 0 Then
             Begin
                Set $DoGtkrc2_b = (GetOutput {$NSCDE_TOOLSDIR/confset -t properties -c "$HOME/.gtkrc-2.0" -k gtk-icon-theme-name -v ' "NsCDE"'} 1 -1)
@@ -1470,12 +1470,12 @@ Widget 32
                Set $MkGtk3 = (GetOutput {mkdir -p "$HOME/.config/gtk-3.0"} 1 -1)
             End
 
-            Set $CheckGtkrc3a = (GetOutput {egrep -q "gtk-theme-name.*NsCDE" "$HOME/.config/gtk-3.0/settings.ini" 2>/dev/null ; echo $?} 1 -1)
+            Set $CheckGtkrc3a = (GetOutput {grep -E -q "gtk-theme-name.*NsCDE" "$HOME/.config/gtk-3.0/settings.ini" 2>/dev/null ; echo $?} 1 -1)
             If $CheckGtkrc3a <> 0 Then
             Begin
                Set $DoGtkrc3a = (GetOutput {$NSCDE_TOOLSDIR/confset -t ini -c "$HOME/.config/gtk-3.0/settings.ini" -s Settings -k gtk-theme-name -v NsCDE} 1 -1)
             End
-            Set $CheckGtkrc3b = (GetOutput {egrep -q "gtk-icon-theme-name.*NsCDE" "$HOME/.config/gtk-3.0/settings.ini" 2>/dev/null ; echo $?} 1 -1)
+            Set $CheckGtkrc3b = (GetOutput {grep -E -q "gtk-icon-theme-name.*NsCDE" "$HOME/.config/gtk-3.0/settings.ini" 2>/dev/null ; echo $?} 1 -1)
             If $CheckGtkrc3b <> 0 Then
             Begin
                Set $DoGtkrc3b = (GetOutput {$NSCDE_TOOLSDIR/confset -t ini -c "$HOME/.config/gtk-3.0/settings.ini" -s Settings -k gtk-icon-theme-name -v NsCDE} 1 -1)
@@ -1611,8 +1611,8 @@ Widget 32
             Set $QssQt5CtConfOutput = (GetOutput $QssQt5CtConfCmd 1 -1)
             Set $QssQt5CtConfStatus = (GetOutput $QssQt5CtConfCmd 2 1)
 
-            Set $QssQt5CtConfCheck1Cmd = {echo '} $QssQt5CtConfOutput {' | egrep -q '\/qss\/NsCDE-Kvantum\.qss'; echo $?}
-            Set $QssQt5CtConfCheck2Cmd = {echo '} $QssQt5CtConfOutput {' | egrep -q '@Invalid\(\)'; echo $?}
+            Set $QssQt5CtConfCheck1Cmd = {echo '} $QssQt5CtConfOutput {' | grep -E -q '\/qss\/NsCDE-Kvantum\.qss'; echo $?}
+            Set $QssQt5CtConfCheck2Cmd = {echo '} $QssQt5CtConfOutput {' | grep -E -q '@Invalid\(\)'; echo $?}
             Set $QssQt5CtConfCheck1 = (GetOutput $QssQt5CtConfCheck1Cmd 1 1)
             Set $QssQt5CtConfCheck2 = (GetOutput $QssQt5CtConfCheck2Cmd 1 1)
 
@@ -1705,8 +1705,8 @@ Widget 32
             Set $QssQt6CtConfOutput = (GetOutput $QssQt6CtConfCmd 1 -1)
             Set $QssQt6CtConfStatus = (GetOutput $QssQt6CtConfCmd 2 1)
 
-            Set $QssQt6CtConfCheck1Cmd = {echo '} $QssQt6CtConfOutput {' | egrep -q '\/qss\/NsCDE-Kvantum\.qss'; echo $?}
-            Set $QssQt6CtConfCheck2Cmd = {echo '} $QssQt6CtConfOutput {' | egrep -q '@Invalid\(\)'; echo $?}
+            Set $QssQt6CtConfCheck1Cmd = {echo '} $QssQt6CtConfOutput {' | grep -E -q '\/qss\/NsCDE-Kvantum\.qss'; echo $?}
+            Set $QssQt6CtConfCheck2Cmd = {echo '} $QssQt6CtConfOutput {' | grep -E -q '@Invalid\(\)'; echo $?}
             Set $QssQt6CtConfCheck1 = (GetOutput $QssQt6CtConfCheck1Cmd 1 1)
             Set $QssQt6CtConfCheck2 = (GetOutput $QssQt6CtConfCheck2Cmd 1 1)
 
@@ -1896,7 +1896,7 @@ Widget 32
          If $CheckUseXsettingsd == 1 Then
          Begin
             Do {f_Xsettingsd stop}
-            Set $CheckXstSetup = (GetOutput {egrep -q '^Net\/ThemeName[[:space:]]+"NsCDE"' $FVWM_USERDIR/Xsettingsd.conf; echo $?} 1 1)
+            Set $CheckXstSetup = (GetOutput {grep -E -q '^Net\/ThemeName[[:space:]]+"NsCDE"' $FVWM_USERDIR/Xsettingsd.conf; echo $?} 1 1)
             If $CheckXstSetup <> 0 Then
             Begin
                Set $SetXstEntry = (GetOutput {$NSCDE_TOOLSDIR/ised -c 's/\(^Net\/ThemeName[[:space:]]\+\).*/\1"NsCDE"/g' -f $FVWM_USERDIR/Xsettingsd.conf} 1 -1)

@@ -337,7 +337,7 @@ DestroyFunc f_MoveToWorkspace
 AddToFunc f_MoveToWorkspace
 + I f_SetWSMConf
 + I PipeRead 'wsp=0; while [ ${wsp} -lt $[infostore.desknum] ]; do wsp=$((wsp + 1)); \
-              wspname=$(egrep "^WSP:${wsp}:" $[infostore.wsmconf] | cut -d: -f3); \
+              wspname=$(grep -E "^WSP:${wsp}:" $[infostore.wsmconf] | cut -d: -f3); \
               if [ "x${wspname}" = "x" ]; then wspname="$wsp"; fi; \
               echo "+ \\\"&${wsp} $[gt.Move To Workspace]:		${wspname}\\\" MoveToDesk 0 $(($wsp - 1))"; done'
 
@@ -1788,7 +1788,7 @@ AddToFunc f_LeaveWindow
 # icons bigger than cca 60x60.
 DestroyFunc f_IconifyWindow
 AddToFunc f_IconifyWindow
-+ I PipeRead "echo '$[ip.width]$[ip.height]' | egrep -q '^[0-9]+$' || echo 'Break 1'"
++ I PipeRead "echo '$[ip.width]$[ip.height]' | grep -E -q '^[0-9]+$' || echo 'Break 1'"
 + I PipeRead "@KSH@ -c '(( $[ip.width] > 60 && $[ip.width] < 72 || $[ip.height] > 60 && $[ip.height] < 72 )) && \
  echo \"WindowId $0 WindowStyle State 3, IconBackgroundColorset 54\"'"
 + I PipeRead "@KSH@ -c '(( $[ip.width] >= 72 || $[ip.height] >= 72 )) &&  \

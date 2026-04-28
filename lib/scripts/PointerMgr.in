@@ -68,7 +68,7 @@ Begin
    Set $pos2 = (Add $pos2 1)
    Set $pos2 = (Add $pos2 -1)
 
-   Set $dclickTimeOut = {egrep '^([[:space:]]+)?InfoStoreAdd[[:space:]]+menudclicktm' "} $NSCDEFILE {"}
+   Set $dclickTimeOut = {grep -E '^([[:space:]]+)?InfoStoreAdd[[:space:]]+menudclicktm' "} $NSCDEFILE {"}
    Set $dclickTime = (GetOutput $dclickTimeOut 1 3)
    If $dclickTime == {} Then
    Begin
@@ -427,7 +427,7 @@ Widget 18
       Begin
          # Workaround for FvwmScript WriteToFile which truncates existing file if it
          # doesn't find script's signature in it.
-         Set $CheckEntryCmd = {egrep -q '^#PointerMgr,[1-9]*' "} $XSETFILE {"; echo $?}
+         Set $CheckEntryCmd = {grep -E -q '^#PointerMgr,[1-9]*' "} $XSETFILE {"; echo $?}
          Set $CheckEntry = (GetOutput $CheckEntryCmd 1 -1)
 
          If $CheckEntry <> 0 Then
@@ -481,7 +481,7 @@ Widget 18
          # Xsettingsd Integration - only if $FVWM_USERDIR/Xsettingsd.conf is found
          If $XSETTINGSFILE <> {} Then
          Begin
-            Set $XsettingsParamExistanceCmd = {egrep -q '^([[:space:]]+)?Net\/DoubleClickTime[[:space:]]+[[:digit:]]+' "} $XSETTINGSFILE {"; echo $?}
+            Set $XsettingsParamExistanceCmd = {grep -E -q '^([[:space:]]+)?Net\/DoubleClickTime[[:space:]]+[[:digit:]]+' "} $XSETTINGSFILE {"; echo $?}
             Set $XsettingsParamExistance = (GetOutput $XsettingsParamExistanceCmd 1 1)
             If $XsettingsParamExistance == 0 Then
             Begin

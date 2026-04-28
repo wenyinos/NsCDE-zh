@@ -39,7 +39,7 @@ if (($? != 0)); then
    exit 0
 fi
 
-xdata=$(xrandr | egrep '^Screen [[:digit:]]:')
+xdata=$(xrandr | grep -E '^Screen [[:digit:]]:')
 mdata=$(xrandr --listmonitors)
 
 # Handling more than one logical screen is currently out of scope
@@ -53,7 +53,7 @@ fi
 
 # Inspect if there some SLS configuration present
 scpos_sum=0
-echo "$mdata" | egrep -v Monitors: | while read scnum pmname geo mname
+echo "$mdata" | grep -E -v Monitors: | while read scnum pmname geo mname
 do
    # Is this a Cloned Display or a Single Logical Screen?
    scpos=$((${geo#*+}))
@@ -75,7 +75,7 @@ fi
 
 # Monitor count
 moncnt=$(echo "$mdata" | grep Monitors: | cut -d' ' -f 2)
-echo "$moncnt" | egrep -q '^[[:digit:]]+$'
+echo "$moncnt" | grep -E -q '^[[:digit:]]+$'
 if (($? == 0)); then
    if (($scpos_sum > 0)); then
       echo "InfoStoreAdd lscrn.cnt $moncnt"
@@ -89,7 +89,7 @@ fi
 # Main monitor geometry enumeration
 rootmenudata=""
 
-echo "$mdata" | egrep -v Monitors: | while read scnum pmname geo mname
+echo "$mdata" | grep -E -v Monitors: | while read scnum pmname geo mname
 do
    scnum="${scnum%%:*}"
    scwidth=${geo%%/*}
@@ -115,10 +115,10 @@ do
    fi
    export active_monitors
 
-   echo "$scwidth" | egrep -q '^[[:digit:]]+$'
+   echo "$scwidth" | grep -E -q '^[[:digit:]]+$'
    retval_w=$?
 
-   echo "$scheight" | egrep -q '^[[:digit:]]+$'
+   echo "$scheight" | grep -E -q '^[[:digit:]]+$'
    retval_h=$?
 
    retval=$(($retval_w + $retval_h))
@@ -146,7 +146,7 @@ if (($scpos_sum > 0)); then
    echo "AddToMenu m_SlsMoveAll"
    echo "+ \"&Move All Windows To This Screen\"            f_MoveAllToThisScreen"
    echo "+ \"\" Nop"
-   echo "$rootmenudata" | egrep -v '^$'
+   echo "$rootmenudata" | grep -E -v '^$'
 
    echo ""
    echo "ChangeMenuStyle CommonMenu m_SlsMoveAll"

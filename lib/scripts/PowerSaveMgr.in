@@ -236,7 +236,7 @@ Widget 2
          Begin
             # Workaround for FvwmScript WriteToFile which truncates existing file if it
             # doesn't find script's signature in it.
-            Set $CheckEntryCmd = {egrep -q '^#PowerSaveMgr,[1-9]*' "} $FILE {"; echo $?}
+            Set $CheckEntryCmd = {grep -E -q '^#PowerSaveMgr,[1-9]*' "} $FILE {"; echo $?}
             Set $CheckEntry = (GetOutput $CheckEntryCmd 1 -1)
 
             If $CheckEntry <> 0 Then

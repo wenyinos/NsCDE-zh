@@ -14,13 +14,13 @@ Begin
    Set $genfile= (GetOutput {sh -c "echo $FVWM_USERDIR/Xset.conf"} -1 1)
    Set $FILE = $genfile
 
-   ChangeValue 9 (GetOutput  {xset -q | egrep 'auto repeat:' } 0 7)
-   If (GetOutput  {xset -q | egrep 'auto repeat:' } 0 3)==on Then
+   ChangeValue 9 (GetOutput  {xset -q | grep -E 'auto repeat:' } 0 7)
+   If (GetOutput  {xset -q | grep -E 'auto repeat:' } 0 3)==on Then
    Begin
       ChangeValue 3 1
    End
-   ChangeValue 5 (GetOutput  {xset -q | egrep 'auto repeat delay:' } 0 4)
-   ChangeValue 7 (GetOutput  {xset -q | egrep 'auto repeat delay:' } 0 7)
+   ChangeValue 5 (GetOutput  {xset -q | grep -E 'auto repeat delay:' } 0 4)
+   ChangeValue 7 (GetOutput  {xset -q | grep -E 'auto repeat delay:' } 0 7)
 
    Set $DefFont = (GetOutput {$NSCDE_TOOLSDIR/getfont -v -t normal -s medium -Z 11.5} 1 -1)
    ChangeFont 2 $DefFont
@@ -337,7 +337,7 @@ Widget 14
       Begin
          # Workaround for FvwmScript WriteToFile which truncates existing file if it
          # doesn't find script's signature in it.
-         Set $CheckEntryCmd = {egrep -q '^#KeyboardMgr,[1-9]*' "} $FILE {"; echo $?}
+         Set $CheckEntryCmd = {grep -E -q '^#KeyboardMgr,[1-9]*' "} $FILE {"; echo $?}
          Set $CheckEntry = (GetOutput $CheckEntryCmd 1 -1)
 
          If $CheckEntry <> 0 Then
@@ -361,7 +361,7 @@ Widget 14
 
          If $InitialKeyBindingSet <> $KeyBindingSet Then
          Begin
-            Set $CheckKeyBindingSet = (GetOutput {egrep -q '^([[:space:]]+)?InfoStoreAdd kbd_bind_set .*' "$FVWM_USERDIR/NsCDE.conf"; echo $?} 1 -1)
+            Set $CheckKeyBindingSet = (GetOutput {grep -E -q '^([[:space:]]+)?InfoStoreAdd kbd_bind_set .*' "$FVWM_USERDIR/NsCDE.conf"; echo $?} 1 -1)
             If $CheckKeyBindingSet == 0 Then
             Begin
                Set $WriteKbdBindingSetCmd = {$NSCDE_TOOLSDIR/ised -c 's/^\([[:space:]]\+\)\?InfoStoreAdd kbd_bind_set\([[:space:]]\+\)\([[:alnum:]]\+\)\([[:space:]]\+\)\?\(#.*\)\?/\1InfoStoreAdd kbd_bind_set } $KeyBindingSet {\4\5/g' -f "$FVWM_USERDIR/NsCDE.conf"}

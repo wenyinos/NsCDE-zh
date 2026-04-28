@@ -29,7 +29,7 @@ function find_colors
          $NSCDE_TOOLSDIR/palette_colorgen \
           -n ${NSCDE_PALETTE_NCOLORS} \
           -p ${palfile} -sl | \
-          egrep '(ts|bs)_color_3' | while IFS=" " read name value
+          grep -E '(ts|bs)_color_3' | while IFS=" " read name value
          do
             eval "${name}"="${value}"
          done

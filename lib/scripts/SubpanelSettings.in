@@ -22,7 +22,7 @@ Begin
    End
 
    # Find out if we are going to read subpanel data from the system or user Subpanels.actions file
-   Set $ChkActionsCmd = {egrep '^S} $SubpanelNo {,.*' "$FVWM_USERDIR/Subpanels.actions" 2>/dev/null}
+   Set $ChkActionsCmd = {grep -E '^S} $SubpanelNo {,.*' "$FVWM_USERDIR/Subpanels.actions" 2>/dev/null}
    Set $ChkActions = (GetOutput $ChkActionsCmd 1 -1)
    If $ChkActions <> {} Then
    Begin
@@ -36,7 +36,7 @@ Begin
    Set $SystemSubpanelActionsRead = {$NSCDE_DATADIR/defaults/Subpanels.actions}
 
    # Fill subpanel parameters in variables
-   Set $SubpanelDataCmd = {egrep "^S} $SubpanelNo {,(NAME|WIDTH|ENABLED)" "} $SubpanelActionsRead {" | sort | cut -d"," -f3}
+   Set $SubpanelDataCmd = {grep -E "^S} $SubpanelNo {,(NAME|WIDTH|ENABLED)" "} $SubpanelActionsRead {" | sort | cut -d"," -f3}
    Set $SubpanelEnabled = (GetOutput $SubpanelDataCmd 1 -1)
    Set $SubpanelDisplayName = (GetOutput $SubpanelDataCmd 2 -1)
    Set $SubpanelDisplayLocalizedNameCmd = {echo '} $SubpanelDisplayName {' | $NSCDE_TOOLSDIR/ised -c 's/^\(\$\[gt\.\)\(.*\)\(\]\)/\2/g' -o -f -}
@@ -61,7 +61,7 @@ Begin
    End
 
    # Fill system defaults in variables - for resetting
-   Set $SubpanelSysDataCmd = {egrep "^S} $SubpanelNo {,(NAME|WIDTH|ENABLED)" "} $SystemSubpanelActionsRead {" | sort | cut -d"," -f3}
+   Set $SubpanelSysDataCmd = {grep -E "^S} $SubpanelNo {,(NAME|WIDTH|ENABLED)" "} $SystemSubpanelActionsRead {" | sort | cut -d"," -f3}
    Set $SubpanelSysEnabled = (GetOutput $SubpanelSysDataCmd 1 -1)
    Set $SubpanelSysDisplayName = (GetOutput $SubpanelSysDataCmd 2 -1)
    Set $SubpanelSysWidth = (GetOutput $SubpanelSysDataCmd 3 -1)
@@ -376,7 +376,7 @@ Widget 14
          # Make sure Subpanels.actions exists in $FVWM_USERDIR
          Set $ExistanceOK = 0
 
-         Set $ExistanceEnsureCmd = {egrep "^S} $SubpanelNo {,(NAME|WIDTH|ENABLED),.*" "} $UserSubpanelActionsFile{" 2>/dev/null | wc -l}
+         Set $ExistanceEnsureCmd = {grep -E "^S} $SubpanelNo {,(NAME|WIDTH|ENABLED),.*" "} $UserSubpanelActionsFile{" 2>/dev/null | wc -l}
          Set $ExistanceEnsure = (GetOutput $ExistanceEnsureCmd 1 1)
 
          If $ExistanceEnsure == 3 Then
@@ -394,7 +394,7 @@ Widget 14
              {\nS} $SubpanelNo {,ENABLED,} $NewSubpanelEnabled
              {\nS} $SubpanelNo {,WIDTH,} $NewSubpanelWidth {\n" >> "} $UserSubpanelActionsFile {"'}
             Set $WriteNewSubpanelConf = (GetOutput $WriteNewSubpanelConfCmd 1 -1)
-            Set $AddTheRestFromSysCmd = {egrep ^S} $SubpanelNo {,ENTRY,.* "} $SystemSubpanelActionsRead {" >> "} $UserSubpanelActionsFile {"}
+            Set $AddTheRestFromSysCmd = {grep -E ^S} $SubpanelNo {,ENTRY,.* "} $SystemSubpanelActionsRead {" >> "} $UserSubpanelActionsFile {"}
             Set $AddTheRestFromSys = (GetOutput $AddTheRestFromSysCmd 1 -1)
             Set $ExistanceOK = 1
          End

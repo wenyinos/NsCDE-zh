@@ -132,7 +132,7 @@ fi
 found=0
 cat "$NSCDE_DATADIR/fallback/app-catalog/$CatName" | while read appname
 do
-   echo "$appname" | egrep -q '^\$\[infostore\..*\]'
+   echo "$appname" | grep -E -q '^\$\[infostore\..*\]'
    if (($? == 0)); then
       found=1
       echo "$appname"
