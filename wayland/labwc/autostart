@@ -27,7 +27,7 @@ if [ -n "${NSCDE_WAYLAND_SCALE:-}" ] || [ -r "$scale_file" ]; then
 	(sleep 1; apply_global_scale) &
 fi
 command -v sfwbar >/dev/null 2>&1 && nscde-wayland-run sfwbar &
-command -v lavalauncher >/dev/null 2>&1 && lavalauncher &
+command -v lavalauncher >/dev/null 2>&1 && nscde-wayland-run app lavalauncher &
 
 if [ -f "$wallpaper" ]; then
 	if command -v swaybg >/dev/null 2>&1; then

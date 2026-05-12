@@ -24,7 +24,18 @@ if [ "${NSCDE_WAYLAND_PRIVATE_DBUS:-1}" != 0 ] && \
 	[ -z "${NSCDE_WAYLAND_DBUS_WRAPPED:-}" ] && \
 	command -v dbus-run-session >/dev/null 2>&1; then
 	export NSCDE_WAYLAND_DBUS_WRAPPED=1
-	exec dbus-run-session -- "$0" "$@"
+	export NSCDE_BASE_XDG_DATA_HOME="${XDG_DATA_HOME:-"$HOME/.local/share"}"
+	export NSCDE_BASE_XDG_CONFIG_DIRS="${XDG_CONFIG_DIRS:-/etc/xdg}"
+	export NSCDE_BASE_XDG_DATA_DIRS="${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+	dbus_data_home=${NSCDE_WAYLAND_DBUS_DATA_HOME:-"$HOME/.local/share/nscde-wayland/dbus"}
+	mkdir -p "$dbus_data_home"
+	XDG_DATA_HOME=$dbus_data_home \
+		XDG_DATA_DIRS="$source_dir:$asset_source/xdg:$NSCDE_BASE_XDG_DATA_DIRS" \
+		exec dbus-run-session -- "$0" "$@"
+fi
+
+if [ -n "${NSCDE_BASE_XDG_DATA_HOME:-}" ]; then
+	export XDG_DATA_HOME=$NSCDE_BASE_XDG_DATA_HOME
 fi
 
 copy_file_once() {
@@ -176,12 +187,14 @@ repair_labwc_component_wrappers() {
 
 	cfg=$labwc_config_dir/autostart
 	[ -f "$cfg" ] || return
-	grep -q '&& fnott &' "$cfg" || grep -q '&& sfwbar &' "$cfg" || return
+	grep -q '&& fnott &' "$cfg" || grep -q '&& sfwbar &' "$cfg" || \
+		grep -q '&& lavalauncher &' "$cfg" || return
 	tmp=$cfg.tmp.$$
 	backup=$cfg.bak-before-wayland-run
 	sed \
 		-e 's/&& fnott &/\&\& nscde-wayland-run fnott \&/g' \
 		-e 's/&& sfwbar &/\&\& nscde-wayland-run sfwbar \&/g' \
+		-e 's/&& lavalauncher &/\&\& nscde-wayland-run app lavalauncher \&/g' \
 		"$cfg" > "$tmp" || {
 			rm -f "$tmp"
 			return
@@ -210,8 +223,8 @@ export CLUTTER_BACKEND=wayland
 export NSCDE_WAYLAND_CONFIG="$config_dir"
 export NSCDE_WAYLAND_DATA="$source_dir"
 export NSCDE_WAYLAND_ASSETS="$asset_source"
-export NSCDE_BASE_XDG_CONFIG_DIRS="${XDG_CONFIG_DIRS:-/etc/xdg}"
-export NSCDE_BASE_XDG_DATA_DIRS="${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+export NSCDE_BASE_XDG_CONFIG_DIRS="${NSCDE_BASE_XDG_CONFIG_DIRS:-${XDG_CONFIG_DIRS:-/etc/xdg}}"
+export NSCDE_BASE_XDG_DATA_DIRS="${NSCDE_BASE_XDG_DATA_DIRS:-${XDG_DATA_DIRS:-/usr/local/share:/usr/share}}"
 export PATH="$script_dir:$PATH"
 export XCURSOR_PATH="$asset_source/icons:${XCURSOR_PATH:-}"
 

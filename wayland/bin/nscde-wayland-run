@@ -21,9 +21,55 @@ else
 fi
 
 asset_source=${NSCDE_WAYLAND_ASSET_SOURCE:-"$source_dir/assets"}
+config_root=${NSCDE_WAYLAND_CONFIG:-"${XDG_CONFIG_HOME:-"$HOME/.config"}/nscde-wayland"}
+app_config_home=${NSCDE_WAYLAND_APP_CONFIG_HOME:-"$config_root/app-config"}
+app_data_home=${NSCDE_WAYLAND_APP_DATA_HOME:-"${XDG_DATA_HOME:-"$HOME/.local/share"}/nscde-wayland/app-data"}
 base_config_dirs=${NSCDE_BASE_XDG_CONFIG_DIRS:-${XDG_CONFIG_DIRS:-/etc/xdg}}
 base_data_dirs=${NSCDE_BASE_XDG_DATA_DIRS:-${XDG_DATA_DIRS:-/usr/local/share:/usr/share}}
 nscde_data_dirs="$source_dir:$asset_source/xdg:$base_data_dirs"
+
+ensure_app_config() {
+	gtk_theme=${NSCDE_WAYLAND_GTK_THEME:-NsCDE}
+	qt_style=${NSCDE_WAYLAND_QT_STYLE:-kvantum}
+	filemgr_desktop=${NSCDE_WAYLAND_FILEMGR_DESKTOP:-pcmanfm-qt.desktop}
+	mkdir -p "$app_config_home/gtk-3.0" "$app_config_home/gtk-4.0" \
+		"$app_config_home/qt5ct" "$app_config_home/qt6ct" \
+		"$app_config_home/Kvantum" "$app_data_home/applications"
+	for gtkver in gtk-3.0 gtk-4.0; do
+		if [ ! -e "$app_config_home/$gtkver/settings.ini" ]; then
+			cat > "$app_config_home/$gtkver/settings.ini" <<EOF
+[Settings]
+gtk-theme-name=$gtk_theme
+gtk-icon-theme-name=NsCDE
+gtk-cursor-theme-name=NsCDE
+gtk-font-name=DejaVu Serif 10
+EOF
+		fi
+	done
+	for qtver in qt5ct qt6ct; do
+		if [ ! -e "$app_config_home/$qtver/${qtver}.conf" ]; then
+			cat > "$app_config_home/$qtver/${qtver}.conf" <<EOF
+[Appearance]
+icon_theme=NsCDE
+standard_dialogs=default
+style=$qt_style
+
+[Fonts]
+fixed="DejaVu Sans Mono,10"
+general="DejaVu Serif,10"
+EOF
+		fi
+	done
+	if [ ! -e "$app_config_home/Kvantum/kvantum.kvconfig" ]; then
+		printf '[General]\ntheme=NsCDE\n' > "$app_config_home/Kvantum/kvantum.kvconfig"
+	fi
+	if [ ! -e "$app_config_home/kdeglobals" ]; then
+		printf '[Icons]\nTheme=NsCDE\n' > "$app_config_home/kdeglobals"
+	fi
+	if [ ! -e "$app_config_home/mimeapps.list" ]; then
+		printf '[Default Applications]\ninode/directory=%s\n' "$filemgr_desktop" > "$app_config_home/mimeapps.list"
+	fi
+}
 
 case "$cmd" in
 	fuzzel)
@@ -44,7 +90,21 @@ case "$cmd" in
 			XDG_DATA_DIRS=$nscde_data_dirs exec sfwbar "$@"
 		;;
 	app)
-		XDG_CONFIG_DIRS=$base_config_dirs XDG_DATA_DIRS=$base_data_dirs exec "$@"
+		[ "$#" -gt 0 ] || {
+			printf '%s\n' "usage: nscde-wayland-run app COMMAND [ARGS...]" >&2
+			exit 2
+		}
+		ensure_app_config
+		gtk2rc=$asset_source/integration/gtk2_gtk3_qt/gtk-2.0/gtkrc
+		[ ! -r "$gtk2rc" ] || export GTK2_RC_FILES=$gtk2rc
+		export XDG_CONFIG_HOME=$app_config_home
+		export XDG_DATA_HOME=$app_data_home
+		export XDG_CONFIG_DIRS=$base_config_dirs
+		export XDG_DATA_DIRS=$nscde_data_dirs
+		export GTK_THEME=${NSCDE_WAYLAND_GTK_THEME:-NsCDE}
+		export QT_QPA_PLATFORMTHEME=${NSCDE_WAYLAND_QT_PLATFORMTHEME:-qt5ct}
+		export XCURSOR_THEME=${NSCDE_WAYLAND_CURSOR_THEME:-NsCDE}
+		exec "$@"
 		;;
 	*)
 		printf '%s\n' "unknown command: $cmd" >&2
