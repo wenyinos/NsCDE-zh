@@ -20,6 +20,13 @@ asset_source=${NSCDE_WAYLAND_ASSET_SOURCE:-"$source_dir/assets"}
 theme_source=${NSCDE_WAYLAND_THEME_SOURCE:-"$source_dir/themes/NsCDE-Wayland"}
 labwc_source=${NSCDE_WAYLAND_LABWC_SOURCE:-"$source_dir/labwc"}
 
+if [ "${NSCDE_WAYLAND_PRIVATE_DBUS:-1}" != 0 ] && \
+	[ -z "${NSCDE_WAYLAND_DBUS_WRAPPED:-}" ] && \
+	command -v dbus-run-session >/dev/null 2>&1; then
+	export NSCDE_WAYLAND_DBUS_WRAPPED=1
+	exec dbus-run-session -- "$0" "$@"
+fi
+
 copy_file_once() {
 	src=$1
 	dst=$2
