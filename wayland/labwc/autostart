@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -eu
+
 nscde_data=${NSCDE_WAYLAND_DATA:-/usr/share/nscde-wayland}
 nscde_assets=${NSCDE_WAYLAND_ASSETS:-"$nscde_data/assets"}
 wallpaper="$nscde_assets/photos/Flower.png"
@@ -21,13 +23,13 @@ apply_global_scale() {
 	done
 }
 
-command -v fnott >/dev/null 2>&1 && nscde-wayland-run fnott &
-command -v kanshi >/dev/null 2>&1 && kanshi &
+if command -v fnott >/dev/null 2>&1; then nscde-wayland-run fnott & fi
+if command -v kanshi >/dev/null 2>&1; then kanshi & fi
 if [ -n "${NSCDE_WAYLAND_SCALE:-}" ] || [ -r "$scale_file" ]; then
 	(sleep 1; apply_global_scale) &
 fi
-command -v sfwbar >/dev/null 2>&1 && nscde-wayland-run sfwbar &
-command -v lavalauncher >/dev/null 2>&1 && nscde-wayland-run app lavalauncher &
+if command -v sfwbar >/dev/null 2>&1; then nscde-wayland-run sfwbar & fi
+if command -v lavalauncher >/dev/null 2>&1; then nscde-wayland-run app lavalauncher & fi
 
 if [ -f "$wallpaper" ]; then
 	if command -v swaybg >/dev/null 2>&1; then

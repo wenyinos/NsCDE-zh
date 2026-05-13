@@ -48,16 +48,16 @@ EOF
 	done
 	for qtver in qt5ct qt6ct; do
 		if [ ! -e "$app_config_home/$qtver/${qtver}.conf" ]; then
-			cat > "$app_config_home/$qtver/${qtver}.conf" <<EOF
-[Appearance]
-icon_theme=NsCDE
-standard_dialogs=default
-style=$qt_style
-
-[Fonts]
-fixed="DejaVu Sans Mono,10"
-general="DejaVu Serif,10"
-EOF
+			printf '%s\n' \
+				"[Appearance]" \
+				"icon_theme=NsCDE" \
+				"standard_dialogs=default" \
+				"style=$qt_style" \
+				"" \
+				"[Fonts]" \
+				'fixed="DejaVu Sans Mono,10"' \
+				'general="DejaVu Serif,10"' \
+				> "$app_config_home/$qtver/${qtver}.conf"
 		fi
 	done
 	if [ ! -e "$app_config_home/Kvantum/kvantum.kvconfig" ]; then

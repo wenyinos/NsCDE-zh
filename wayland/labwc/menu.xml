@@ -10,6 +10,7 @@
     <item label="Run">
       <action name="Execute" command="nscde-wayland-run fuzzel" />
     </item>
+    <menu id="pipe-apps" label="Applications" execute="nscde-wayland-pipemenu" />
     <item label="Screenshot Area">
       <action name="Execute" command="nscde-wayland-screenshot area" />
     </item>

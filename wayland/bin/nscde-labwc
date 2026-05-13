@@ -3,7 +3,7 @@
 set -eu
 
 config_home=${XDG_CONFIG_HOME:-"$HOME/.config"}
-config_dir="$config_home/nscde-wayland"
+config_dir=${NSCDE_WAYLAND_CONFIG:-"$config_home/nscde-wayland"}
 labwc_config_dir="$config_dir/labwc"
 script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 wayland_dir=$(CDPATH= cd -- "$script_dir/.." && pwd)
@@ -211,6 +211,19 @@ repair_labwc_mouse_defaults
 repair_labwc_menu_scale
 repair_labwc_autostart_scale
 repair_labwc_component_wrappers
+# Ensure pipe-menu entry exists in menu.xml for users upgrading from
+# a version that did not include nscde-wayland-pipemenu.
+if [ -f "$labwc_config_dir/menu.xml" ] && \
+   ! grep -q 'nscde-wayland-pipemenu' "$labwc_config_dir/menu.xml"; then
+	cfg=$labwc_config_dir/menu.xml
+	tmp=$cfg.tmp.$$
+	backup=$cfg.bak-before-pipemenu
+	[ -e "$backup" ] || cp "$cfg" "$backup" 2>/dev/null || true
+	awk '/<separator/ && !done {
+		print "    <menu id=\"pipe-apps\" label=\"Applications\" execute=\"nscde-wayland-pipemenu\" />"
+		done=1
+	} { print }' "$cfg" > "$tmp" && mv "$tmp" "$cfg" || rm -f "$tmp"
+fi
 
 export XDG_SESSION_TYPE=wayland
 export XDG_SESSION_DESKTOP=nscde-labwc

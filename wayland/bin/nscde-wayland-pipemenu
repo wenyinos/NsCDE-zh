@@ -1,0 +1,89 @@
+#!/bin/sh
+#
+# labwc pipe-menu: generate XDG application menu from .desktop files
+# Outputs Openbox XML menu to stdout.
+#
+
+set -eu
+
+app_dirs="${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+app_home="${XDG_DATA_HOME:-$HOME/.local/share}"
+terminal_cmd="nscde-wayland-run foot"
+
+# Collect .desktop files, deduplicate by basename (first wins).
+# Uses awk for O(n) dedup instead of per-file grep.
+find_desktop_files() {
+	{
+		[ -d "$app_home/applications" ] && find "$app_home/applications" -name '*.desktop' -type f 2>/dev/null
+		printf '%s\n' "$app_dirs" | tr ':' '\n' | while IFS= read -r dir; do
+			[ -d "$dir/applications" ] && find "$dir/applications" -name '*.desktop' -type f 2>/dev/null
+		done
+	} | awk -F/ '!seen[$NF]++ { print }'
+}
+
+# Parse a .desktop file, respecting localized Name[xx]= entries.
+# Extracts Name (prefers Name[LANG] over plain Name), Exec, NoDisplay, Terminal.
+# Strips Exec field codes (%f, %U, etc.).
+parse_desktop() {
+	file=$1
+	lang=${LANG:-en}
+	short_lang=${lang%%.*}
+	awk -v lang="$short_lang" -F= '
+		BEGIN { name=""; loc_name=""; exec_cmd=""; nodisplay=""; terminal="" }
+		/^Name=/ && !/Name\[/ { name=substr($0, index($0,"=")+1) }
+		/^Name\[/ {
+			key=substr($0, 6, index($0,"=")-6)
+			if (key == lang || key == substr(lang,1,2)) {
+				loc_name=substr($0, index($0,"=")+1)
+			}
+		}
+		/^Exec=/ { exec_cmd=substr($0, index($0,"=")+1) }
+		/^NoDisplay=/ { nodisplay=substr($0, index($0,"=")+1) }
+		/^Terminal=/ { terminal=substr($0, index($0,"=")+1) }
+		END {
+			if (loc_name != "") name = loc_name
+			if (name == "" || exec_cmd == "") exit 1
+			if (nodisplay == "true") exit 1
+			# Strip Exec field codes: %f %F %u %U %d %D %n %N %i %c %k %v %m
+			gsub(/ %[fFuUdDnNickvm]/, "", exec_cmd)
+			# Also strip single % at end
+			sub(/ %$/, "", exec_cmd)
+			t = (terminal == "true") ? "1" : "0"
+			printf "%s\t%s\t%s\n", name, exec_cmd, t
+		}
+	' "$file" 2>/dev/null || return 1
+}
+
+# XML-escape a string
+xml_escape() {
+	printf '%s' "$1" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g'
+}
+
+# Main: gather apps, sort by name, output XML
+{
+	find_desktop_files | while IFS= read -r desktop; do
+		entry=$(parse_desktop "$desktop") || continue
+		printf '%s\t%s\n' "$entry" "$desktop"
+	done
+} | sort -t'	' -k1,1 | {
+	printf '%s\n' '<?xml version="1.0" encoding="UTF-8"?>'
+	printf '%s\n' '<openbox_menu>'
+	printf '%s\n' '  <menu id="pipe-apps" label="Applications">'
+
+	while IFS='	' read -r name exec_cmd terminal desktop_file; do
+		escaped_name=$(xml_escape "$name")
+		if [ "$terminal" = "1" ]; then
+			# Escape single quotes in exec_cmd for safe shell embedding
+			safe_cmd=$(printf '%s' "$exec_cmd" | sed "s/'/'\\\\''/g")
+			cmd="$terminal_cmd -e sh -c '$safe_cmd'"
+		else
+			cmd="nscde-wayland-run app $exec_cmd"
+		fi
+		escaped_cmd=$(xml_escape "$cmd")
+		printf '    <item label="%s"><action name="Execute" command="%s" /></item>\n' \
+			"$escaped_name" "$escaped_cmd"
+	done
+
+	printf '%s\n' '  </menu>'
+	printf '%s\n' '</openbox_menu>'
+}
