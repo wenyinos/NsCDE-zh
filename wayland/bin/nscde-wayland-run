@@ -16,6 +16,8 @@ if [ -n "${NSCDE_WAYLAND_SOURCE:-}" ]; then
 	source_dir=$NSCDE_WAYLAND_SOURCE
 elif [ -d "$wayland_dir/labwc" ]; then
 	source_dir=$wayland_dir
+elif [ -d "/usr/local/share/nscde-wayland" ]; then
+	source_dir=/usr/local/share/nscde-wayland
 else
 	source_dir=/usr/share/nscde-wayland
 fi
@@ -97,6 +99,10 @@ case "$cmd" in
 	fnott)
 		XDG_CONFIG_DIRS=$base_config_dirs XDG_DATA_DIRS=$nscde_data_dirs exec fnott \
 			-c "$source_dir/fnott/fnott.ini" "$@"
+		;;
+	nscde-panel)
+		NSCDE_BASE_XDG_DATA_DIRS=$base_data_dirs \
+			XDG_DATA_DIRS=$nscde_data_dirs exec nscde-panel "$@"
 		;;
 	sfwbar)
 		NSCDE_BASE_XDG_DATA_DIRS=$base_data_dirs \

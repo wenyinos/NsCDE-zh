@@ -40,12 +40,12 @@
 
 | 功能 | X11 版 (FVWM) | Wayland 版 (labwc) | 差异说明 |
 |---|---|---|---|
-| CDE 前面板 | ✅ FvwmButtons | ⚠️ sfwbar 临时方案 | 外观近似但非 CDE 等价 |
-| 子面板弹出 | ✅ | ❌ | sfwbar 不支持子面板概念 |
-| 前面板按钮 | ✅ | ⚠️ | sfwbar 有启动按钮，但无 CDE 3D 立体效果 |
-| 时钟小程序 | ✅ FvwmScript | ⚠️ sfwbar 内置 | 功能简单，无 CDE 风格外观 |
-| 托盘区域 | ✅ stalonetray | 🔄 sfwbar SNI tray | 功能等价，实现不同 |
-| 工作区切换器 | ✅ FvwmButtons | ⚠️ sfwbar 基本按钮 | 无 page 概念 |
+| CDE 前面板 | ✅ FvwmButtons | ✅ nscde-panel | GTK3 + GtkLayerShell 原生实现 |
+| 子面板弹出 | ✅ | ✅ | nscde-panel 支持 CDE 风格子面板 |
+| 前面板按钮 | ✅ | ✅ | nscde-panel 完整 CDE 3D 立体效果 |
+| 时钟小程序 | ✅ FvwmScript | ✅ nscde-panel | 实时时钟和日期显示 |
+| 托盘区域 | ✅ stalonetray | 🔄 nscde-panel SNI tray | 功能等价，Wayland SNI 由合成器处理 |
+| 工作区切换器 | ✅ FvwmButtons | ✅ nscde-panel | 4 个工作区按钮 |
 | CPU/负载监视器 | ✅ FvwmScript | ❌ | 未实现 |
 
 ## 菜单
@@ -53,11 +53,11 @@
 | 功能 | X11 版 (FVWM) | Wayland 版 (labwc) | 差异说明 |
 |---|---|---|---|
 | 右键根菜单 | ✅ | ✅ | labwc menu.xml |
-| XDG 应用菜单 | ✅ PipeRead 动态生成 | ⚠️ pipe-menu 静态脚本 | 刚实现基础版本 |
-| 菜单图标 | ✅ | ⚠️ | labwc 支持但配置方式不同 |
+| XDG 应用菜单 | ✅ PipeRead 动态生成 | ✅ nscde-wayland-menugen | 静态菜单生成器，支持分类和本地化 |
+| 菜单图标 | ✅ | ✅ | labwc menu.xml 支持图标 |
 | 菜单加速键 | ✅ | ❌ | labwc 菜单不支持加速键 |
 | 子菜单嵌套 | ✅ | ✅ | labwc menu.xml 支持 |
-| 动态菜单（pipe-menu） | ✅ PipeRead | ⚠️ 刚验证 | 需要脚本输出 XML |
+| 动态菜单（pipe-menu） | ✅ PipeRead | ✅ nscde-wayland-pipemenu | 已验证，从 .desktop 文件动态生成 |
 
 ## 快捷键
 
@@ -72,15 +72,15 @@
 
 | 功能 | X11 版 (FVWM) | Wayland 版 (labwc) | 差异说明 |
 |---|---|---|---|
-| CDE 窗口装饰 | ✅ FVWM Colorset | ⚠️ 静态 themerc | 手写固定配色，无动态生成 |
-| 调色板系统 | ✅ | ⚠️ | assets 中有调色板文件，但无生成器 |
+| CDE 窗口装饰 | ✅ FVWM Colorset | ✅ 动态 themerc | nscde-wayland-theme 从调色板生成 |
+| 调色板系统 | ✅ | ✅ | assets 中有调色板文件，nscde-wayland-colorcalc 计算颜色 |
 | GTK2 主题 | ✅ 自动生成 | ❌ | themegen 未移植 |
 | GTK3 主题 | ✅ 自动生成 | ❌ | themegen 未移植 |
-| GTK4 主题 | N/A | ❌ | 新增需求 |
-| Qt5/Qt6 主题 | ✅ 自动生成 | ⚠️ | nscde-wayland-run 有基本配置，但无生成器 |
-| Kvantum 主题 | ✅ | ⚠️ | nscde-wayland-run 写入基本配置 |
+| GTK4 主题 | N/A | ✅ | nscde-wayland-theme --gtk4 生成 CSS |
+| Qt5/Qt6 主题 | ✅ 自动生成 | ✅ | nscde-wayland-theme --kvantum 生成 Kvantum 主题 |
+| Kvantum 主题 | ✅ | ✅ | nscde-wayland-theme --kvantum 生成完整主题 |
 | Motif/Xt 主题 | ✅ | ❌ | Wayland 下无意义 |
-| Firefox CSS 主题 | ✅ | ❌ | 未移植 |
+| Firefox CSS 主题 | ✅ | ✅ | nscde-wayland-theme --install-firefox 安装 |
 | Thunderbird CSS 主题 | ✅ | ❌ | 未移植 |
 | 背景/壁纸 | ✅ fvwm-root | 🔄 swaybg/wbg | 功能等价，实现不同 |
 | 壁纸管理器 | ✅ BackdropMgr | ❌ | 无 GUI 管理器 |
@@ -125,6 +125,10 @@
 | 诊断工具 | ❌ | ✅ nscde-wayland-doctor | Wayland 版新增 |
 | 缩放工具 | ❌ | ✅ nscde-output-scale | Wayland 版新增 |
 | 组件隔离运行器 | ❌ | ✅ nscde-wayland-run | Wayland 版新增 |
+| 主题生成器 | ❌ | ✅ nscde-wayland-theme | labwc/Kvantum/Firefox/GTK4 主题生成 |
+| 菜单生成器 | ❌ | ✅ nscde-wayland-menugen | XDG 菜单生成 labwc menu.xml |
+| 颜色计算器 | ❌ | ✅ nscde-wayland-colorcalc | Motif/CDE 颜色计算（无 PyQt 依赖） |
+| 原生面板 | ❌ | ✅ nscde-panel | GTK3 + GtkLayerShell CDE 前面板 |
 
 ## 统计
 
@@ -132,11 +136,12 @@
 |---|---|---|---|---|
 | 窗口管理 | 4 | 3 | 2 | 0 |
 | 工作区 | 2 | 2 | 2 | 0 |
-| 前面板 | 1 | 4 | 2 | 1 |
-| 菜单 | 3 | 2 | 1 | 0 |
+| 前面板 | 6 | 1 | 1 | 1 |
+| 菜单 | 5 | 1 | 0 | 0 |
 | 快捷键 | 2 | 0 | 2 | 0 |
-| 主题视觉 | 0 | 5 | 6 | 1 |
+| 主题视觉 | 3 | 3 | 5 | 1 |
 | 工具管理器 | 0 | 0 | 12 | 0 |
+| 辅助工具 | 3 | 1 | 1 | 4 |
 | 会话启动 | 4 | 1 | 0 | 0 |
 | 辅助工具 | 0 | 1 | 1 | 4 |
 | **合计** | **16** | **18** | **28** | **6** |

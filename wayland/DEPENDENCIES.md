@@ -12,7 +12,8 @@
 | `foot` | 默认终端 | 无 | — |
 | `fuzzel` | 应用启动器 | 无 | — |
 | `fnott` | 通知守护进程 | 无（避免 `mako` 默认拉入 systemd-libs） | — |
-| `sfwbar` | 面板（临时方案） | 无 | — |
+| `nscde-panel` | 原生 CDE 前面板 | 无（GTK3 + GtkLayerShell） | 替代 sfwbar |
+| `sfwbar` | 面板（fallback） | 无 | nscde-panel 不可用时的备选方案 |
 | `swaybg` 或 `wbg` | 壁纸设置 | 无 | 两者二选一 |
 | `wl-clipboard` | 剪贴板（wl-copy / wl-paste） | 无 | — |
 | `grim` | 截图 | 无 | — |
@@ -38,7 +39,10 @@ NsCDE Wayland 会话不绑定特定 seat 管理器。以下三种均受支持：
 
 | 组件 | 作用 | systemd 依赖 | 说明 |
 |---|---|---|---|
-| `lavalauncher` | 应用启动按钮 | 无 | 配合 sfwbar 使用 |
+| `lavalauncher` | 应用启动按钮 | 无 | 配合面板使用 |
+| `gtk3` | nscde-panel 运行时 | 无 | GTK3 基础库 |
+| `gtk-layer-shell` | nscde-panel Wayland 集成 | 无 | GTK3 Layer Shell 绑定 |
+| `python3` | 颜色计算器/主题引擎运行时 | 无 | nscde-wayland-colorcalc 依赖 |
 | `kanshi` | 自动显示器配置 | 无 | 多显示器场景 |
 | `nwg-look` | GTK 主题设置 GUI | 视发行版 | — |
 | `PCManFM-Qt` | 文件管理器 | 视发行版 | 用 Qt Wayland 后端启动 |
@@ -55,6 +59,7 @@ NsCDE Wayland 会话不绑定特定 seat 管理器。以下三种均受支持：
 |---|---|
 | `make` | 构建系统 |
 | `sh` | 脚本语法检查 |
+| `python3` | Python 脚本编译检查（`make check` 使用） |
 | `xmllint` | XML 配置验证（可选，`make check` 使用） |
 | `fuzzel` | 配置自检（可选，`make check` 使用） |
 | `foot` | 配置自检（可选，`make check` 使用） |
@@ -69,7 +74,7 @@ NsCDE Wayland 会话不绑定特定 seat 管理器。以下三种均受支持：
 | `xterm` | `foot` | 终端替换 |
 | `rofi` | `fuzzel` | 启动器替换 |
 | `dunst` | `fnott` | 通知替换 |
-| `stalonetray` | `sfwbar`（内置 SNI tray） | 托盘替换 |
+| `stalonetray` | `nscde-panel`（内置 SNI tray） | 托盘替换 |
 | `xclip` | `wl-clipboard` | 剪贴板替换 |
 | `xdotool` | `wtype`（受限） | 键盘模拟替换 |
 | `xrandr` | `wlr-randr` / `kanshi` | 显示器配置替换 |
