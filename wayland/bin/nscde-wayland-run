@@ -34,7 +34,8 @@ ensure_app_config() {
 	filemgr_desktop=${NSCDE_WAYLAND_FILEMGR_DESKTOP:-pcmanfm-qt.desktop}
 	mkdir -p "$app_config_home/gtk-3.0" "$app_config_home/gtk-4.0" \
 		"$app_config_home/qt5ct" "$app_config_home/qt6ct" \
-		"$app_config_home/Kvantum" "$app_data_home/applications"
+		"$app_config_home/Kvantum" "$app_config_home/pcmanfm-qt" \
+		"$app_data_home/applications"
 	for gtkver in gtk-3.0 gtk-4.0; do
 		if [ ! -e "$app_config_home/$gtkver/settings.ini" ]; then
 			cat > "$app_config_home/$gtkver/settings.ini" <<EOF
@@ -68,6 +69,18 @@ EOF
 	fi
 	if [ ! -e "$app_config_home/mimeapps.list" ]; then
 		printf '[Default Applications]\ninode/directory=%s\n' "$filemgr_desktop" > "$app_config_home/mimeapps.list"
+	fi
+	if [ ! -e "$app_config_home/pcmanfm-qt/pcmanfm-qt.conf" ]; then
+		printf '%s\n' \
+			"[General]" \
+			"Terminal=foot" \
+			"SuCommand=" \
+			"Archiver=file-roller" \
+			"SiUnit=false" \
+			"" \
+			"[Desktop]" \
+			"ShowDesktop=false" \
+			> "$app_config_home/pcmanfm-qt/pcmanfm-qt.conf"
 	fi
 }
 

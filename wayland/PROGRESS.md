@@ -6,7 +6,7 @@
 
 ## 总体定位
 
-按计划定义的 6 个阶段（0-5），当前已完成 **阶段 0 + 阶段 1**，约 **整体规划的 32%**。
+按计划定义的 6 个阶段（0-5），当前已完成 **阶段 0 + 阶段 1**，约 **整体规划的 44%**。
 
 所有 Wayland 相关工作集中在 **2 天内完成**（2026-05-12 ~ 05-13），约 21 个提交、14 小时密集开发，属于一次性高强度推进。
 
@@ -42,21 +42,21 @@
 
 ---
 
-## 阶段 1：NsCDE-labwc Lite 外观原型（完成度 83%）
+## 阶段 1：NsCDE-labwc Lite 外观原型（完成度 100%）
 
 **计划 9 项任务，预计 1-3 周**
 
 | # | 计划任务 | 状态 | 实现证据 |
 |---|---|---|---|
-| 1 | nscde-labwc 启动脚本 | ✅ | `bin/nscde-labwc` 232 行，含环境变量、XDG 设置、首次配置复制、4 个修复函数、dbus 包装 |
+| 1 | nscde-labwc 启动脚本 | ✅ | `bin/nscde-labwc` 244 行，含环境变量、XDG 设置、首次配置复制、5 个修复函数、dbus 包装 |
 | 2 | Wayland session desktop 文件 | ✅ | `session/nscde-labwc.desktop` — `Exec=nscde-labwc`, `DesktopNames=NsCDE;labwc` |
 | 3 | labwc rc.xml/menu.xml/autostart | ✅ | 三个文件均存在且功能完整 |
 | 4 | 复用 NsCDE 图标/背景/调色板 | ✅ | `assets/` 下复制了完整的 backdrops、palettes、icons、photos |
-| 5 | 写 labwc/Openbox theme 生成器 | ❌ | `themerc` 是手写的静态文件，没有生成器。计划中此任务标注为"写生成器"，实际只写了固定主题 |
+| 5 | 写 labwc/Openbox theme 生成器 | ✅ | `bin/nscde-wayland-theme` 从 CDE `.dp` 调色板生成 `themerc`，支持 77 个内置调色板 |
 | 6 | swaybg/wbg 设置背景 | ✅ | `autostart` 中实现，且有 fallback 逻辑 |
 | 7 | sfwbar+lavalauncher 模拟前面板 | ✅ | `sfwbar.config` 实现面板，`lavalauncher/lavalauncher.conf` 提供 CDE 风格启动栏（终端/文件管理器/运行） |
 | 8 | fnott 处理通知 | ✅ | `fnott.ini` 配置完整 |
-| 9 | foot/fuzzel/PCManFM-Qt/wl-clipboard/grim/slurp 替换 | ⚠️ | foot、fuzzel、grim、slurp、wl-copy 均已集成。PCManFM-Qt 在菜单和 sfwbar 中引用了 `nscde-wayland-run app pcmanfm-qt`，但没有 PCManFM-Qt 的专用配置文件 |
+| 9 | foot/fuzzel/PCManFM-Qt/wl-clipboard/grim/slurp 替换 | ✅ | 全部集成，PCManFM-Qt 在 `ensure_app_config()` 中自动生成配置（终端=foot，桌面=false） |
 
 **交付物检查**：
 
@@ -110,6 +110,8 @@
 | 代码审查修复 | 7 个文件 | 18 个问题发现，12 个修复（含安全注入、性能、兼容性） |
 | CJK 字体 fallback | `foot/foot.ini`、`fuzzel/fuzzel.ini` | 添加 Noto Sans CJK SC 作为中文字体 fallback |
 | lavalauncher CDE 配置 | `lavalauncher/lavalauncher.conf` | CDE 风格启动栏（终端/文件管理器/运行），48x48 图标 |
+| 主题生成器 | `bin/nscde-wayland-theme` | 从 CDE `.dp` 调色板生成 labwc `themerc`，支持 77 个内置调色板 |
+| PCManFM-Qt 配置 | `nscde-wayland-run` ensure_app_config | 自动生成 pcmanfm-qt.conf（终端=foot，桌面=false） |
 
 ---
 
@@ -156,11 +158,7 @@
 
 1. **面板是临时方案**：sfwbar 只是一个通用 Wayland 面板，不是 CDE 前面板。缺少子面板弹出、工作区切换器、小程序区域、CDE 3D 立体边框。
 
-2. **无主题生成能力**：当前 `themerc` 是手工硬编码的静态文件，没有从 CDE palette 动态生成 labwc 主题的能力。
-
-3. **无设置管理器**：没有 GUI 方式修改主题、字体、背景。
-
-4. **PCManFM-Qt 配置缺失**：菜单中引用了 pcmanfm-qt 但没有专用配置。
+2. **无设置管理器**：没有 GUI 方式修改主题、字体、背景。
 
 ---
 
@@ -169,12 +167,12 @@
 | 维度 | 计划 | 已完成 | 未完成 | 完成率 |
 |---|---|---|---|---|
 | 阶段 0 任务 | 9 | 9 | 0 | 100% |
-| 阶段 1 任务 | 9 | 7.5 | 1.5 | 83% |
+| 阶段 1 任务 | 9 | 9 | 0 | 100% |
 | 计划首批文件 | 10 | 4 | 6 | 40% |
 | 阶段 2-5 任务 | ~30 | 0 | 30 | 0% |
-| **整体进度** | **~57 项** | **~23.5** | **~33.5** | **~41%** |
+| **整体进度** | **~57 项** | **~25** | **~32** | **~44%** |
 
-按工时估算：计划总工时约 **5-10 个月**，已投入约 **14 小时**密集开发 + **2 小时**代码审查修复。实际完成的是「骨架」，后续阶段（主题生成器、原生面板、设置管理器、功能等价）是真正的工程量所在。
+按工时估算：计划总工时约 **5-10 个月**，已投入约 **16 小时**密集开发 + **2 小时**代码审查修复。阶段 0+1 已全部完成，后续阶段（原生面板、设置管理器、功能等价）是真正的工程量所在。
 
 ---
 

@@ -1,0 +1,203 @@
+#!/bin/sh
+# nscde-wayland-theme - Generate labwc theme and Firefox CSS from CDE palette
+# Usage:
+#   nscde-wayland-theme [PALETTE.dp]              → themerc (stdout)
+#   nscde-wayland-theme --firefox [PALETTE.dp]    → Firefox CSS (stdout)
+#   nscde-wayland-theme --all [PALETTE.dp]        → themerc + Firefox CSS (stdout)
+
+set -eu
+
+script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+wayland_dir=$(CDPATH= cd -- "$script_dir/.." && pwd)
+
+if [ -n "${NSCDE_WAYLAND_SOURCE:-}" ]; then
+	source_dir=$NSCDE_WAYLAND_SOURCE
+elif [ -d "$wayland_dir/labwc" ]; then
+	source_dir=$wayland_dir
+else
+	source_dir=/usr/share/nscde-wayland
+fi
+
+mode=themerc
+case "${1:-}" in
+	--firefox) mode=firefox; shift ;;
+	--gtk4) mode=gtk4; shift ;;
+	--all) mode=all; shift ;;
+	--help|-h) printf '%s\n' "usage: nscde-wayland-theme [--firefox|--gtk4|--all] [PALETTE.dp]"; exit 0 ;;
+esac
+
+palette_file=${1:-}
+if [ -z "$palette_file" ]; then
+	palette_dir=${NSCDE_WAYLAND_ASSET_SOURCE:-"$source_dir/assets"}/palettes
+	palette_file="$palette_dir/GrayScale.dp"
+fi
+
+if [ ! -r "$palette_file" ]; then
+	printf '%s\n' "error: palette file not found: $palette_file" >&2
+	exit 1
+fi
+
+# Convert CDE 16-bit color (#RRRRGGGGBBBB) to 8-bit hex (#RRGGBB)
+cde_to_hex() {
+	hex=${1#'#'}
+	r=$(printf '%s' "$hex" | cut -c1-2)
+	g=$(printf '%s' "$hex" | cut -c5-6)
+	b=$(printf '%s' "$hex" | cut -c9-10)
+	printf '%s%s%s' "$r" "$g" "$b"
+}
+
+# Read 8 palette colors
+i=0
+while IFS= read -r line && [ "$i" -lt 8 ]; do
+	case "$line" in '#'*|'')
+		line=${line#"${line%%[![:space:]]*}"}
+		line=${line%"${line##*[![:space:]]}"}
+		[ -n "$line" ] || continue
+		i=$((i + 1))
+		eval "c$i=\$line"
+		;; esac
+done < "$palette_file"
+
+if [ "$i" -lt 7 ]; then
+	printf '%s\n' "error: palette must have at least 7 colors, found $i" >&2
+	exit 1
+fi
+
+# CDE palette indices:
+#   1 = Primary Background (lightest)
+#   2 = Secondary Foreground
+#   3 = Primary Foreground
+#   4 = Secondary Background (darkest)
+#   5 = Top Shadow (light bevel)
+#   6 = Bottom Shadow (dark bevel)
+#   7 = Select/Highlight
+hex1=$(cde_to_hex "$c1")
+hex2=$(cde_to_hex "$c2")
+hex3=$(cde_to_hex "$c3")
+hex5=$(cde_to_hex "$c5")
+hex6=$(cde_to_hex "$c6")
+hex7=$(cde_to_hex "$c7")
+
+emit_themerc() {
+	cat <<EOF
+window.active.title.bg: Raised Solid
+window.active.title.bg.color: #$hex7
+window.active.label.text.color: #000000
+window.inactive.title.bg: Raised Solid
+window.inactive.title.bg.color: #$hex1
+window.inactive.label.text.color: #202020
+window.handle.width: 6
+border.width: 2
+padding.width: 5
+window.active.border.color: #$hex6
+window.inactive.border.color: #$hex6
+window.button.pressed.bg: Sunken Solid
+window.button.pressed.bg.color: #$hex2
+menu.items.bg: Solid Flat
+menu.items.bg.color: #$hex1
+menu.items.text.color: #000000
+menu.items.active.bg: Raised Solid
+menu.items.active.bg.color: #$hex7
+menu.items.active.text.color: #000000
+menu.border.width: 2
+menu.border.color: #$hex6
+menu.separator.width: 1
+menu.separator.color: #$hex5
+EOF
+}
+
+emit_firefox_css() {
+	cat <<EOF
+:root {
+  --nscde-bg-color-1: #$hex1;
+  --nscde-sel-color-1: #$hex7;
+  --nscde-fg-color-1: #$hex3;
+  --nscde-bs-color-1: #$hex6;
+  --nscde-ts-color-1: #$hex5;
+
+  --nscde-bg-color-2: #$hex1;
+  --nscde-sel-color-2: #$hex7;
+  --nscde-fg-color-2: #$hex3;
+  --nscde-bs-color-2: #$hex6;
+  --nscde-ts-color-2: #$hex5;
+
+  --nscde-bg-color-4: #$hex1;
+  --nscde-sel-color-4: #$hex7;
+  --nscde-fg-color-4: #$hex3;
+  --nscde-bs-color-4: #$hex6;
+  --nscde-ts-color-4: #$hex5;
+
+  --nscde-bg-color-5: #$hex1;
+  --nscde-sel-color-5: #$hex7;
+  --nscde-fg-color-5: #$hex3;
+  --nscde-bs-color-5: #$hex6;
+  --nscde-ts-color-5: #$hex5;
+
+  --nscde-bg-color-6: #$hex1;
+  --nscde-sel-color-6: #$hex7;
+  --nscde-fg-color-6: #$hex3;
+  --nscde-bs-color-6: #$hex6;
+  --nscde-ts-color-6: #$hex5;
+}
+EOF
+}
+
+emit_gtk4_css() {
+	cat <<EOF
+/* GTK4 NsCDE color definitions - generated from CDE palette */
+@define-color bg_color_1 #$hex1;
+@define-color fg_color_1 #$hex3;
+@define-color ts_color_1 #$hex5;
+@define-color bs_color_1 #$hex6;
+@define-color sel_color_1 #$hex7;
+
+@define-color bg_color_2 #$hex1;
+@define-color fg_color_2 #$hex3;
+@define-color ts_color_2 #$hex5;
+@define-color bs_color_2 #$hex6;
+@define-color sel_color_2 #$hex7;
+
+@define-color bg_color_3 #$hex1;
+@define-color fg_color_3 #$hex3;
+@define-color ts_color_3 #$hex5;
+@define-color bs_color_3 #$hex6;
+@define-color sel_color_3 #$hex7;
+
+@define-color bg_color_4 #$hex1;
+@define-color fg_color_4 #$hex3;
+@define-color ts_color_4 #$hex5;
+@define-color bs_color_4 #$hex6;
+@define-color sel_color_4 #$hex7;
+
+@define-color bg_color_5 #$hex1;
+@define-color fg_color_5 #$hex3;
+@define-color ts_color_5 #$hex5;
+@define-color bs_color_5 #$hex6;
+@define-color sel_color_5 #$hex7;
+
+@define-color bg_color_6 #$hex1;
+@define-color fg_color_6 #$hex3;
+@define-color ts_color_6 #$hex5;
+@define-color bs_color_6 #$hex6;
+@define-color sel_color_6 #$hex7;
+
+@define-color bg_color_7 #$hex7;
+@define-color fg_color_7 #$hex3;
+@define-color ts_color_7 #$hex5;
+@define-color bs_color_7 #$hex6;
+@define-color sel_color_7 #$hex7;
+
+@define-color bg_color_8 #$hex1;
+@define-color fg_color_8 #$hex3;
+@define-color ts_color_8 #$hex5;
+@define-color bs_color_8 #$hex6;
+@define-color sel_color_8 #$hex7;
+EOF
+}
+
+case "$mode" in
+	themerc) emit_themerc ;;
+	firefox) emit_firefox_css ;;
+	gtk4) emit_gtk4_css ;;
+	all) emit_themerc; printf '\n'; emit_firefox_css; printf '\n'; emit_gtk4_css ;;
+esac
