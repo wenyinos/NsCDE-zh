@@ -28,7 +28,8 @@ if command -v kanshi >/dev/null 2>&1; then kanshi & fi
 if [ -n "${NSCDE_WAYLAND_SCALE:-}" ] || [ -r "$scale_file" ]; then
 	(sleep 1; apply_global_scale) &
 fi
-if command -v sfwbar >/dev/null 2>&1; then nscde-wayland-run sfwbar & fi
+if command -v nscde-panel >/dev/null 2>&1; then nscde-wayland-run nscde-panel &
+elif command -v sfwbar >/dev/null 2>&1; then nscde-wayland-run sfwbar & fi
 if command -v lavalauncher >/dev/null 2>&1; then nscde-wayland-run app lavalauncher & fi
 
 if [ -f "$wallpaper" ]; then

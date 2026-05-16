@@ -22,6 +22,7 @@ check:
 	sh -n bin/nscde-wayland-theme
 	sh -n bin/nscde-wayland-menugen
 	python3 -m py_compile bin/nscde-wayland-colorcalc
+	python3 -m py_compile bin/nscde-panel
 	sh -n labwc/autostart
 	command -v fuzzel >/dev/null && fuzzel --check-config --config=fuzzel/fuzzel.ini || true
 	command -v foot >/dev/null && foot --check-config --config=foot/foot.ini || true
@@ -40,6 +41,7 @@ install:
 	$(INSTALL) -m 0755 bin/nscde-wayland-theme "$(DESTDIR)$(BINDIR)/nscde-wayland-theme"
 	$(INSTALL) -m 0755 bin/nscde-wayland-menugen "$(DESTDIR)$(BINDIR)/nscde-wayland-menugen"
 	$(INSTALL) -m 0755 bin/nscde-wayland-colorcalc "$(DESTDIR)$(BINDIR)/nscde-wayland-colorcalc"
+	$(INSTALL) -m 0755 bin/nscde-panel "$(DESTDIR)$(BINDIR)/nscde-panel"
 	$(INSTALL) -d "$(DESTDIR)$(SESSIONDIR)"
 	$(INSTALL) -m 0644 session/nscde-labwc.desktop "$(DESTDIR)$(SESSIONDIR)/nscde-labwc.desktop"
 	$(INSTALL) -d "$(DESTDIR)$(PROJECTDATADIR)"
@@ -58,6 +60,7 @@ uninstall:
 	rm -f "$(DESTDIR)$(BINDIR)/nscde-wayland-theme"
 	rm -f "$(DESTDIR)$(BINDIR)/nscde-wayland-menugen"
 	rm -f "$(DESTDIR)$(BINDIR)/nscde-wayland-colorcalc"
+	rm -f "$(DESTDIR)$(BINDIR)/nscde-panel"
 	rm -f "$(DESTDIR)$(SESSIONDIR)/nscde-labwc.desktop"
 	rm -rf "$(DESTDIR)$(PROJECTDATADIR)"
 	rm -rf "$(DESTDIR)$(DATADIR)/themes/NsCDE-Wayland"
