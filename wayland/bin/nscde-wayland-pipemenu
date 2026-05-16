@@ -59,25 +59,62 @@ xml_escape() {
 	printf '%s' "$1" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g'
 }
 
+# Validate that a command contains no shell metacharacters.
+# Returns 0 if safe, 1 otherwise.
+validate_command() {
+	cmd=$1
+	# Reject commands containing shell metacharacters or command substitution
+	case "$cmd" in
+		*[\;\&\|\<\>\`\$\(\)]*)
+			return 1
+			;;
+	esac
+	return 0
+}
+
+# Build a safe command array for terminal execution.
+# Outputs the command as a space-separated string with proper quoting.
+build_safe_terminal_cmd() {
+	exec_cmd=$1
+	# First validate
+	if ! validate_command "$exec_cmd"; then
+		printf '%s\n' "error: command contains unsafe characters: $exec_cmd" >&2
+		return 1
+	fi
+	# Output the command wrapped for terminal
+	printf '%s' "$terminal_cmd -e sh -c "
+	printf '%s' "$exec_cmd"
+	printf '"'
+}
+
+# Build a safe command for app execution.
+build_safe_app_cmd() {
+	exec_cmd=$1
+	# First validate
+	if ! validate_command "$exec_cmd"; then
+		printf '%s\n' "error: command contains unsafe characters: $exec_cmd" >&2
+		return 1
+	fi
+	printf '%s' "nscde-wayland-run app $exec_cmd"
+}
+
 # Main: gather apps, sort by name, output XML
 {
 	find_desktop_files | while IFS= read -r desktop; do
 		entry=$(parse_desktop "$desktop") || continue
 		printf '%s\t%s\n' "$entry" "$desktop"
 	done
-} | sort -t'	' -k1,1 | {
+} | sort -t'\t' -k1,1 | {
 	printf '%s\n' '<?xml version="1.0" encoding="UTF-8"?>'
 	printf '%s\n' '<openbox_menu>'
 	printf '%s\n' '  <menu id="pipe-apps" label="Applications">'
 
-	while IFS='	' read -r name exec_cmd terminal desktop_file; do
+	while IFS='\t' read -r name exec_cmd terminal desktop_file; do
 		escaped_name=$(xml_escape "$name")
 		if [ "$terminal" = "1" ]; then
-			# Escape single quotes in exec_cmd for safe shell embedding
-			safe_cmd=$(printf '%s' "$exec_cmd" | sed "s/'/'\\\\''/g")
-			cmd="$terminal_cmd -e sh -c '$safe_cmd'"
+			cmd=$(build_safe_terminal_cmd "$exec_cmd") || continue
 		else
-			cmd="nscde-wayland-run app $exec_cmd"
+			cmd=$(build_safe_app_cmd "$exec_cmd") || continue
 		fi
 		escaped_cmd=$(xml_escape "$cmd")
 		printf '    <item label="%s"><action name="Execute" command="%s" /></item>\n' \

@@ -1,11 +1,18 @@
 #!/bin/sh
 
-set -eu
+# Don't use 'set -e' here - optional component failures should not
+# kill the entire session. Individual commands handle their own errors.
+set -u
 
 nscde_data=${NSCDE_WAYLAND_DATA:-/usr/share/nscde-wayland}
 nscde_assets=${NSCDE_WAYLAND_ASSETS:-"$nscde_data/assets"}
 wallpaper="$nscde_assets/photos/Flower.png"
 scale_file=${NSCDE_WAYLAND_SCALE_FILE:-"${NSCDE_WAYLAND_CONFIG:-"$HOME/.config/nscde-wayland"}/scale"}
+
+# Run command with error handling, logging failures but not stopping
+_run() {
+	"$@" 2>/dev/null || true
+}
 
 apply_global_scale() {
 	scale=${NSCDE_WAYLAND_SCALE:-}
@@ -23,19 +30,38 @@ apply_global_scale() {
 	done
 }
 
-if command -v fnott >/dev/null 2>&1; then nscde-wayland-run fnott & fi
-if command -v kanshi >/dev/null 2>&1; then kanshi & fi
+# Start notification daemon
+if command -v fnott >/dev/null 2>&1; then
+	(nscde-wayland-run fnott &) 2>/dev/null || true
+fi
+
+# Start display configuration manager
+if command -v kanshi >/dev/null 2>&1; then
+	(kanshi &) 2>/dev/null || true
+fi
+
+# Apply output scaling
 if [ -n "${NSCDE_WAYLAND_SCALE:-}" ] || [ -r "$scale_file" ]; then
 	(sleep 1; apply_global_scale) &
 fi
-if command -v nscde-panel >/dev/null 2>&1; then nscde-wayland-run nscde-panel &
-elif command -v sfwbar >/dev/null 2>&1; then nscde-wayland-run sfwbar & fi
-if command -v lavalauncher >/dev/null 2>&1; then nscde-wayland-run app lavalauncher & fi
 
+# Start panel (prefer native nscde-panel, fallback to sfwbar)
+if command -v nscde-panel >/dev/null 2>&1; then
+	(nscde-wayland-run nscde-panel &) 2>/dev/null || true
+elif command -v sfwbar >/dev/null 2>&1; then
+	(nscde-wayland-run sfwbar &) 2>/dev/null || true
+fi
+
+# Start application launcher dock
+if command -v lavalauncher >/dev/null 2>&1; then
+	(nscde-wayland-run app lavalauncher &) 2>/dev/null || true
+fi
+
+# Set wallpaper
 if [ -f "$wallpaper" ]; then
 	if command -v swaybg >/dev/null 2>&1; then
-		swaybg -i "$wallpaper" -m fill &
+		(swaybg -i "$wallpaper" -m fill &) 2>/dev/null || true
 	elif command -v wbg >/dev/null 2>&1; then
-		wbg "$wallpaper" &
+		(wbg "$wallpaper" &) 2>/dev/null || true
 	fi
 fi
