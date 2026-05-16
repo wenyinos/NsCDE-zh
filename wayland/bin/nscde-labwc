@@ -52,7 +52,7 @@ copy_file_once() {
 repair_labwc_mouse_defaults() {
 	cfg=$labwc_config_dir/rc.xml
 	[ -f "$cfg" ] || return
-	grep -q 'ShowMenu" menu="root-menu"' "$cfg" || return
+	if ! grep -q 'ShowMenu" menu="root-menu"' "$cfg"; then return; fi
 	if awk '
 		/<mouse>/ { in_mouse=1 }
 		in_mouse && /<default/ { found=1 }
@@ -77,10 +77,10 @@ repair_labwc_mouse_defaults() {
 repair_labwc_menu_scale() {
 	cfg=$labwc_config_dir/menu.xml
 	[ -f "$cfg" ] || return
-	grep -q 'id="root-menu" label="NsCDE"' "$cfg" || return
-	grep -q 'nscde-output-scale' "$cfg" && \
-		grep -q 'nscde-wayland-doctor' "$cfg" && \
-		grep -q 'nscde-wayland-screenshot' "$cfg" && return
+	if ! grep -q 'id="root-menu" label="NsCDE"' "$cfg"; then return; fi
+	if ! grep -q 'nscde-output-scale' "$cfg"; then return; fi
+	if ! grep -q 'nscde-wayland-doctor' "$cfg"; then return; fi
+	if ! grep -q 'nscde-wayland-screenshot' "$cfg"; then return; fi
 	tmp=$cfg.tmp.$$
 	backup=$cfg.bak-before-scale-menu
 	awk '
@@ -125,8 +125,8 @@ repair_labwc_menu_scale() {
 repair_labwc_autostart_scale() {
 	cfg=$labwc_config_dir/autostart
 	[ -f "$cfg" ] || return
-	grep -q 'nscde_assets=' "$cfg" || return
-	grep -q 'apply_global_scale' "$cfg" && return
+	if ! grep -q 'nscde_assets=' "$cfg"; then return; fi
+	if grep -q 'apply_global_scale' "$cfg"; then return; fi
 	tmp=$cfg.tmp.$$
 	backup=$cfg.bak-before-scale-autostart
 	awk '
@@ -189,8 +189,9 @@ repair_labwc_component_wrappers() {
 
 	cfg=$labwc_config_dir/autostart
 	[ -f "$cfg" ] || return
-	grep -q '&& fnott &' "$cfg" || grep -q '&& sfwbar &' "$cfg" || \
-		grep -q '&& lavalauncher &' "$cfg" || return
+	if ! grep -q '&& fnott &' "$cfg"; then return; fi
+	if ! grep -q '&& sfwbar &' "$cfg"; then return; fi
+	if ! grep -q '&& lavalauncher &' "$cfg"; then return; fi
 	tmp=$cfg.tmp.$$
 	backup=$cfg.bak-before-wayland-run
 	sed \
