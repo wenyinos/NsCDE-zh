@@ -1,9 +1,13 @@
 #!/bin/sh
-# nscde-wayland-theme - Generate labwc theme and Firefox CSS from CDE palette
+# nscde-wayland-theme - Generate labwc theme, Kvantum theme, Firefox CSS from CDE palette
 # Usage:
-#   nscde-wayland-theme [PALETTE.dp]              → themerc (stdout)
-#   nscde-wayland-theme --firefox [PALETTE.dp]    → Firefox CSS (stdout)
-#   nscde-wayland-theme --all [PALETTE.dp]        → themerc + Firefox CSS (stdout)
+#   nscde-wayland-theme [PALETTE.dp]                        → themerc (stdout)
+#   nscde-wayland-theme --firefox [PALETTE.dp]              → Firefox CSS (stdout)
+#   nscde-wayland-theme --gtk4 [PALETTE.dp]                 → GTK4 CSS (stdout)
+#   nscde-wayland-theme --kvantum [PALETTE.dp]              → Kvantum theme files (stdout, tar)
+#   nscde-wayland-theme --kvantum-dir DIR [PALETTE.dp]      → Kvantum theme files (write to DIR/NsCDE)
+#   nscde-wayland-theme --install-firefox [PALETTE.dp]      → Install Firefox CSS to profile
+#   nscde-wayland-theme --all [PALETTE.dp]                  → themerc + Firefox CSS + GTK4 (stdout)
 
 set -eu
 
@@ -19,11 +23,31 @@ else
 fi
 
 mode=themerc
+kvantum_dir=""
+firefox_profile=""
 case "${1:-}" in
 	--firefox) mode=firefox; shift ;;
 	--gtk4) mode=gtk4; shift ;;
+	--kvantum) mode=kvantum; shift ;;
+	--kvantum-dir) mode=kvantum-dir; kvantum_dir="${2:-}"; shift 2 ;;
+	--install-firefox) mode=install-firefox; shift ;;
 	--all) mode=all; shift ;;
-	--help|-h) printf '%s\n' "usage: nscde-wayland-theme [--firefox|--gtk4|--all] [PALETTE.dp]"; exit 0 ;;
+	--help|-h)
+		cat <<'HELPEOF'
+usage: nscde-wayland-theme [OPTION] [PALETTE.dp]
+
+Options:
+  (default)              Generate labwc themerc to stdout
+  --firefox              Generate Firefox CSS color definitions to stdout
+  --gtk4                 Generate GTK4 CSS color definitions to stdout
+  --kvantum              Generate Kvantum theme (kvconfig + SVG + QSS) to stdout as tar
+  --kvantum-dir DIR      Write Kvantum theme files to DIR/NsCDE/
+  --install-firefox      Install Firefox CSS to ~/.mozilla/firefox/*/chrome/
+  --all                  Generate themerc + Firefox CSS + GTK4 CSS to stdout
+  --help, -h             Show this help
+HELPEOF
+		exit 0
+		;;
 esac
 
 palette_file=${1:-}
@@ -195,9 +219,210 @@ emit_gtk4_css() {
 EOF
 }
 
+# Generate Kvantum theme by replacing NSCDE_*_COLOR placeholders in templates
+emit_kvantum_theme() {
+	# Calculate Motif colors using Python helper
+	colorcalc="$script_dir/nscde-wayland-colorcalc"
+	if [ ! -x "$colorcalc" ]; then
+		printf '%s\n' "error: nscde-wayland-colorcalc not found or not executable" >&2
+		exit 1
+	fi
+
+	# Get color variables
+	eval "$($colorcalc "$palette_file" 8)"
+
+	template_dir="$source_dir/assets/integration/qt_kvantum"
+	if [ ! -d "$template_dir" ]; then
+		printf '%s\n' "error: Kvantum template directory not found: $template_dir" >&2
+		exit 1
+	fi
+
+	# Build sed replacement script for all NSCDE_*_COLOR_N placeholders
+	sed_script=""
+	for n in 1 2 3 4 5 6 7 8; do
+		eval "bg=\$NSCDE_BG_COLOR_$n"
+		eval "fg=\$NSCDE_FG_COLOR_$n"
+		eval "ts=\$NSCDE_TS_COLOR_$n"
+		eval "bs=\$NSCDE_BS_COLOR_$n"
+		eval "sel=\$NSCDE_SEL_COLOR_$n"
+		eval "dis=\$NSCDE_DISABLED_FG_COLOR_$n"
+		sed_script="${sed_script}s|NSCDE_BG_COLOR_${n}|${bg}|g;"
+		sed_script="${sed_script}s|NSCDE_FG_COLOR_${n}|${fg}|g;"
+		sed_script="${sed_script}s|NSCDE_TS_COLOR_${n}|${ts}|g;"
+		sed_script="${sed_script}s|NSCDE_BS_COLOR_${n}|${bs}|g;"
+		sed_script="${sed_script}s|NSCDE_SEL_COLOR_${n}|${sel}|g;"
+		sed_script="${sed_script}s|NSCDE_DISABLED_FG_COLOR_${n}|${dis}|g;"
+	done
+
+	# Generate kvconfig
+	kvconfig=$(sed "$sed_script" "$template_dir/NsCDE_kvconfig.tmpl")
+
+	# Generate color scheme conf
+	conf=$(sed "$sed_script" "$template_dir/NsCDE_conf.tmpl")
+
+	# Generate QSS stylesheet
+	qss=$(sed "$sed_script" "$template_dir/NsCDE-Kvantum_qss.tmpl")
+
+	# SVG: replace colors in the SVG template
+	svg=""
+	if [ -r "$template_dir/NsCDE_svg.tmpl" ]; then
+		svg=$(sed "$sed_script" "$template_dir/NsCDE_svg.tmpl")
+	fi
+
+	if [ -n "$kvantum_dir" ]; then
+		# Write to directory
+		dest="$kvantum_dir/NsCDE"
+		mkdir -p "$dest"
+		printf '%s\n' "$kvconfig" > "$dest/NsCDE.kvconfig"
+		printf '%s\n' "$conf" > "$dest/NsCDE.colors"
+		printf '%s\n' "$qss" > "$dest/NsCDE.qss"
+		if [ -n "$svg" ]; then
+			printf '%s\n' "$svg" > "$dest/NsCDE.svg"
+		fi
+		printf '%s\n' "Kvantum theme written to: $dest/" >&2
+	else
+		# Output as tar to stdout
+		tmpdir=$(mktemp -d)
+		trap 'rm -rf "$tmpdir"' EXIT
+		mkdir -p "$tmpdir/NsCDE"
+		printf '%s\n' "$kvconfig" > "$tmpdir/NsCDE/NsCDE.kvconfig"
+		printf '%s\n' "$conf" > "$tmpdir/NsCDE/NsCDE.colors"
+		printf '%s\n' "$qss" > "$tmpdir/NsCDE/NsCDE.qss"
+		if [ -n "$svg" ]; then
+			printf '%s\n' "$svg" > "$tmpdir/NsCDE/NsCDE.svg"
+		fi
+		cd "$tmpdir" && tar cf - NsCDE
+	fi
+}
+
+# Install Firefox CSS theme to user profile
+install_firefox_css() {
+	firefox_dir="$HOME/.mozilla/firefox"
+	if [ ! -d "$firefox_dir" ]; then
+		printf '%s\n' "error: Firefox profile directory not found: $firefox_dir" >&2
+		exit 1
+	fi
+
+	# Find default profile
+	profile_ini="$firefox_dir/profiles.ini"
+	if [ ! -r "$profile_ini" ]; then
+		printf '%s\n' "error: profiles.ini not found" >&2
+		exit 1
+	fi
+
+	# Parse profiles.ini to find default profile path
+	default_profile=""
+	in_default=0
+	while IFS= read -r line; do
+		case "$line" in
+			\[Profile*)
+				in_default=0
+				;;
+			Default=1)
+				in_default=1
+				;;
+			Path=*)
+				if [ "$in_default" -eq 1 ]; then
+					default_profile="${line#Path=}"
+				fi
+				;;
+		esac
+	done < "$profile_ini"
+
+	# If no Default=1 found, use the first profile
+	if [ -z "$default_profile" ]; then
+		default_profile=$(grep '^Path=' "$profile_ini" | head -1 | cut -d= -f2)
+	fi
+
+	if [ -z "$default_profile" ]; then
+		printf '%s\n' "error: no Firefox profile found" >&2
+		exit 1
+	fi
+
+	# Handle relative vs absolute path
+	case "$default_profile" in
+		/*) profile_path="$default_profile" ;;
+		*) profile_path="$firefox_dir/$default_profile" ;;
+	esac
+
+	if [ ! -d "$profile_path" ]; then
+		printf '%s\n' "error: profile directory not found: $profile_path" >&2
+		exit 1
+	fi
+
+	# Create chrome directory
+	chrome_dir="$profile_path/chrome"
+	mkdir -p "$chrome_dir"
+
+	# Generate and install nscdeColordefs.css
+	colorcalc="$script_dir/nscde-wayland-colorcalc"
+	if [ -x "$colorcalc" ]; then
+		# Use full Motif color calculation
+		eval "$($colorcalc "$palette_file" 8)"
+		{
+			printf '%s\n' "/* nscdeColordefs.css - generated by nscde-wayland-theme */"
+			printf '%s\n' ":root {"
+			for n in 1 2 4 5 6; do
+				eval "bg=\$NSCDE_BG_COLOR_$n"
+				eval "fg=\$NSCDE_FG_COLOR_$n"
+				eval "ts=\$NSCDE_TS_COLOR_$n"
+				eval "bs=\$NSCDE_BS_COLOR_$n"
+				eval "sel=\$NSCDE_SEL_COLOR_$n"
+				printf '  --nscde-bg-color-%s: %s;\n' "$n" "$bg"
+				printf '  --nscde-sel-color-%s: %s;\n' "$n" "$sel"
+				printf '  --nscde-fg-color-%s: %s;\n' "$n" "$fg"
+				printf '  --nscde-bs-color-%s: %s;\n' "$n" "$bs"
+				printf '  --nscde-ts-color-%s: %s;\n' "$n" "$ts"
+			done
+			printf '%s\n' "}"
+		} > "$chrome_dir/nscdeColordefs.css"
+	else
+		# Fallback: use basic palette colors
+		emit_firefox_css > "$chrome_dir/nscdeColordefs.css"
+	fi
+
+	# Install Firefox chrome CSS files if available
+	firefox_assets="$source_dir/assets/integration/firefox"
+	if [ -d "$firefox_assets" ]; then
+		for cssfile in ff115x_nscdeChrome.css ff115x_nscdeContent.css \
+					   ff9x_nscdeChrome.css ff9x_nscdeContent.css \
+					   ff7x_nscdeChrome.css ff7x_nscdeContent.css \
+					   nscdeIcons.css; do
+			if [ -r "$firefox_assets/$cssfile" ]; then
+				cp "$firefox_assets/$cssfile" "$chrome_dir/$cssfile"
+			fi
+		done
+	fi
+
+	# Create userChrome.css if it doesn't exist
+	if [ ! -r "$chrome_dir/userChrome.css" ]; then
+		cat > "$chrome_dir/userChrome.css" <<'USERCHROME'
+/* NsCDE Firefox theme - userChrome.css */
+@import url("nscdeColordefs.css");
+@import url("ff115x_nscdeChrome.css");
+USERCHROME
+		printf '%s\n' "Created: $chrome_dir/userChrome.css"
+	fi
+
+	# Create userContent.css if it doesn't exist
+	if [ ! -r "$chrome_dir/userContent.css" ]; then
+		cat > "$chrome_dir/userContent.css" <<'USERCONTENT'
+/* NsCDE Firefox theme - userContent.css */
+@import url("nscdeColordefs.css");
+@import url("ff115x_nscdeContent.css");
+USERCONTENT
+		printf '%s\n' "Created: $chrome_dir/userContent.css"
+	fi
+
+	printf '%s\n' "Firefox CSS theme installed to: $chrome_dir/"
+	printf '%s\n' "Restart Firefox to apply the theme."
+}
+
 case "$mode" in
 	themerc) emit_themerc ;;
 	firefox) emit_firefox_css ;;
 	gtk4) emit_gtk4_css ;;
+	kvantum|kvantum-dir) emit_kvantum_theme ;;
+	install-firefox) install_firefox_css ;;
 	all) emit_themerc; printf '\n'; emit_firefox_css; printf '\n'; emit_gtk4_css ;;
 esac

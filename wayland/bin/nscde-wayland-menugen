@@ -1,0 +1,154 @@
+#!/bin/sh
+#
+# nscde-wayland-menugen - Generate labwc menu.xml from XDG .desktop files
+# Outputs a static Openbox-compatible menu XML to stdout.
+#
+# Usage:
+#   nscde-wayland-menugen > ~/.config/labwc/menu.xml
+#   nscde-wayland-menugen --lang zh_CN > menu.xml
+#
+
+set -eu
+
+app_dirs="${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+app_home="${XDG_DATA_HOME:-$HOME/.local/share}"
+lang="${NSCDE_WAYLAND_LANG:-${LANG:-en}}"
+short_lang="${lang%%.*}"
+terminal_cmd="nscde-wayland-run foot"
+
+# Main categories for menu organization
+MAIN_CATEGORIES="AudioVideo Audio Video Development Education Game Graphics Network Office Settings System Utility"
+
+# Category display names (English defaults)
+cat_name_AudioVideo="Multimedia"
+cat_name_Audio="Audio"
+cat_name_Video="Video"
+cat_name_Development="Development"
+cat_name_Education="Education"
+cat_name_Game="Games"
+cat_name_Graphics="Graphics"
+cat_name_Network="Network"
+cat_name_Office="Office"
+cat_name_Settings="Settings"
+cat_name_System="System"
+cat_name_Utility="Utilities"
+
+# Localized category names
+case "$short_lang" in
+	zh|zh_CN|zh_TW)
+		cat_name_AudioVideo="多媒体"
+		cat_name_Audio="音频"
+		cat_name_Video="视频"
+		cat_name_Development="开发"
+		cat_name_Education="教育"
+		cat_name_Game="游戏"
+		cat_name_Graphics="图形"
+		cat_name_Network="网络"
+		cat_name_Office="办公"
+		cat_name_Settings="设置"
+		cat_name_System="系统"
+		cat_name_Utility="工具"
+		;;
+esac
+
+# Collect .desktop files, deduplicate by basename (first wins)
+find_desktop_files() {
+	{
+		[ -d "$app_home/applications" ] && find "$app_home/applications" -name '*.desktop' -type f 2>/dev/null
+		printf '%s\n' "$app_dirs" | tr ':' '\n' | while IFS= read -r dir; do
+			[ -d "$dir/applications" ] && find "$dir/applications" -name '*.desktop' -type f 2>/dev/null
+		done
+	} | awk -F/ '!seen[$NF]++ { print }'
+}
+
+# Parse a .desktop file, extract main category
+# Output: main_category\tname\texec_cmd\tterminal
+parse_desktop() {
+	file=$1
+	awk -v lang="$short_lang" -F= '
+		BEGIN { name=""; loc_name=""; exec_cmd=""; nodisplay=""; terminal=""; categories="" }
+		/^Name=/ && !/Name\[/ { name=substr($0, index($0,"=")+1) }
+		/^Name\[/ {
+			key=substr($0, 6, index($0,"=")-6)
+			if (key == lang || key == substr(lang,1,2)) {
+				loc_name=substr($0, index($0,"=")+1)
+			}
+		}
+		/^Exec=/ { exec_cmd=substr($0, index($0,"=")+1) }
+		/^NoDisplay=/ { nodisplay=substr($0, index($0,"=")+1) }
+		/^Terminal=/ { terminal=substr($0, index($0,"=")+1) }
+		/^Categories=/ { categories=substr($0, index($0,"=")+1) }
+		END {
+			if (loc_name != "") name = loc_name
+			if (name == "" || exec_cmd == "") exit 1
+			if (nodisplay == "true") exit 1
+			gsub(/ %[fFuUdDnNickvm]/, "", exec_cmd)
+			sub(/ %$/, "", exec_cmd)
+			t = (terminal == "true") ? "1" : "0"
+			# Extract first main category
+			split(categories, cats, ";")
+			main_cat = "Utility"
+			for (i in cats) {
+				if (cats[i] ~ /^(AudioVideo|Audio|Video|Development|Education|Game|Graphics|Network|Office|Settings|System|Utility)$/) {
+					main_cat = cats[i]
+					break
+				}
+			}
+			printf "%s\t%s\t%s\t%s\n", main_cat, name, exec_cmd, t
+		}
+	' "$file" 2>/dev/null || return 1
+}
+
+# XML-escape a string
+xml_escape() {
+	printf '%s' "$1" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g'
+}
+
+# Main: gather apps, sort by category then name, output XML
+{
+	find_desktop_files | while IFS= read -r desktop; do
+		parse_desktop "$desktop" || true
+	done
+} | sort -t'	' -k1,1 -k2,2 | {
+	printf '%s\n' '<?xml version="1.0" encoding="UTF-8"?>'
+	printf '%s\n' '<openbox_menu>'
+	printf '  <menu id="root-menu" label="%s">\n' "NsCDE"
+
+	current_cat=""
+
+	while IFS='	' read -r main_cat name exec_cmd terminal; do
+		if [ "$main_cat" != "$current_cat" ]; then
+			# Close previous category menu
+			if [ -n "$current_cat" ]; then
+				printf '%s\n' '    </menu>'
+			fi
+			current_cat="$main_cat"
+			eval "cat_label=\$cat_name_$main_cat"
+			printf '    <menu id="cat-%s" label="%s">\n' "$main_cat" "$cat_label"
+		fi
+
+		escaped_name=$(xml_escape "$name")
+		if [ "$terminal" = "1" ]; then
+			safe_cmd=$(printf '%s' "$exec_cmd" | sed "s/'/'\\\\''/g")
+			cmd="$terminal_cmd -e sh -c '$safe_cmd'"
+		else
+			cmd="nscde-wayland-run app $exec_cmd"
+		fi
+		escaped_cmd=$(xml_escape "$cmd")
+		printf '      <item label="%s"><action name="Execute" command="%s" /></item>\n' \
+			"$escaped_name" "$escaped_cmd"
+	done
+
+	# Close last category menu
+	if [ -n "$current_cat" ]; then
+		printf '%s\n' '    </menu>'
+	fi
+
+	# Add separator and standard items
+	printf '%s\n' '    <separator />'
+	printf '%s\n' '    <menu id="pipe-apps" label="All Applications" execute="nscde-wayland-pipemenu" />'
+	printf '%s\n' '    <item label="Reconfigure"><action name="Reconfigure" /></item>'
+	printf '%s\n' '    <item label="Exit"><action name="Exit" /></item>'
+	printf '%s\n' '  </menu>'
+	printf '%s\n' '</openbox_menu>'
+}

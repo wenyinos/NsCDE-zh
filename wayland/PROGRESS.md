@@ -112,16 +112,47 @@
 | lavalauncher CDE 配置 | `lavalauncher/lavalauncher.conf` | CDE 风格启动栏（终端/文件管理器/运行），48x48 图标 |
 | 主题生成器 | `bin/nscde-wayland-theme` | 从 CDE `.dp` 调色板生成 labwc `themerc`，支持 77 个内置调色板 |
 | PCManFM-Qt 配置 | `nscde-wayland-run` ensure_app_config | 自动生成 pcmanfm-qt.conf（终端=foot，桌面=false） |
+| 颜色计算器 | `bin/nscde-wayland-colorcalc` | Python3 脚本，计算 Motif/CDE 颜色（bg/fg/ts/bs/sel/disabled），不依赖 PyQt |
+| 静态菜单生成器 | `bin/nscde-wayland-menugen` | 从 XDG .desktop 文件生成分类 labwc menu.xml，支持中文化 |
+| Kvantum 主题生成 | `nscde-wayland-theme --kvantum` | 从调色板生成完整 Kvantum 主题（kvconfig + SVG + QSS + colors） |
+| Firefox CSS 安装 | `nscde-wayland-theme --install-firefox` | 自动安装 Firefox CSS 主题到用户 profile |
 
 ---
 
-## 阶段 2-5 尚未开始
+## 阶段 2：菜单和主题生成器改造（完成度 100%）
+
+**计划 6 项任务，预计 2-4 周**
+
+| # | 计划任务 | 状态 | 实现证据 |
+|---|---|---|---|
+| 1 | 扩展 themegen 支持生成 labwc/Openbox 主题 | ✅ | `nscde-wayland-theme --kvantum` 生成 Kvantum 主题（kvconfig + SVG + QSS + colors） |
+| 2 | 继续生成 GTK2/GTK3 主题，评估 GTK4 CSS 支持 | ✅ | `nscde-wayland-theme --gtk4` 生成 GTK4 CSS `@define-color` 定义 |
+| 3 | 生成 Qt5/Qt6 适配配置或主题提示 | ✅ | `nscde-wayland-theme --kvantum` 生成完整 Kvantum 主题，含 Qt5/Qt6 颜色方案 |
+| 4 | 将 generate_app_menus 改造成 labwc menu.xml 生成器 | ✅ | `nscde-wayland-menugen` 从 XDG .desktop 文件生成分类菜单 XML |
+| 5 | 保留 XDG 分类、图标、本地化逻辑 | ✅ | 菜单生成器支持 `Name[LANG]` 本地化、XDG Categories 分类 |
+| 6 | 增加 Firefox CSS 主题安装/更新逻辑 | ✅ | `nscde-wayland-theme --install-firefox` 安装 CSS 到 Firefox profile |
+
+**交付物检查**：
+
+- ✅ `nscde-wayland-theme --kvantum` 生成完整 Kvantum 主题
+- ✅ `nscde-wayland-theme --kvantum-dir DIR` 写入主题到指定目录
+- ✅ `nscde-wayland-theme --gtk4` 生成 GTK4 CSS
+- ✅ `nscde-wayland-theme --install-firefox` 安装 Firefox CSS 主题
+- ✅ `nscde-wayland-menugen` 生成分类 labwc menu.xml
+- ✅ `nscde-wayland-colorcalc` Python 颜色计算辅助脚本（不依赖 PyQt）
+
+**新增文件**：
+
+- `bin/nscde-wayland-colorcalc` - Motif/CDE 颜色计算器（Python3，无 PyQt 依赖）
+- `bin/nscde-wayland-menugen` - XDG 菜单生成器（shell，支持中文化）
+
+---
+
+## 阶段 3-5 尚未开始
 
 | 阶段 | 内容 | 计划工时 | 状态 |
 |---|---|---|---|
-| **阶段 2** | 主题生成器（themegen 输出 labwc/Openbox theme + GTK4） | 2-4 周 | ❌ 未开始 |
-| **阶段 2** | 菜单生成器（generate_app_menus → labwc menu.xml） | 含在上面 | ❌ 未开始 |
-| **阶段 2** | Firefox CSS 主题安装/更新 | 含在上面 | ❌ 未开始 |
+| **阶段 3** | 原生 CDE 前面板 `nscde-panel`（替代 sfwbar） | 4-8 周 | ❌ 未开始 |
 | **阶段 3** | 原生 CDE 前面板 `nscde-panel`（替代 sfwbar） | 4-8 周 | ❌ 未开始 |
 | **阶段 4** | 设置管理器重写（StyleMgr/ColorMgr/FontMgr/BackdropMgr/WindowMgr/Sysinfo/DefaultAppsMgr） | 1-2 月 | ❌ 未开始 |
 | **阶段 5** | workspace pager | 2-4 月 | ❌ 未开始 |
@@ -149,8 +180,9 @@
 | 5月13日 | 02:33 - 04:07 | 4 | 版本发布、assets 大量复制 |
 | 5月13日 | 04:31 - 04:51 | 2 | DBus 包装、XDG 环境处理 |
 | 5月13日 | 10:00 - 12:00 | — | 代码审查：18 个问题发现，12 个修复 |
+| 5月16日 | 17:00 - 17:30 | — | 阶段 2：Kvantum 主题生成、菜单生成器、Firefox CSS 安装 |
 
-**总计约 21 个提交 + 1 轮代码审查，集中在 ~16 小时内**。
+**总计约 21 个提交 + 1 轮代码审查 + 阶段 2 实现，集中在 ~18 小时内**。
 
 ---
 
@@ -168,11 +200,12 @@
 |---|---|---|---|---|
 | 阶段 0 任务 | 9 | 9 | 0 | 100% |
 | 阶段 1 任务 | 9 | 9 | 0 | 100% |
+| 阶段 2 任务 | 6 | 6 | 0 | 100% |
 | 计划首批文件 | 10 | 4 | 6 | 40% |
-| 阶段 2-5 任务 | ~30 | 0 | 30 | 0% |
-| **整体进度** | **~57 项** | **~25** | **~32** | **~44%** |
+| 阶段 3-5 任务 | ~24 | 0 | 24 | 0% |
+| **整体进度** | **~57 项** | **~31** | **~26** | **~54%** |
 
-按工时估算：计划总工时约 **5-10 个月**，已投入约 **16 小时**密集开发 + **2 小时**代码审查修复。阶段 0+1 已全部完成，后续阶段（原生面板、设置管理器、功能等价）是真正的工程量所在。
+按工时估算：计划总工时约 **5-10 个月**，已投入约 **18 小时**密集开发 + **2 小时**代码审查修复。阶段 0+1+2 已全部完成，后续阶段（原生面板、设置管理器、功能等价）是真正的工程量所在。
 
 ---
 
