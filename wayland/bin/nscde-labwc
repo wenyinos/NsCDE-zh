@@ -12,6 +12,8 @@ if [ -n "${NSCDE_WAYLAND_SOURCE:-}" ]; then
 	source_dir=$NSCDE_WAYLAND_SOURCE
 elif [ -d "$wayland_dir/labwc" ]; then
 	source_dir=$wayland_dir
+elif [ -d "/usr/local/share/nscde-wayland" ]; then
+	source_dir=/usr/local/share/nscde-wayland
 else
 	source_dir=/usr/share/nscde-wayland
 fi
