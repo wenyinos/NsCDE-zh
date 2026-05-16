@@ -13,9 +13,7 @@ import signal
 import argparse
 import subprocess
 import json
-import threading
 from datetime import datetime
-from pathlib import Path
 
 import gi
 gi.require_version('Gtk', '3.0')
@@ -60,270 +58,6 @@ SUBPANELS = {
         ]
     },
 }
-
-
-class WaylandWindowTracker:
-    """Track windows using org_kde_plasma_virtual_desktop_management protocol"""
-    
-    def __init__(self):
-        self.windows = []
-        self._lock = threading.Lock()
-        self._running = False
-        self._thread = None
-        
-    def start(self):
-        """Start tracking windows in background thread"""
-        self._running = True
-        self._thread = threading.Thread(target=self._track_windows, daemon=True)
-        self._thread.start()
-        
-    def stop(self):
-        """Stop tracking windows"""
-        self._running = False
-        if self._thread:
-            self._thread.join(timeout=2)
-            
-    def get_windows(self):
-        """Get current window list"""
-        with self._lock:
-            return self.windows.copy()
-            
-    def _track_windows(self):
-        """Track windows using labwc's foreign-toplevel protocol"""
-        # Use wlr-foreign-toplevel-management if available
-        # Fallback to tracking launched processes
-        while self._running:
-            try:
-                self._update_from_labwc()
-            except Exception as e:
-                print(f"Window tracking error: {e}", file=sys.stderr)
-            GLib.timeout_add(2000, self._update_from_labwc)
-            break
-            
-    def _update_from_labwc(self):
-        """Update window list from labwc"""
-        windows = []
-        
-        # Method 1: Try labwc's foreign-toplevel via wayland protocol
-        try:
-            # Use wayland-info to check for foreign-toplevel support
-            result = subprocess.run(
-                ["wayland-info"],
-                capture_output=True, text=True, timeout=2
-            )
-            if "wlr-foreign-toplevel" in result.stdout or "ext-foreign-toplevel" in result.stdout:
-                # Protocol available, but we need a proper client
-                # For now, use a simpler approach
-                pass
-        except (subprocess.TimeoutExpired, FileNotFoundError):
-            pass
-            
-        # Method 2: Use ps to track GUI applications (fallback)
-        try:
-            result = subprocess.run(
-                ["ps", "-eo", "pid,comm,args"],
-                capture_output=True, text=True, timeout=1
-            )
-            if result.returncode == 0:
-                for line in result.stdout.splitlines()[1:]:  # Skip header
-                    parts = line.split(None, 2)
-                    if len(parts) >= 2:
-                        pid, comm = parts[0], parts[1]
-                        # Filter for GUI applications
-                        if comm in ["foot", "pcmanfm-qt", "firefox", "thunderbird", 
-                                   "nautilus", "dolphin", "konsole", "gnome-terminal",
-                                   "kate", "gedit", "vim", "nvim", "code", "sublime_text"]:
-                            windows.append({
-                                "id": pid,
-                                "name": comm,
-                                "icon": self._get_icon_for_app(comm)
-                            })
-        except (subprocess.TimeoutExpired, FileNotFoundError):
-            pass
-            
-        with self._lock:
-            self.windows = windows
-        return True  # Keep timer running
-        
-    def _get_icon_for_app(self, app_name):
-        """Get icon name for application"""
-        icon_map = {
-            "foot": "utilities-terminal",
-            "pcmanfm-qt": "system-file-manager",
-            "firefox": "firefox",
-            "thunderbird": "thunderbird",
-            "nautilus": "system-file-manager",
-            "dolphin": "system-file-manager",
-            "konsole": "utilities-terminal",
-            "gnome-terminal": "utilities-terminal",
-            "kate": "text-editor",
-            "gedit": "text-editor",
-            "vim": "text-editor",
-            "nvim": "text-editor",
-            "code": "visual-studio-code",
-            "sublime_text": "text-editor",
-        }
-        return icon_map.get(app_name, "application-x-executable")
-
-
-class SNITrayIcon:
-    """Represents a single SNI tray icon"""
-    
-    def __init__(self, service_name, bus_name, path):
-        self.service_name = service_name
-        self.bus_name = bus_name
-        self.path = path
-        self.icon_name = "application-x-executable"
-        self.title = ""
-        self.tooltip = ""
-        self.status = "Passive"
-        self._load_properties()
-        
-    def _load_properties(self):
-        """Load icon properties from D-Bus"""
-        try:
-            bus = dbus.SessionBus()
-            obj = bus.get_object(self.bus_name, self.path)
-            iface = dbus.Interface(obj, 'org.kde.StatusNotifierItem')
-            
-            # Get icon name
-            try:
-                self.icon_name = iface.Get('org.kde.StatusNotifierItem', 'IconName')
-            except dbus.exceptions.DBusException:
-                pass
-                
-            # Get title
-            try:
-                self.title = iface.Get('org.kde.StatusNotifierItem', 'Title')
-            except dbus.exceptions.DBusException:
-                pass
-                
-            # Get tooltip
-            try:
-                tooltip = iface.Get('org.kde.StatusNotifierItem', 'ToolTip')
-                if tooltip and len(tooltip) >= 2:
-                    self.tooltip = tooltip[1]  # Second element is the tooltip text
-            except dbus.exceptions.DBusException:
-                pass
-                
-            # Get status
-            try:
-                self.status = iface.Get('org.kde.StatusNotifierItem', 'Status')
-            except dbus.exceptions.DBusException:
-                pass
-                
-        except Exception as e:
-            print(f"Warning: Failed to load SNI properties for {self.service_name}: {e}", file=sys.stderr)
-
-
-class SNITray:
-    """System tray using StatusNotifierItem (SNI) D-Bus protocol"""
-    
-    def __init__(self):
-        self.icons = {}  # service_name -> SNITrayIcon
-        self._bus = None
-        self._watcher = None
-        self._running = False
-        
-    def start(self):
-        """Start SNI tray monitoring"""
-        try:
-            self._bus = dbus.SessionBus()
-            self._running = True
-            
-            # Register as StatusNotifierWatcher
-            self._watcher = SNIWatcher(self)
-            self._bus.publish_name('org.kde.StatusNotifierWatcher', self._watcher)
-            
-            # Watch for new SNI services
-            self._bus.add_match_string(
-                "type='signal',interface='org.freedesktop.DBus',member='NameOwnerChanged'"
-            )
-            self._bus.add_message_filter(self._on_name_owner_changed)
-            
-            print("SNI tray started", file=sys.stderr)
-        except Exception as e:
-            print(f"Warning: Failed to start SNI tray: {e}", file=sys.stderr)
-            
-    def stop(self):
-        """Stop SNI tray monitoring"""
-        self._running = False
-        if self._watcher:
-            self._bus.unpublish_name('org.kde.StatusNotifierWatcher')
-            
-    def get_icons(self):
-        """Get list of tray icons"""
-        return list(self.icons.values())
-        
-    def register_item(self, service_name):
-        """Register a new SNI item"""
-        try:
-            # Parse service name (format: org.kde.StatusNotifierItem-PID-N)
-            parts = service_name.split('-')
-            if len(parts) >= 3 and parts[0] == 'org.kde.StatusNotifierItem':
-                pid = parts[1]
-                path = f"/StatusNotifierItem/{parts[1]}/{parts[2]}"
-                
-                # Create tray icon
-                icon = SNITrayIcon(service_name, service_name, path)
-                self.icons[service_name] = icon
-                print(f"Registered SNI icon: {icon.title or icon.icon_name}", file=sys.stderr)
-        except Exception as e:
-            print(f"Warning: Failed to register SNI item {service_name}: {e}", file=sys.stderr)
-            
-    def unregister_item(self, service_name):
-        """Unregister an SNI item"""
-        if service_name in self.icons:
-            del self.icons[service_name]
-            print(f"Unregistered SNI icon: {service_name}", file=sys.stderr)
-            
-    def _on_name_owner_changed(self, bus, msg):
-        """Handle D-Bus name owner changes"""
-        try:
-            args = msg.get_args_list()
-            if len(args) >= 3:
-                name, old_owner, new_owner = args[0], args[1], args[2]
-                if name.startswith('org.kde.StatusNotifierItem-'):
-                    if new_owner and not old_owner:
-                        self.register_item(name)
-                    elif old_owner and not new_owner:
-                        self.unregister_item(name)
-        except Exception as e:
-            print(f"Warning: Error handling name owner change: {e}", file=sys.stderr)
-
-
-class SNIWatcher(dbus.service.Object):
-    """D-Bus object implementing org.kde.StatusNotifierWatcher"""
-    
-    def __init__(self, tray):
-        self.tray = tray
-        self._bus = dbus.SessionBus()
-        super().__init__(self._bus, '/StatusNotifierWatcher')
-        
-    @dbus.service.method('org.kde.StatusNotifierWatcher', in_signature='s', out_signature='')
-    def RegisterStatusNotifierItem(self, service_name):
-        """Register a new SNI item"""
-        self.tray.register_item(service_name)
-        
-    @dbus.service.signal('org.kde.StatusNotifierWatcher', signature='s')
-    def StatusNotifierItemRegistered(self, service_name):
-        """Signal when a new SNI item is registered"""
-        pass
-        
-    @dbus.service.signal('org.kde.StatusNotifierWatcher', signature='s')
-    def StatusNotifierItemUnregistered(self, service_name):
-        """Signal when an SNI item is unregistered"""
-        pass
-        
-    @dbus.service.method('org.kde.StatusNotifierWatcher', in_signature='', out_signature='as')
-    def RegisteredStatusNotifierItems(self):
-        """Get list of registered SNI items"""
-        return list(self.tray.icons.keys())
-        
-    @dbus.service.method('org.kde.StatusNotifierWatcher', in_signature='', out_signature='s')
-    def Protocol(self):
-        """Get protocol version"""
-        return "org.kde.StatusNotifierWatcher-v1"
 
 
 class SubPanelWindow(Gtk.Window):
@@ -425,8 +159,8 @@ class SubPanelWindow(Gtk.Window):
             icon = Gtk.Image.new_from_icon_name(item.get("icon", "application-x-executable"), Gtk.IconSize.MENU)
             icon.set_pixel_size(16)
             hbox.pack_start(icon, False, False, 0)
-        except Exception as e:
-            print(f"Warning: Failed to load icon: {e}", file=sys.stderr)
+        except:
+            pass
         
         label = Gtk.Label(label=item["name"], xalign=0)
         hbox.pack_start(label, True, True, 0)
@@ -437,26 +171,14 @@ class SubPanelWindow(Gtk.Window):
     
     def _on_item_clicked(self, item):
         """Handle menu item click"""
-        try:
-            subprocess.Popen(item["cmd"])
-        except Exception as e:
-            print(f"Error launching {item['name']}: {e}", file=sys.stderr)
+        subprocess.Popen(item["cmd"])
         self.destroy()
     
     def _position_window(self, button_position):
         """Position the subpanel window"""
-        # Get monitor geometry for proper positioning
-        monitor = Gdk.Display.get_default().get_primary_monitor()
-        if monitor:
-            geometry = monitor.get_geometry()
-            # Position above the panel
-            GtkLayerShell.set_margin(self, GtkLayerShell.Edge.BOTTOM, PANEL_HEIGHT + 4)
-            # Center horizontally relative to button
-            GtkLayerShell.set_margin(self, GtkLayerShell.Edge.LEFT, button_position)
-        else:
-            # Fallback positioning
-            GtkLayerShell.set_margin(self, GtkLayerShell.Edge.BOTTOM, PANEL_HEIGHT + 4)
-            GtkLayerShell.set_margin(self, GtkLayerShell.Edge.LEFT, button_position)
+        # Set margin to position near the button
+        GtkLayerShell.set_margin(self, GtkLayerShell.Edge.BOTTOM, PANEL_HEIGHT + 4)
+        GtkLayerShell.set_margin(self, GtkLayerShell.Edge.LEFT, button_position)
         self.set_default_size(180, -1)
 
 
@@ -469,7 +191,6 @@ class NsCDEPanel:
         self.colors = self._load_palette_colors()
         self.current_workspace = 0
         self.subpanel = None
-        self.window_tracker = WaylandWindowTracker()
         
         # Create main window
         self.window = Gtk.Window(type=Gtk.WindowType.TOPLEVEL)
@@ -492,9 +213,6 @@ class NsCDEPanel:
         # Handle signals
         signal.signal(signal.SIGINT, self._on_signal)
         signal.signal(signal.SIGTERM, self._on_signal)
-        
-        # Start window tracker
-        self.window_tracker.start()
         
     def _find_default_palette(self):
         """Find default palette file"""
@@ -552,11 +270,6 @@ class NsCDEPanel:
         GtkLayerShell.set_anchor(self.window, GtkLayerShell.Edge.RIGHT, True)
         GtkLayerShell.set_exclusive_zone(self.window, PANEL_HEIGHT)
         GtkLayerShell.set_keyboard_mode(self.window, GtkLayerShell.KeyboardMode.NONE)
-        
-        # Handle position parameter
-        if self.position == 'top':
-            GtkLayerShell.set_anchor(self.window, GtkLayerShell.Edge.BOTTOM, False)
-            GtkLayerShell.set_anchor(self.window, GtkLayerShell.Edge.TOP, True)
     
     def _apply_cde_style(self):
         """Apply CDE-style CSS"""
@@ -672,8 +385,7 @@ class NsCDEPanel:
             icon = Gtk.Image.new_from_icon_name(icon_name, Gtk.IconSize.BUTTON)
             icon.set_pixel_size(ICON_SIZE)
             button.add(icon)
-        except Exception as e:
-            print(f"Warning: Failed to create button icon: {e}", file=sys.stderr)
+        except:
             button.set_label(tooltip[:8])
         return button
     
@@ -695,25 +407,17 @@ class NsCDEPanel:
             )
         else:
             # Fallback to direct command
-            try:
-                subprocess.Popen(["nscde-wayland-run", "fuzzel"])
-            except Exception as e:
-                print(f"Error launching fuzzel: {e}", file=sys.stderr)
+            subprocess.Popen(["nscde-wayland-run", "fuzzel"])
     
     def _init_system_tray(self):
-        """Initialize system tray area using SNI protocol"""
-        # Initialize SNI tray
-        self.sni_tray = SNITray()
-        self.sni_tray.start()
-        
-        # Add a placeholder label for the tray area
-        self.tray_label = Gtk.Label(label="⚙")
-        self.tray_label.get_style_context().add_class("tray-icon")
-        self.tray_label.set_tooltip_text("System Tray (SNI)")
-        self.tray_box.pack_start(self.tray_label, False, False, 0)
-        
-        # Update tray icons periodically
-        GLib.timeout_add(2000, self._update_tray_icons)
+        """Initialize system tray area"""
+        # In Wayland, SNI (StatusNotifierItem) is handled by the compositor
+        # We can use a placeholder that watches for tray icons
+        # For now, add a simple indicator
+        tray_label = Gtk.Label(label="⚙")
+        tray_label.get_style_context().add_class("tray-icon")
+        tray_label.set_tooltip_text("System Tray (SNI)")
+        self.tray_box.pack_start(tray_label, False, False, 0)
     
     def _update_clock(self):
         """Update clock display"""
@@ -725,41 +429,76 @@ class NsCDEPanel:
     def _update_taskbar(self):
         """Update taskbar with current windows"""
         try:
-            windows = self.window_tracker.get_windows()
+            # Try to get windows from labwc via foreign-toplevel or fallback
+            windows = self._get_window_list()
             self._render_taskbar(windows)
         except Exception as e:
             print(f"Taskbar update error: {e}", file=sys.stderr)
         return True
+    
+    def _get_window_list(self):
+        """Get list of current windows (Wayland-compatible)
         
-    def _update_tray_icons(self):
-        """Update tray icons from SNI"""
+        Uses labwc's foreign-toplevel protocol via wayland protocol
+        or falls back to tracking launched applications.
+        Note: xdotool is intentionally not used as it requires Xwayland.
+        """
+        windows = []
+        
+        # Method 1: Try to use wlr-foreign-toplevel-management via labwc IPC
+        # This is the native Wayland approach
         try:
-            icons = self.sni_tray.get_icons()
-            # Update tray label to show number of icons
-            if icons:
-                self.tray_label.set_text(f"⚙ {len(icons)}")
-                # Build tooltip with icon names
-                tooltip_lines = [f"{icon.title or icon.icon_name}" for icon in icons[:5]]
-                if len(icons) > 5:
-                    tooltip_lines.append(f"... and {len(icons) - 5} more")
-                self.tray_label.set_tooltip_text("\n".join(tooltip_lines))
-            else:
-                self.tray_label.set_text("⚙")
-                self.tray_label.set_tooltip_text("System Tray (SNI)")
-        except Exception as e:
-            print(f"Tray update error: {e}", file=sys.stderr)
-        return True
+            # labwc supports swaymsg-compatible IPC for some operations
+            result = subprocess.run(
+                ["swaymsg", "-t", "get_tree"],
+                capture_output=True, text=True, timeout=1
+            )
+            if result.returncode == 0:
+                import json
+                tree = json.loads(result.stdout)
+                windows = self._parse_sway_tree(tree)
+                if windows:
+                    return windows
+        except (subprocess.TimeoutExpired, FileNotFoundError, json.JSONDecodeError):
+            pass
+        
+        # Method 2: Try labwc's own IPC socket if available
+        try:
+            labwc_socket = os.environ.get("LABWC_SOCKET")
+            if labwc_socket and os.path.exists(labwc_socket):
+                # Future: implement labwc native IPC parsing
+                pass
+        except:
+            pass
+        
+        # Method 3: Return empty list - panel will show no taskbar items
+        # This is acceptable as the panel still provides other functionality
+        return windows
+    
+    def _parse_sway_tree(self, node):
+        """Recursively parse sway/labwc tree to find windows"""
+        windows = []
+        try:
+            if node.get("type") == "con" and node.get("name"):
+                windows.append({
+                    "id": str(node.get("id", 0)),
+                    "name": node.get("name", "Unknown")
+                })
+            for child in node.get("nodes", []) + node.get("floating_nodes", []):
+                windows.extend(self._parse_sway_tree(child))
+        except (AttributeError, TypeError):
+            pass
+        return windows
     
     def _focus_window(self, window_id):
-        """Focus a window using labwc's native protocol"""
-        # labwc doesn't support swaymsg, so we use a different approach
-        # For now, we'll try to use the window ID to focus via labwc's action
+        """Focus a window using swaymsg (labwc compatible)"""
         try:
-            # labwc supports focusing windows by title or class
-            # We'll need to implement this properly
+            subprocess.run(
+                ["swaymsg", f"[con_id={window_id}]", "focus"],
+                capture_output=True, timeout=1
+            )
+        except (subprocess.TimeoutExpired, FileNotFoundError):
             pass
-        except Exception as e:
-            print(f"Error focusing window: {e}", file=sys.stderr)
     
     def _render_taskbar(self, windows):
         """Render taskbar buttons for current windows"""
@@ -790,13 +529,7 @@ class NsCDEPanel:
     
     def _on_workspace_clicked(self, button, workspace_num):
         """Handle workspace button click"""
-        # labwc uses workspace names like "ws1", "ws2", etc.
-        workspace_name = f"ws{workspace_num + 1}"
-        try:
-            subprocess.Popen(["nscde-wayland-run", "labwc", "-a", "GoToDesktop", workspace_name])
-        except Exception as e:
-            print(f"Error switching workspace: {e}", file=sys.stderr)
-        
+        subprocess.Popen(["nscde-wayland-run", "labwc", "-a", "GoToDesktop", str(workspace_num)])
         self.current_workspace = workspace_num
         for child in button.get_parent().get_children():
             child.get_style_context().remove_class("active")
@@ -804,8 +537,6 @@ class NsCDEPanel:
     
     def _on_signal(self, signum, frame):
         """Handle termination signal"""
-        self.window_tracker.stop()
-        self.sni_tray.stop()
         Gtk.main_quit()
     
     def run(self):
