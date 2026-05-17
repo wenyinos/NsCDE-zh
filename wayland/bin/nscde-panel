@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 nscde-panel - Native CDE-style front panel for NsCDE Wayland
-Uses GTK3 + gtk-layer-shell for Wayland panel implementation.
+Uses PyQt6 for Wayland panel implementation.
 
 Usage:
   nscde-panel [--palette PALETTE.dp] [--position top|bottom]
@@ -11,16 +11,18 @@ import sys
 import os
 import signal
 import argparse
-import subprocess
-import json
-import threading
 from datetime import datetime
-from pathlib import Path
 
-import gi
-gi.require_version('Gtk', '3.0')
-gi.require_version('GtkLayerShell', '0.1')
-from gi.repository import Gtk, Gdk, GLib, GtkLayerShell
+from PyQt6.QtWidgets import (
+    QApplication, QWidget, QHBoxLayout, QVBoxLayout,
+    QPushButton, QLabel, QDialog, QMenu
+)
+from PyQt6.QtCore import (
+    Qt, QTimer, QProcess, QPoint, QSize
+)
+from PyQt6.QtGui import (
+    QIcon, QScreen, QFont
+)
 
 # Constants
 PANEL_HEIGHT = 58
@@ -62,765 +64,511 @@ SUBPANELS = {
 }
 
 
-class WaylandWindowTracker:
-    """Track windows using org_kde_plasma_virtual_desktop_management protocol"""
-    
-    def __init__(self):
-        self.windows = []
-        self._lock = threading.Lock()
-        self._running = False
-        self._thread = None
-        
-    def start(self):
-        """Start tracking windows in background thread"""
-        self._running = True
-        self._thread = threading.Thread(target=self._track_windows, daemon=True)
-        self._thread.start()
-        
-    def stop(self):
-        """Stop tracking windows"""
-        self._running = False
-        if self._thread:
-            self._thread.join(timeout=2)
-            
-    def get_windows(self):
-        """Get current window list"""
-        with self._lock:
-            return self.windows.copy()
-            
-    def _track_windows(self):
-        """Track windows using labwc's foreign-toplevel protocol"""
-        # Use wlr-foreign-toplevel-management if available
-        # Fallback to tracking launched processes
-        while self._running:
+def find_default_palette():
+    """Find default palette file"""
+    for path in [
+        os.path.expanduser("~/.config/nscde-wayland/palette.dp"),
+        os.path.expanduser("~/.NsCDE/palettes/GrayScale.dp"),
+        "/usr/local/share/nscde-wayland/assets/palettes/GrayScale.dp",
+        "/usr/share/nscde-wayland/assets/palettes/GrayScale.dp",
+    ]:
+        if os.path.exists(path):
+            return path
+    return None
+
+
+def load_palette_colors(palette_file=None):
+    """Load colors from CDE palette file via colorcalc"""
+    colors = {
+        'bg': '#b8b8b8', 'fg': '#000000', 'ts': '#ffffff',
+        'bs': '#5f5f5f', 'sel': '#9fb4cf', 'btn_bg': '#c7c7c7',
+        'btn_ts': '#ffffff', 'btn_bs': '#5a5a5a',
+    }
+
+    if not palette_file or not os.path.exists(palette_file):
+        return colors
+
+    try:
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        colorcalc = os.path.join(script_dir, 'nscde-wayland-colorcalc')
+        if os.path.exists(colorcalc):
+            proc = QProcess()
+            proc.start(colorcalc, [palette_file, '8'])
+            if proc.waitForFinished(3000):
+                output = bytes(proc.readAllStandardOutput()).decode()
+                for line in output.strip().split('\n'):
+                    if '=' in line:
+                        key, val = line.split('=', 1)
+                        mapping = {
+                            'NSCDE_BG_COLOR_5': 'bg', 'NSCDE_FG_COLOR_5': 'fg',
+                            'NSCDE_TS_COLOR_5': 'ts', 'NSCDE_BS_COLOR_5': 'bs',
+                            'NSCDE_SEL_COLOR_5': 'sel', 'NSCDE_BG_COLOR_1': 'btn_bg',
+                            'NSCDE_TS_COLOR_1': 'btn_ts', 'NSCDE_BS_COLOR_1': 'btn_bs',
+                        }
+                        if key in mapping:
+                            colors[mapping[key]] = val
+    except Exception as e:
+        print(f"Warning: Failed to load palette: {e}", file=sys.stderr)
+
+    return colors
+
+
+def build_cde_stylesheet(colors):
+    """Build CDE 3D border stylesheet from palette colors"""
+    return f"""
+    QWidget#panelWindow {{
+        background-color: {colors['bg']};
+        border-top: 2px solid {colors['ts']};
+        border-left: 2px solid {colors['ts']};
+        border-right: 2px solid {colors['bs']};
+        border-bottom: 2px solid {colors['bs']};
+    }}
+    QPushButton {{
+        background-color: {colors['btn_bg']};
+        color: {colors['fg']};
+        border-top: 2px solid {colors['btn_ts']};
+        border-left: 2px solid {colors['btn_ts']};
+        border-right: 2px solid {colors['btn_bs']};
+        border-bottom: 2px solid {colors['btn_bs']};
+        border-radius: 0px;
+        padding: {BUTTON_PADDING}px {BUTTON_PADDING * 2}px;
+        margin: 2px;
+        min-width: 28px;
+        min-height: 28px;
+    }}
+    QPushButton:hover {{
+        background-color: {colors['sel']};
+    }}
+    QPushButton:pressed {{
+        border-top: 2px solid {colors['btn_bs']};
+        border-left: 2px solid {colors['btn_bs']};
+        border-right: 2px solid {colors['btn_ts']};
+        border-bottom: 2px solid {colors['btn_ts']};
+    }}
+    QLabel {{
+        color: {colors['fg']};
+        font: 12px Sans;
+    }}
+    QLabel#clockLabel {{
+        font: bold 12px Sans;
+        padding: 0 8px;
+    }}
+    QLabel#dateLabel {{
+        font: 11px Sans;
+        padding: 0 8px;
+    }}
+    QPushButton#taskbarBtn {{
+        min-width: 100px;
+        padding: 3px 8px;
+    }}
+    QPushButton#taskbarBtn:checked {{
+        background-color: {colors['sel']};
+    }}
+    QPushButton#workspaceBtn {{
+        min-width: 28px;
+        padding: 2px 6px;
+    }}
+    QPushButton#workspaceBtn:checked {{
+        background-color: {colors['sel']};
+    }}
+    QPushButton#launcherBtn {{
+        min-width: 42px;
+    }}
+    """
+
+
+# GUI application applications for taskbar tracking
+GUI_APPS = {
+    "foot": "utilities-terminal",
+    "pcmanfm-qt": "system-file-manager",
+    "firefox": "firefox",
+    "thunderbird": "thunderbird",
+    "nautilus": "system-file-manager",
+    "dolphin": "system-file-manager",
+    "konsole": "utilities-terminal",
+    "gnome-terminal": "utilities-terminal",
+    "kate": "text-editor",
+    "gedit": "text-editor",
+    "vim": "text-editor",
+    "nvim": "text-editor",
+    "code": "visual-studio-code",
+    "sublime_text": "text-editor",
+}
+
+
+def enumerate_windows():
+    """Enumerate GUI windows by scanning /proc"""
+    windows = []
+    seen = set()
+    try:
+        for pid in os.listdir('/proc'):
+            if not pid.isdigit():
+                continue
             try:
-                self._update_from_labwc()
-            except Exception as e:
-                print(f"Window tracking error: {e}", file=sys.stderr)
-            GLib.timeout_add(2000, self._update_from_labwc)
-            break
-            
-    def _update_from_labwc(self):
-        """Update window list from labwc"""
-        windows = []
-        
-        # Method 1: Try labwc's foreign-toplevel via wayland protocol
-        try:
-            # Use wayland-info to check for foreign-toplevel support
-            result = subprocess.run(
-                ["wayland-info"],
-                capture_output=True, text=True, timeout=2
-            )
-            if "wlr-foreign-toplevel" in result.stdout or "ext-foreign-toplevel" in result.stdout:
-                # Protocol available, but we need a proper client
-                # For now, use a simpler approach
-                pass
-        except (subprocess.TimeoutExpired, FileNotFoundError):
-            pass
-            
-        # Method 2: Use ps to track GUI applications (fallback)
-        try:
-            result = subprocess.run(
-                ["ps", "-eo", "pid,comm,args"],
-                capture_output=True, text=True, timeout=1
-            )
-            if result.returncode == 0:
-                for line in result.stdout.splitlines()[1:]:  # Skip header
-                    parts = line.split(None, 2)
-                    if len(parts) >= 2:
-                        pid, comm = parts[0], parts[1]
-                        # Filter for GUI applications
-                        if comm in ["foot", "pcmanfm-qt", "firefox", "thunderbird", 
-                                   "nautilus", "dolphin", "konsole", "gnome-terminal",
-                                   "kate", "gedit", "vim", "nvim", "code", "sublime_text"]:
-                            windows.append({
-                                "id": pid,
-                                "name": comm,
-                                "icon": self._get_icon_for_app(comm)
-                            })
-        except (subprocess.TimeoutExpired, FileNotFoundError):
-            pass
-            
-        with self._lock:
-            self.windows = windows
-        return True  # Keep timer running
-        
-    def _get_icon_for_app(self, app_name):
-        """Get icon name for application"""
-        icon_map = {
-            "foot": "utilities-terminal",
-            "pcmanfm-qt": "system-file-manager",
-            "firefox": "firefox",
-            "thunderbird": "thunderbird",
-            "nautilus": "system-file-manager",
-            "dolphin": "system-file-manager",
-            "konsole": "utilities-terminal",
-            "gnome-terminal": "utilities-terminal",
-            "kate": "text-editor",
-            "gedit": "text-editor",
-            "vim": "text-editor",
-            "nvim": "text-editor",
-            "code": "visual-studio-code",
-            "sublime_text": "text-editor",
-        }
-        return icon_map.get(app_name, "application-x-executable")
-
-
-class SNITrayIcon:
-    """Represents a single SNI tray icon"""
-    
-    def __init__(self, service_name, bus_name, path):
-        self.service_name = service_name
-        self.bus_name = bus_name
-        self.path = path
-        self.icon_name = "application-x-executable"
-        self.title = ""
-        self.tooltip = ""
-        self.status = "Passive"
-        self._load_properties()
-        
-    def _load_properties(self):
-        """Load icon properties from D-Bus"""
-        try:
-            bus = dbus.SessionBus()
-            obj = bus.get_object(self.bus_name, self.path)
-            iface = dbus.Interface(obj, 'org.kde.StatusNotifierItem')
-            
-            # Get icon name
-            try:
-                self.icon_name = iface.Get('org.kde.StatusNotifierItem', 'IconName')
-            except dbus.exceptions.DBusException:
-                pass
-                
-            # Get title
-            try:
-                self.title = iface.Get('org.kde.StatusNotifierItem', 'Title')
-            except dbus.exceptions.DBusException:
-                pass
-                
-            # Get tooltip
-            try:
-                tooltip = iface.Get('org.kde.StatusNotifierItem', 'ToolTip')
-                if tooltip and len(tooltip) >= 2:
-                    self.tooltip = tooltip[1]  # Second element is the tooltip text
-            except dbus.exceptions.DBusException:
-                pass
-                
-            # Get status
-            try:
-                self.status = iface.Get('org.kde.StatusNotifierItem', 'Status')
-            except dbus.exceptions.DBusException:
-                pass
-                
-        except Exception as e:
-            print(f"Warning: Failed to load SNI properties for {self.service_name}: {e}", file=sys.stderr)
-
-
-class SNITray:
-    """System tray using StatusNotifierItem (SNI) D-Bus protocol"""
-    
-    def __init__(self):
-        self.icons = {}  # service_name -> SNITrayIcon
-        self._bus = None
-        self._watcher = None
-        self._running = False
-        
-    def start(self):
-        """Start SNI tray monitoring"""
-        try:
-            self._bus = dbus.SessionBus()
-            self._running = True
-            
-            # Register as StatusNotifierWatcher
-            self._watcher = SNIWatcher(self)
-            self._bus.publish_name('org.kde.StatusNotifierWatcher', self._watcher)
-            
-            # Watch for new SNI services
-            self._bus.add_match_string(
-                "type='signal',interface='org.freedesktop.DBus',member='NameOwnerChanged'"
-            )
-            self._bus.add_message_filter(self._on_name_owner_changed)
-            
-            print("SNI tray started", file=sys.stderr)
-        except Exception as e:
-            print(f"Warning: Failed to start SNI tray: {e}", file=sys.stderr)
-            
-    def stop(self):
-        """Stop SNI tray monitoring"""
-        self._running = False
-        if self._watcher:
-            self._bus.unpublish_name('org.kde.StatusNotifierWatcher')
-            
-    def get_icons(self):
-        """Get list of tray icons"""
-        return list(self.icons.values())
-        
-    def register_item(self, service_name):
-        """Register a new SNI item"""
-        try:
-            # Parse service name (format: org.kde.StatusNotifierItem-PID-N)
-            parts = service_name.split('-')
-            if len(parts) >= 3 and parts[0] == 'org.kde.StatusNotifierItem':
-                pid = parts[1]
-                path = f"/StatusNotifierItem/{parts[1]}/{parts[2]}"
-                
-                # Create tray icon
-                icon = SNITrayIcon(service_name, service_name, path)
-                self.icons[service_name] = icon
-                print(f"Registered SNI icon: {icon.title or icon.icon_name}", file=sys.stderr)
-        except Exception as e:
-            print(f"Warning: Failed to register SNI item {service_name}: {e}", file=sys.stderr)
-            
-    def unregister_item(self, service_name):
-        """Unregister an SNI item"""
-        if service_name in self.icons:
-            del self.icons[service_name]
-            print(f"Unregistered SNI icon: {service_name}", file=sys.stderr)
-            
-    def _on_name_owner_changed(self, bus, msg):
-        """Handle D-Bus name owner changes"""
-        try:
-            args = msg.get_args_list()
-            if len(args) >= 3:
-                name, old_owner, new_owner = args[0], args[1], args[2]
-                if name.startswith('org.kde.StatusNotifierItem-'):
-                    if new_owner and not old_owner:
-                        self.register_item(name)
-                    elif old_owner and not new_owner:
-                        self.unregister_item(name)
-        except Exception as e:
-            print(f"Warning: Error handling name owner change: {e}", file=sys.stderr)
-
-
-class SNIWatcher(dbus.service.Object):
-    """D-Bus object implementing org.kde.StatusNotifierWatcher"""
-    
-    def __init__(self, tray):
-        self.tray = tray
-        self._bus = dbus.SessionBus()
-        super().__init__(self._bus, '/StatusNotifierWatcher')
-        
-    @dbus.service.method('org.kde.StatusNotifierWatcher', in_signature='s', out_signature='')
-    def RegisterStatusNotifierItem(self, service_name):
-        """Register a new SNI item"""
-        self.tray.register_item(service_name)
-        
-    @dbus.service.signal('org.kde.StatusNotifierWatcher', signature='s')
-    def StatusNotifierItemRegistered(self, service_name):
-        """Signal when a new SNI item is registered"""
+                with open(f'/proc/{pid}/comm') as f:
+                    comm = f.read().strip()
+                if comm in GUI_APPS and comm not in seen:
+                    seen.add(comm)
+                    windows.append({
+                        "id": pid,
+                        "name": comm,
+                        "icon": GUI_APPS.get(comm, "application-x-executable")
+                    })
+            except (PermissionError, FileNotFoundError, ProcessLookupError):
+                continue
+    except Exception:
         pass
-        
-    @dbus.service.signal('org.kde.StatusNotifierWatcher', signature='s')
-    def StatusNotifierItemUnregistered(self, service_name):
-        """Signal when an SNI item is unregistered"""
-        pass
-        
-    @dbus.service.method('org.kde.StatusNotifierWatcher', in_signature='', out_signature='as')
-    def RegisteredStatusNotifierItems(self):
-        """Get list of registered SNI items"""
-        return list(self.tray.icons.keys())
-        
-    @dbus.service.method('org.kde.StatusNotifierWatcher', in_signature='', out_signature='s')
-    def Protocol(self):
-        """Get protocol version"""
-        return "org.kde.StatusNotifierWatcher-v1"
+    return windows
 
 
-class SubPanelWindow(Gtk.Window):
+class SubPanel(QDialog):
     """CDE-style subpanel popup window"""
-    
-    def __init__(self, parent_panel, items, title, position):
-        super().__init__(type=Gtk.WindowType.TOPLEVEL)
-        self.parent_panel = parent_panel
-        self.set_title(title)
-        self.set_decorated(False)
-        self.set_resizable(False)
-        self.set_skip_taskbar_hint(True)
-        self.set_skip_pager_hint(True)
-        
-        # Initialize layer shell for popup
-        GtkLayerShell.init_for_window(self)
-        GtkLayerShell.set_layer(self, GtkLayerShell.Layer.OVERLAY)
-        GtkLayerShell.set_anchor(self, GtkLayerShell.Edge.BOTTOM, True)
-        GtkLayerShell.set_keyboard_mode(self, GtkLayerShell.KeyboardMode.ON_DEMAND)
-        
-        # Apply CDE style
-        self._apply_style()
-        
-        # Build UI
-        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=1)
-        vbox.set_margin_top(4)
-        vbox.set_margin_bottom(4)
-        vbox.set_margin_left(4)
-        vbox.set_margin_right(4)
-        
-        # Title label
-        title_label = Gtk.Label(label=title)
-        title_label.get_style_context().add_class("subpanel-title")
-        vbox.pack_start(title_label, False, False, 2)
-        
-        sep = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
-        vbox.pack_start(sep, False, False, 2)
-        
+
+    def __init__(self, parent, items, title):
+        super().__init__(parent)
+        self.setWindowFlags(
+            Qt.WindowType.Popup |
+            Qt.WindowType.FramelessWindowHint
+        )
+        self.setFixedWidth(180)
+
+        colors = parent.colors
+
+        # CDE 3D border
+        self.setStyleSheet(f"""
+            QDialog {{
+                background-color: {colors['bg']};
+                border-top: 2px solid {colors['ts']};
+                border-left: 2px solid {colors['ts']};
+                border-right: 2px solid {colors['bs']};
+                border-bottom: 2px solid {colors['bs']};
+            }}
+            QLabel {{
+                color: {colors['fg']};
+                font: bold 12px Sans;
+                padding: 2px 8px;
+            }}
+            QPushButton {{
+                background-color: {colors['btn_bg']};
+                color: {colors['fg']};
+                border-top: 2px solid {colors['btn_ts']};
+                border-left: 2px solid {colors['btn_ts']};
+                border-right: 2px solid {colors['btn_bs']};
+                border-bottom: 2px solid {colors['btn_bs']};
+                border-radius: 0px;
+                padding: 4px 8px;
+                margin: 1px;
+                min-width: 160px;
+                text-align: left;
+            }}
+            QPushButton:hover {{
+                background-color: {colors['sel']};
+            }}
+            QPushButton:pressed {{
+                border-top: 2px solid {colors['btn_bs']};
+                border-left: 2px solid {colors['btn_bs']};
+                border-right: 2px solid {colors['btn_ts']};
+                border-bottom: 2px solid {colors['btn_ts']};
+            }}
+        """)
+
+        vbox = QVBoxLayout(self)
+        vbox.setContentsMargins(4, 4, 4, 4)
+        vbox.setSpacing(1)
+
+        # Title
+        title_label = QLabel(title)
+        vbox.addWidget(title_label)
+
+        # Separator
+        sep = QLabel()
+        sep.setFixedHeight(2)
+        sep.setStyleSheet(f"background-color: {colors['bs']};")
+        vbox.addWidget(sep)
+
         # Menu items
         for item in items:
-            btn = self._create_menu_button(item)
-            vbox.pack_start(btn, False, False, 0)
-        
-        self.add(vbox)
-        self.show_all()
-        
-        # Position window
-        self._position_window(position)
-    
-    def _apply_style(self):
-        """Apply CDE style to subpanel"""
-        colors = self.parent_panel.colors
-        css = f"""
-        window {{
-            background-color: {colors['bg']};
-            border-top: 2px solid {colors['ts']};
-            border-left: 2px solid {colors['ts']};
-            border-right: 2px solid {colors['bs']};
-            border-bottom: 2px solid {colors['bs']};
-        }}
-        .subpanel-title {{
-            font: bold 12px Sans;
-            color: {colors['fg']};
-            padding: 2px 8px;
-        }}
-        button {{
-            background-color: {colors['btn_bg']};
-            color: {colors['fg']};
-            border-top: 2px solid {colors['btn_ts']};
-            border-left: 2px solid {colors['btn_ts']};
-            border-right: 2px solid {colors['btn_bs']};
-            border-bottom: 2px solid {colors['btn_bs']};
-            border-radius: 0;
-            padding: 4px 8px;
-            margin: 1px;
-            min-width: 160px;
-        }}
-        button:hover {{ background-color: {colors['sel']}; }}
-        button:active {{
-            border-top: 2px solid {colors['btn_bs']};
-            border-left: 2px solid {colors['btn_bs']};
-            border-right: 2px solid {colors['btn_ts']};
-            border-bottom: 2px solid {colors['btn_ts']};
-        }}
-        """
-        style_provider = Gtk.CssProvider()
-        style_provider.load_from_data(css.encode())
-        Gtk.StyleContext.add_provider_for_screen(
-            Gdk.Screen.get_default(), style_provider,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-        )
-    
-    def _create_menu_button(self, item):
-        """Create a menu button for subpanel item"""
-        btn = Gtk.Button()
-        hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        
-        try:
-            icon = Gtk.Image.new_from_icon_name(item.get("icon", "application-x-executable"), Gtk.IconSize.MENU)
-            icon.set_pixel_size(16)
-            hbox.pack_start(icon, False, False, 0)
-        except Exception as e:
-            print(f"Warning: Failed to load icon: {e}", file=sys.stderr)
-        
-        label = Gtk.Label(label=item["name"], xalign=0)
-        hbox.pack_start(label, True, True, 0)
-        
-        btn.add(hbox)
-        btn.connect("clicked", lambda b: self._on_item_clicked(item))
-        return btn
-    
-    def _on_item_clicked(self, item):
+            btn = QPushButton(item["name"])
+            icon = QIcon.fromTheme(item.get("icon", "application-x-executable"))
+            if not icon.isNull():
+                btn.setIcon(icon)
+                btn.setIconSize(QSize(16, 16))
+            btn.clicked.connect(lambda checked, cmd=item["cmd"]: self._on_item_clicked(cmd))
+            vbox.addWidget(btn)
+
+    def _on_item_clicked(self, cmd):
         """Handle menu item click"""
         try:
-            subprocess.Popen(item["cmd"])
+            QProcess.startDetached(cmd[0], cmd[1:])
         except Exception as e:
-            print(f"Error launching {item['name']}: {e}", file=sys.stderr)
-        self.destroy()
-    
-    def _position_window(self, button_position):
-        """Position the subpanel window"""
-        # Get monitor geometry for proper positioning
-        monitor = Gdk.Display.get_default().get_primary_monitor()
-        if monitor:
-            geometry = monitor.get_geometry()
-            # Position above the panel
-            GtkLayerShell.set_margin(self, GtkLayerShell.Edge.BOTTOM, PANEL_HEIGHT + 4)
-            # Center horizontally relative to button
-            GtkLayerShell.set_margin(self, GtkLayerShell.Edge.LEFT, button_position)
-        else:
-            # Fallback positioning
-            GtkLayerShell.set_margin(self, GtkLayerShell.Edge.BOTTOM, PANEL_HEIGHT + 4)
-            GtkLayerShell.set_margin(self, GtkLayerShell.Edge.LEFT, button_position)
-        self.set_default_size(180, -1)
+            print(f"Error launching {cmd}: {e}", file=sys.stderr)
+        self.accept()
+
+    def popup_at(self, global_pos):
+        """Show subpanel at global position, above the panel"""
+        self.adjustSize()
+        x = global_pos.x()
+        y = global_pos.y() - self.height() - 4
+        self.move(x, y)
+        self.exec()
 
 
-class NsCDEPanel:
-    """Main CDE-style panel class"""
-    
+class CDEPanel(QWidget):
+    """Main CDE-style panel widget"""
+
     def __init__(self, palette_file=None, position='bottom'):
-        self.palette_file = palette_file or self._find_default_palette()
+        super().__init__()
+        self.palette_file = palette_file or find_default_palette()
         self.position = position
-        self.colors = self._load_palette_colors()
+        self.colors = load_palette_colors(self.palette_file)
         self.current_workspace = 0
         self.subpanel = None
-        self.window_tracker = WaylandWindowTracker()
-        
-        # Create main window
-        self.window = Gtk.Window(type=Gtk.WindowType.TOPLEVEL)
-        self.window.set_title("NsCDE Panel")
-        self.window.set_default_size(-1, PANEL_HEIGHT)
-        self.window.set_decorated(False)
-        self.window.set_resizable(False)
-        self.window.set_skip_taskbar_hint(True)
-        self.window.set_skip_pager_hint(True)
-        
-        # Initialize layer shell
-        self._init_layer_shell()
-        
-        # Apply CDE style
-        self._apply_cde_style()
-        
+
+        self.setObjectName("panelWindow")
+        self.setFixedHeight(PANEL_HEIGHT)
+
+        # Window flags: frameless, stay on top, tool, no focus
+        self.setWindowFlags(
+            Qt.WindowType.FramelessWindowHint |
+            Qt.WindowType.WindowStaysOnTopHint |
+            Qt.WindowType.Tool |
+            Qt.WindowType.WindowDoesNotAcceptFocus
+        )
+
+        # Apply CDE stylesheet
+        self.setStyleSheet(build_cde_stylesheet(self.colors))
+
         # Build UI
         self._build_ui()
-        
-        # Handle signals
-        signal.signal(signal.SIGINT, self._on_signal)
-        signal.signal(signal.SIGTERM, self._on_signal)
-        
-        # Start window tracker
-        self.window_tracker.start()
-        
-    def _find_default_palette(self):
-        """Find default palette file"""
-        for path in [
-            os.path.expanduser("~/.config/nscde-wayland/palette.dp"),
-            os.path.expanduser("~/.NsCDE/palettes/GrayScale.dp"),
-            "/usr/local/share/nscde-wayland/assets/palettes/GrayScale.dp",
-            "/usr/share/nscde-wayland/assets/palettes/GrayScale.dp",
-        ]:
-            if os.path.exists(path):
-                return path
-        return None
-    
-    def _load_palette_colors(self):
-        """Load colors from CDE palette file"""
-        colors = {
-            'bg': '#b8b8b8', 'fg': '#000000', 'ts': '#ffffff',
-            'bs': '#5f5f5f', 'sel': '#9fb4cf', 'btn_bg': '#c7c7c7',
-            'btn_ts': '#ffffff', 'btn_bs': '#5a5a5a',
-        }
-        
-        if not self.palette_file or not os.path.exists(self.palette_file):
-            return colors
-        
-        try:
-            script_dir = os.path.dirname(os.path.abspath(__file__))
-            colorcalc = os.path.join(script_dir, 'nscde-wayland-colorcalc')
-            if os.path.exists(colorcalc):
-                result = subprocess.run(
-                    [colorcalc, self.palette_file, '8'],
-                    capture_output=True, text=True
-                )
-                if result.returncode == 0:
-                    for line in result.stdout.strip().split('\n'):
-                        if '=' in line:
-                            key, val = line.split('=', 1)
-                            mapping = {
-                                'NSCDE_BG_COLOR_5': 'bg', 'NSCDE_FG_COLOR_5': 'fg',
-                                'NSCDE_TS_COLOR_5': 'ts', 'NSCDE_BS_COLOR_5': 'bs',
-                                'NSCDE_SEL_COLOR_5': 'sel', 'NSCDE_BG_COLOR_1': 'btn_bg',
-                                'NSCDE_TS_COLOR_1': 'btn_ts', 'NSCDE_BS_COLOR_1': 'btn_bs',
-                            }
-                            if key in mapping:
-                                colors[mapping[key]] = val
-        except Exception as e:
-            print(f"Warning: Failed to load palette: {e}", file=sys.stderr)
-        return colors
-    
-    def _init_layer_shell(self):
-        """Initialize GtkLayerShell for Wayland panel"""
-        GtkLayerShell.init_for_window(self.window)
-        GtkLayerShell.set_layer(self.window, GtkLayerShell.Layer.BOTTOM)
-        GtkLayerShell.set_anchor(self.window, GtkLayerShell.Edge.BOTTOM, True)
-        GtkLayerShell.set_anchor(self.window, GtkLayerShell.Edge.LEFT, True)
-        GtkLayerShell.set_anchor(self.window, GtkLayerShell.Edge.RIGHT, True)
-        GtkLayerShell.set_exclusive_zone(self.window, PANEL_HEIGHT)
-        GtkLayerShell.set_keyboard_mode(self.window, GtkLayerShell.KeyboardMode.NONE)
-        
-        # Handle position parameter
-        if self.position == 'top':
-            GtkLayerShell.set_anchor(self.window, GtkLayerShell.Edge.BOTTOM, False)
-            GtkLayerShell.set_anchor(self.window, GtkLayerShell.Edge.TOP, True)
-    
-    def _apply_cde_style(self):
-        """Apply CDE-style CSS"""
-        css = f"""
-        window {{
-            background-color: {self.colors['bg']};
-            border-top: 2px solid {self.colors['ts']};
-            border-left: 2px solid {self.colors['ts']};
-            border-right: 2px solid {self.colors['bs']};
-            border-bottom: 2px solid {self.colors['bs']};
-        }}
-        button {{
-            background-color: {self.colors['btn_bg']};
-            color: {self.colors['fg']};
-            border-top: 2px solid {self.colors['btn_ts']};
-            border-left: 2px solid {self.colors['btn_ts']};
-            border-right: 2px solid {self.colors['btn_bs']};
-            border-bottom: 2px solid {self.colors['btn_bs']};
-            border-radius: 0;
-            padding: {BUTTON_PADDING}px {BUTTON_PADDING * 2}px;
-            margin: 2px;
-            min-width: 28px;
-            min-height: 28px;
-        }}
-        button:hover {{ background-color: {self.colors['sel']}; }}
-        button:active {{
-            border-top: 2px solid {self.colors['btn_bs']};
-            border-left: 2px solid {self.colors['btn_bs']};
-            border-right: 2px solid {self.colors['btn_ts']};
-            border-bottom: 2px solid {self.colors['btn_ts']};
-        }}
-        label {{ color: {self.colors['fg']}; font: 12px Sans; }}
-        .clock-label {{ font: bold 12px Sans; padding: 0 8px; }}
-        .date-label {{ font: 11px Sans; padding: 0 8px; }}
-        .taskbar-button {{ min-width: 100px; padding: 3px 8px; }}
-        .taskbar-button.active {{ background-color: {self.colors['sel']}; }}
-        .workspace-btn {{ min-width: 28px; padding: 2px 6px; }}
-        .workspace-btn.active {{ background-color: {self.colors['sel']}; }}
-        .tray-icon {{ min-width: 22px; min-height: 22px; padding: 2px; }}
-        """
-        style_provider = Gtk.CssProvider()
-        style_provider.load_from_data(css.encode())
-        Gtk.StyleContext.add_provider_for_screen(
-            Gdk.Screen.get_default(), style_provider,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-        )
-    
+
+        # Position panel
+        self._position_panel()
+
+        # Timers
+        self.clock_timer = QTimer(self)
+        self.clock_timer.timeout.connect(self._update_clock)
+        self.clock_timer.start(1000)
+
+        self.taskbar_timer = QTimer(self)
+        self.taskbar_timer.timeout.connect(self._update_taskbar)
+        self.taskbar_timer.start(2000)
+
+        # Initial update
+        self._update_clock()
+        self._update_taskbar()
+
+    def _position_panel(self):
+        """Position panel at bottom of screen"""
+        screen = QApplication.primaryScreen()
+        if screen:
+            geo = screen.availableGeometry()
+            self.setFixedWidth(geo.width())
+            if self.position == 'bottom':
+                self.move(geo.x(), geo.y() + geo.height() - PANEL_HEIGHT)
+            else:
+                self.move(geo.x(), geo.y())
+
     def _build_ui(self):
         """Build the panel UI"""
-        hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=2)
-        hbox.set_margin_top(2)
-        hbox.set_margin_bottom(2)
-        hbox.set_margin_start(4)
-        hbox.set_margin_end(4)
-        
+        hbox = QHBoxLayout(self)
+        hbox.setContentsMargins(4, 2, 4, 2)
+        hbox.setSpacing(2)
+
         # Left: Menu + Launchers with subpanels
-        left_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=2)
+        left_box = QHBoxLayout()
+        left_box.setSpacing(2)
         for icon, tooltip, subpanel_key in [
             ("start-here", "NsCDE Menu", "start-here"),
             ("utilities-terminal", "Terminal Tools", "utilities-terminal"),
             ("system-file-manager", "File Tools", "system-file-manager"),
         ]:
             btn = self._create_button(icon, tooltip)
-            btn.connect("clicked", self._on_launcher_clicked, subpanel_key)
-            left_box.pack_start(btn, False, False, 0)
-        hbox.pack_start(left_box, False, False, 0)
-        
+            btn.setObjectName("launcherBtn")
+            btn.clicked.connect(lambda checked, key=subpanel_key: self._on_launcher_clicked(key, btn))
+            left_box.addWidget(btn)
+        hbox.addLayout(left_box)
+
         # Workspace switcher
-        ws_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=1)
+        ws_box = QHBoxLayout()
+        ws_box.setSpacing(1)
+        self.workspace_buttons = []
         for i in range(NUM_WORKSPACES):
-            ws_btn = Gtk.Button(label=str(i + 1))
-            ws_btn.get_style_context().add_class("workspace-btn")
-            if i == self.current_workspace:
-                ws_btn.get_style_context().add_class("active")
-            ws_btn.connect("clicked", self._on_workspace_clicked, i)
-            ws_box.pack_start(ws_btn, False, False, 0)
-        hbox.pack_start(ws_box, False, False, 0)
-        
+            ws_btn = QPushButton(str(i + 1))
+            ws_btn.setObjectName("workspaceBtn")
+            ws_btn.setCheckable(True)
+            ws_btn.setChecked(i == self.current_workspace)
+            ws_btn.clicked.connect(lambda checked, num=i: self._on_workspace_clicked(num))
+            ws_box.addWidget(ws_btn)
+            self.workspace_buttons.append(ws_btn)
+        hbox.addLayout(ws_box)
+
         # Center: Taskbar
-        self.taskbar_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=2)
-        self.taskbar_box.set_hexpand(True)
-        hbox.pack_start(self.taskbar_box, True, True, 0)
-        
+        self.taskbar_box = QHBoxLayout()
+        self.taskbar_box.setSpacing(2)
+        hbox.addLayout(self.taskbar_box, 1)  # stretch=1
+
         # Right: Tray + Clock
-        right_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=2)
-        
-        # System tray (placeholder with SNI support)
-        self.tray_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=2)
+        right_box = QHBoxLayout()
+        right_box.setSpacing(2)
+
+        # System tray placeholder
+        self.tray_label = QLabel("⚙")
+        self.tray_label.setToolTip("System Tray (SNI)")
+        right_box.addWidget(self.tray_label)
+
+        # Date
+        self.date_label = QLabel()
+        self.date_label.setObjectName("dateLabel")
+        right_box.addWidget(self.date_label)
+
+        # Clock
+        self.clock_label = QLabel()
+        self.clock_label.setObjectName("clockLabel")
+        right_box.addWidget(self.clock_label)
+
+        hbox.addLayout(right_box)
+
+        # Initialize system tray
         self._init_system_tray()
-        right_box.pack_start(self.tray_box, False, False, 0)
-        
-        self.date_label = Gtk.Label(label=datetime.now().strftime(DATE_FORMAT))
-        self.date_label.get_style_context().add_class("date-label")
-        right_box.pack_start(self.date_label, False, False, 0)
-        
-        self.clock_label = Gtk.Label(label=datetime.now().strftime(CLOCK_FORMAT))
-        self.clock_label.get_style_context().add_class("clock-label")
-        right_box.pack_start(self.clock_label, False, False, 0)
-        
-        hbox.pack_start(right_box, False, False, 0)
-        self.window.add(hbox)
-        
-        # Timers
-        GLib.timeout_add(1000, self._update_clock)
-        GLib.timeout_add(2000, self._update_taskbar)
-        self.window.show_all()
-    
+
+    def _init_system_tray(self):
+        """Initialize system tray area using QSystemTrayIcon"""
+        from PyQt6.QtWidgets import QSystemTrayIcon
+        if QSystemTrayIcon.isSystemTrayAvailable():
+            self.systray = QSystemTrayIcon(self)
+            self.systray.setIcon(QIcon.fromTheme("system-tray-icon", QIcon.fromTheme("application-x-executable")))
+            self.systray.setToolTip("NsCDE System Tray")
+            self.systray.show()
+            # Hide placeholder since we have real systray
+            self.tray_label.hide()
+        else:
+            self.systray = None
+            # Update tray label periodically
+            self.tray_timer = QTimer(self)
+            self.tray_timer.timeout.connect(self._update_tray_label)
+            self.tray_timer.start(2000)
+
     def _create_button(self, icon_name, tooltip):
         """Create a CDE-style button with icon"""
-        button = Gtk.Button()
-        button.set_tooltip_text(tooltip)
-        try:
-            icon = Gtk.Image.new_from_icon_name(icon_name, Gtk.IconSize.BUTTON)
-            icon.set_pixel_size(ICON_SIZE)
-            button.add(icon)
-        except Exception as e:
-            print(f"Warning: Failed to create button icon: {e}", file=sys.stderr)
-            button.set_label(tooltip[:8])
-        return button
-    
-    def _on_launcher_clicked(self, button, subpanel_key):
+        btn = QPushButton()
+        btn.setToolTip(tooltip)
+        icon = QIcon.fromTheme(icon_name)
+        if not icon.isNull():
+            btn.setIcon(icon)
+            btn.setIconSize(QSize(ICON_SIZE, ICON_SIZE))
+        else:
+            btn.setText(tooltip[:2])
+        return btn
+
+    def _on_launcher_clicked(self, subpanel_key, button):
         """Handle launcher button click with subpanel"""
         if subpanel_key in SUBPANELS:
             subpanel_def = SUBPANELS[subpanel_key]
-            # Get button position for subpanel placement
-            allocation = button.get_allocation()
-            position = allocation.x
-            
-            # Close existing subpanel if any
-            if self.subpanel:
-                self.subpanel.destroy()
-            
+
+            # Close existing subpanel
+            if self.subpanel and self.subpanel.isVisible():
+                self.subpanel.reject()
+
             # Create new subpanel
-            self.subpanel = SubPanelWindow(
-                self, subpanel_def["items"], subpanel_def["title"], position
-            )
+            self.subpanel = SubPanel(self, subpanel_def["items"], subpanel_def["title"])
+
+            # Position relative to button
+            global_pos = button.mapToGlobal(QPoint(0, 0))
+            self.subpanel.popup_at(global_pos)
         else:
-            # Fallback to direct command
             try:
-                subprocess.Popen(["nscde-wayland-run", "fuzzel"])
+                QProcess.startDetached("nscde-wayland-run", ["fuzzel"])
             except Exception as e:
                 print(f"Error launching fuzzel: {e}", file=sys.stderr)
-    
-    def _init_system_tray(self):
-        """Initialize system tray area using SNI protocol"""
-        # Initialize SNI tray
-        self.sni_tray = SNITray()
-        self.sni_tray.start()
-        
-        # Add a placeholder label for the tray area
-        self.tray_label = Gtk.Label(label="⚙")
-        self.tray_label.get_style_context().add_class("tray-icon")
-        self.tray_label.set_tooltip_text("System Tray (SNI)")
-        self.tray_box.pack_start(self.tray_label, False, False, 0)
-        
-        # Update tray icons periodically
-        GLib.timeout_add(2000, self._update_tray_icons)
-    
+
     def _update_clock(self):
         """Update clock display"""
         now = datetime.now()
-        self.clock_label.set_text(now.strftime(CLOCK_FORMAT))
-        self.date_label.set_text(now.strftime(DATE_FORMAT))
-        return True
-    
+        self.clock_label.setText(now.strftime(CLOCK_FORMAT))
+        self.date_label.setText(now.strftime(DATE_FORMAT))
+
     def _update_taskbar(self):
         """Update taskbar with current windows"""
-        try:
-            windows = self.window_tracker.get_windows()
-            self._render_taskbar(windows)
-        except Exception as e:
-            print(f"Taskbar update error: {e}", file=sys.stderr)
-        return True
-        
-    def _update_tray_icons(self):
-        """Update tray icons from SNI"""
-        try:
-            icons = self.sni_tray.get_icons()
-            # Update tray label to show number of icons
-            if icons:
-                self.tray_label.set_text(f"⚙ {len(icons)}")
-                # Build tooltip with icon names
-                tooltip_lines = [f"{icon.title or icon.icon_name}" for icon in icons[:5]]
-                if len(icons) > 5:
-                    tooltip_lines.append(f"... and {len(icons) - 5} more")
-                self.tray_label.set_tooltip_text("\n".join(tooltip_lines))
-            else:
-                self.tray_label.set_text("⚙")
-                self.tray_label.set_tooltip_text("System Tray (SNI)")
-        except Exception as e:
-            print(f"Tray update error: {e}", file=sys.stderr)
-        return True
-    
-    def _focus_window(self, window_id):
-        """Focus a window using labwc's native protocol"""
-        # labwc doesn't support swaymsg, so we use a different approach
-        # For now, we'll try to use the window ID to focus via labwc's action
-        try:
-            # labwc supports focusing windows by title or class
-            # We'll need to implement this properly
-            pass
-        except Exception as e:
-            print(f"Error focusing window: {e}", file=sys.stderr)
-    
-    def _render_taskbar(self, windows):
-        """Render taskbar buttons for current windows"""
+        windows = enumerate_windows()
+
         # Clear existing buttons
-        for child in self.taskbar_box.get_children():
-            self.taskbar_box.remove(child)
-        
+        while self.taskbar_box.count():
+            item = self.taskbar_box.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+
         if not windows:
-            # Show placeholder when no windows detected
-            placeholder = Gtk.Label(label="No windows")
-            placeholder.get_style_context().add_class("taskbar-placeholder")
-            placeholder.set_sensitive(False)
-            self.taskbar_box.pack_start(placeholder, False, False, 0)
-            self.taskbar_box.show_all()
+            placeholder = QLabel("No windows")
+            placeholder.setEnabled(False)
+            self.taskbar_box.addWidget(placeholder)
             return
-        
+
         for win in windows:
-            btn = Gtk.Button(label=win["name"][:20])
-            btn.get_style_context().add_class("taskbar-button")
-            btn.connect("clicked", self._on_taskbar_clicked, win)
-            self.taskbar_box.pack_start(btn, False, False, 0)
-        
-        self.taskbar_box.show_all()
-    
-    def _on_taskbar_clicked(self, button, window_info):
+            btn = QPushButton(win["name"][:20])
+            btn.setObjectName("taskbarBtn")
+            btn.setCheckable(True)
+            icon = QIcon.fromTheme(win["icon"])
+            if not icon.isNull():
+                btn.setIcon(icon)
+                btn.setIconSize(QSize(16, 16))
+            btn.clicked.connect(lambda checked, w=win: self._on_taskbar_clicked(w))
+            self.taskbar_box.addWidget(btn)
+
+    def _on_taskbar_clicked(self, window_info):
         """Handle taskbar button click - focus window"""
-        self._focus_window(window_info["id"])
-    
-    def _on_workspace_clicked(self, button, workspace_num):
+        # labwc doesn't have direct window focus API
+        # Future: use wlr-foreign-toplevel when labwc supports it
+        pass
+
+    def _update_tray_label(self):
+        """Update tray placeholder label (fallback when no QSystemTrayIcon)"""
+        self.tray_label.setText("⚙")
+        self.tray_label.setToolTip("System Tray (SNI)")
+
+    def _on_workspace_clicked(self, workspace_num):
         """Handle workspace button click"""
-        # labwc uses workspace names like "ws1", "ws2", etc.
         workspace_name = f"ws{workspace_num + 1}"
         try:
-            subprocess.Popen(["nscde-wayland-run", "labwc", "-a", "GoToDesktop", workspace_name])
+            QProcess.startDetached("nscde-wayland-run", ["labwc", "-a", "GoToDesktop", workspace_name])
         except Exception as e:
             print(f"Error switching workspace: {e}", file=sys.stderr)
-        
+
         self.current_workspace = workspace_num
-        for child in button.get_parent().get_children():
-            child.get_style_context().remove_class("active")
-        button.get_style_context().add_class("active")
-    
-    def _on_signal(self, signum, frame):
-        """Handle termination signal"""
-        self.window_tracker.stop()
-        self.sni_tray.stop()
-        Gtk.main_quit()
-    
-    def run(self):
-        """Run the panel"""
-        Gtk.main()
+        for i, btn in enumerate(self.workspace_buttons):
+            btn.setChecked(i == workspace_num)
 
 
 def main():
-    parser = argparse.ArgumentParser(description='NsCDE CDE-style panel')
+    parser = argparse.ArgumentParser(description='NsCDE CDE-style panel (PyQt6)')
     parser.add_argument('--palette', help='Path to CDE palette file')
     parser.add_argument('--position', choices=['top', 'bottom'], default='bottom',
-                       help='Panel position (default: bottom)')
+                        help='Panel position (default: bottom)')
     args = parser.parse_args()
-    panel = NsCDEPanel(palette_file=args.palette, position=args.position)
-    panel.run()
+
+    # Enable High DPI
+    QApplication.setHighDpiScaleFactorRoundingPolicy(
+        Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
+    )
+
+    app = QApplication(sys.argv)
+    app.setApplicationName("nscde-panel")
+    app.setDesktopFileName("nscde-panel")
+
+    # Handle SIGINT/SIGTERM gracefully
+    signal.signal(signal.SIGINT, lambda s, f: app.quit())
+    signal.signal(signal.SIGTERM, lambda s, f: app.quit())
+
+    panel = CDEPanel(palette_file=args.palette, position=args.position)
+    panel.show()
+
+    # Ensure panel stays on top (some composizers need this)
+    panel.raise_()
+    panel.activateWindow()
+    # Re-set no-activate since we only want to raise, not focus
+    # (activateWindow may steal focus, but it's needed for z-order)
+
+    sys.exit(app.exec())
 
 
 if __name__ == '__main__':
