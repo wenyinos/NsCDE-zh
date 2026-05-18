@@ -37,7 +37,7 @@ ICON_H = 62                # icon 容器高度 62 像素
 LAUNCHER_BTN_W = 63        # 单个 launcher 按钮宽 63 像素
 LAUNCHER_BTN_H = 16        # 单个 launcher 按钮高 16 像素
 ICON_CELL_W = 63           # 图标格子宽 63 像素
-ICON_CELL_H = 62           # 图标格子高 62 像素
+ICON_CELL_H = 60           # 图标格子高 60 像素（Frame 1 边框内部）
 ICON_SIZE = 48             # 图标实际像素 48×48
 CENTER_W = 343             # 中心 WSM 容器宽度
 CENTER_H = 78              # 中心 WSM 容器高度
@@ -157,13 +157,13 @@ def build_cde_stylesheet(colors):
     Panel uses Colorset 23 (warm beige), buttons use Colorset 1 (gray).
     """
     return f"""
-    /* === Panel window (Colorset 23) === */
+    /* === Panel window (CS1 border like FVWM Window Manager) === */
     QWidget#panelWindow {{
         background-color: {colors['bg']};
-        border-top: 1px solid {colors['ts']};
-        border-left: 1px solid {colors['ts']};
-        border-right: 1px solid {colors['bs']};
-        border-bottom: 1px solid {colors['bs']};
+        border-top: 1px solid {colors['btn_ts']};
+        border-left: 1px solid {colors['btn_ts']};
+        border-right: 1px solid {colors['btn_bs']};
+        border-bottom: 1px solid {colors['btn_bs']};
     }}
 
     /* === All buttons: CDE 3D raised effect (Colorset 1) === */
@@ -191,11 +191,11 @@ def build_cde_stylesheet(colors):
     /* === Labels === */
     QLabel {{
         color: {colors['btn_fg']};
-        font: 11px Sans;
+        font: 11px "Noto Sans CJK SC";
         background: transparent;
     }}
     QLabel#clockLabel {{
-        font: bold 11px Sans;
+        font: bold 11px "Noto Sans CJK SC";
         padding: 0 6px;
     }}
 
@@ -203,7 +203,7 @@ def build_cde_stylesheet(colors):
     QPushButton#taskbarBtn {{
         min-width: 80px;
         padding: 2px 6px;
-        font: 11px Sans;
+        font: 11px "Noto Sans CJK SC";
     }}
     QPushButton#taskbarBtn:checked {{
         border-top: 2px solid {colors['btn_bs']};
@@ -217,7 +217,7 @@ def build_cde_stylesheet(colors):
     QPushButton#workspaceBtn {{
         min-width: 24px;
         padding: 2px 4px;
-        font: bold 11px Sans;
+        font: bold 11px "Noto Sans CJK SC";
     }}
     QPushButton#workspaceBtn:checked {{
         border-top: 2px solid {colors['btn_bs']};
@@ -305,7 +305,7 @@ class SubPanel(QDialog):
             }}
             QLabel#subpanelTitle {{
                 color: {colors['btn_fg']};
-                font: bold 11px Sans;
+                font: bold 11px "Noto Sans CJK SC";
                 padding: 3px 8px;
             }}
             QLabel#subpanelSep {{
@@ -323,7 +323,7 @@ class SubPanel(QDialog):
                 margin: 1px;
                 min-width: 160px;
                 text-align: left;
-                font: 11px Sans;
+                font: 11px "Noto Sans CJK SC";
             }}
             QPushButton:hover {{
                 background-color: {colors['sel']};
@@ -374,9 +374,10 @@ class SubPanel(QDialog):
 
 
 class IconButton(QPushButton):
-    """CDE Front Panel icon button with XPM icon and 3D border.
-    Matches original: Colorset 23 bg, PressColorset 24 (SelectedL.xpm)
-    Icon buttons use CS1 (gray) for 3D border effect.
+    """CDE Front Panel icon button with XPM icon.
+    Matches original: Colorset 23, Frame 0, PressColorset 24, Padding 0 0
+    Icon buttons use panel background (CS23), NO frame border.
+    PressColorset 24 approx = sel color (#a0a0a0).
     图标占 63x62 格子，48x48 图标居中
     """
 
@@ -405,10 +406,7 @@ class IconButton(QPushButton):
             self.setStyleSheet(f"""
                 QPushButton {{
                     background-color: {self._press_bg};
-                    border-top: 2px solid {c['btn_bs']};
-                    border-left: 2px solid {c['btn_bs']};
-                    border-right: 2px solid {c['btn_ts']};
-                    border-bottom: 2px solid {c['btn_ts']};
+                    border: none;
                     border-radius: 0px;
                     padding: 0px;
                     margin: 0px;
@@ -417,11 +415,8 @@ class IconButton(QPushButton):
         else:
             self.setStyleSheet(f"""
                 QPushButton {{
-                    background-color: {c['btn_bg']};
-                    border-top: 2px solid {c['btn_ts']};
-                    border-left: 2px solid {c['btn_ts']};
-                    border-right: 2px solid {c['btn_bs']};
-                    border-bottom: 2px solid {c['btn_bs']};
+                    background-color: {c['bg']};
+                    border: none;
                     border-radius: 0px;
                     padding: 0px;
                     margin: 0px;
@@ -439,15 +434,15 @@ class IconButton(QPushButton):
 
 class LauncherButton(QPushButton):
     """CDE Front Panel subpanel launcher button.
-    Matches original: 63x16, Frame 1, PressColorset 27 (PressedFPL.xpm)
+    Matches original: 63x16, Frame 1, PressColorset 27, Padding 1 1
     Launcher buttons use CS1 (gray) for 3D border effect.
-    按钮紧贴无间距 (Padding 1 1 in original)
+    PressColorset 27 approx = #b0b0b0.
     """
 
     def __init__(self, parent, xpm_icon_name, tooltip=""):
         super().__init__(parent)
         self._colors = parent.colors
-        self._press_bg = parent.colors.get('sel', '#a0a0a0')
+        self._press_bg = '#b0b0b0'  # PressColorset 27 approximate
         self.setToolTip(tooltip)
         self.setFixedSize(LAUNCHER_BTN_W, LAUNCHER_BTN_H)
         self.setContentsMargins(0, 0, 0, 0)
@@ -473,7 +468,7 @@ class LauncherButton(QPushButton):
                     border-right: 1px solid {c['btn_ts']};
                     border-bottom: 1px solid {c['btn_ts']};
                     border-radius: 0px;
-                    padding: 0px;
+                    padding: 1px;
                     margin: 0px;
                 }}
             """)
@@ -486,7 +481,7 @@ class LauncherButton(QPushButton):
                     border-right: 1px solid {c['btn_bs']};
                     border-bottom: 1px solid {c['btn_bs']};
                     border-radius: 0px;
-                    padding: 0px;
+                    padding: 1px;
                     margin: 0px;
                 }}
             """)
@@ -502,8 +497,8 @@ class LauncherButton(QPushButton):
 
 class CenterButton(QPushButton):
     """CDE Front Panel center button (Lock, Lite, Exit).
-    Matches original: 2x1 格 ≈ 44x39 像素, Colorset 23, PressColorset 25
-    Center buttons use CS23 (panel) colors for bg, CS1 for 3D border.
+    Matches original: 2x1 格 ≈ 44x39 像素, Frame 0, Colorset 23, PressColorset 25
+    Center buttons use panel bg (CS23), NO frame border.
     叠在 WSM 主区域上方
     """
 
@@ -530,10 +525,7 @@ class CenterButton(QPushButton):
             self.setStyleSheet(f"""
                 QPushButton {{
                     background-color: {self._press_bg};
-                    border-top: 1px solid {c['bs']};
-                    border-left: 1px solid {c['bs']};
-                    border-right: 1px solid {c['ts']};
-                    border-bottom: 1px solid {c['ts']};
+                    border: none;
                     border-radius: 0px;
                     padding: 0px;
                     margin: 0px;
@@ -543,10 +535,7 @@ class CenterButton(QPushButton):
             self.setStyleSheet(f"""
                 QPushButton {{
                     background-color: {c['bg']};
-                    border-top: 1px solid {c['ts']};
-                    border-left: 1px solid {c['ts']};
-                    border-right: 1px solid {c['bs']};
-                    border-bottom: 1px solid {c['bs']};
+                    border: none;
                     border-radius: 0px;
                     padding: 0px;
                     margin: 0px;
@@ -661,31 +650,68 @@ class CDEPanel(QWidget):
         # ① 左把手容器 (21x79, Frame 1)
         hbox.addWidget(self._build_handle_container(is_left=True))
 
-        # ② 左侧: launcher(315x16) + icon(315x62) 上下叠放
+        # ② 左侧: launcher(315x16) + Frame1容器(icon 315x62)
         left_side = QWidget()
         left_side.setFixedSize(SIDE_W, PANEL_HEIGHT)
         left_vbox = QVBoxLayout(left_side)
         left_vbox.setContentsMargins(0, 0, 0, 0)
         left_vbox.setSpacing(0)
         left_vbox.addLayout(self._build_launcher_row(is_left=True))
-        left_vbox.addLayout(self._build_icon_row(is_left=True))
+        # 图标行 Frame 1 凸起容器 (匹配 FvwmButtons Frame 1)
+        left_icon_frame = QWidget()
+        left_icon_frame.setObjectName("iconFrame")
+        left_icon_frame.setFixedHeight(ICON_H)
+        left_icon_frame.setStyleSheet(f"""
+            QWidget#iconFrame {{
+                background-color: {self.colors['bg']};
+                border-top: 1px solid {self.colors['btn_ts']};
+                border-left: 1px solid {self.colors['btn_ts']};
+                border-right: 1px solid {self.colors['btn_bs']};
+                border-bottom: 1px solid {self.colors['btn_bs']};
+            }}
+        """)
+        left_icon_frame.setLayout(self._build_icon_row(is_left=True))
+        left_vbox.addWidget(left_icon_frame)
         hbox.addWidget(left_side)
 
         # ③ 中心: Lock + WSM + Lite + Exit (343x78)
         hbox.addWidget(self._build_center_section())
 
-        # ④ 右侧: icon(315x62) + launcher(315x16) 上下叠放
+        # ④ 右侧: Frame1容器(icon 315x62) + launcher(315x16)
         right_side = QWidget()
         right_side.setFixedSize(SIDE_W, PANEL_HEIGHT)
         right_vbox = QVBoxLayout(right_side)
         right_vbox.setContentsMargins(0, 0, 0, 0)
         right_vbox.setSpacing(0)
-        right_vbox.addLayout(self._build_icon_row(is_left=False))
+        # 图标行 Frame 1 凸起容器 (匹配 FvwmButtons Frame 1)
+        right_icon_frame = QWidget()
+        right_icon_frame.setObjectName("iconFrame")
+        right_icon_frame.setFixedHeight(ICON_H)
+        right_icon_frame.setStyleSheet(f"""
+            QWidget#iconFrame {{
+                background-color: {self.colors['bg']};
+                border-top: 1px solid {self.colors['btn_ts']};
+                border-left: 1px solid {self.colors['btn_ts']};
+                border-right: 1px solid {self.colors['btn_bs']};
+                border-bottom: 1px solid {self.colors['btn_bs']};
+            }}
+        """)
+        right_icon_frame.setLayout(self._build_icon_row(is_left=False))
+        right_vbox.addWidget(right_icon_frame)
         right_vbox.addLayout(self._build_launcher_row(is_left=False))
         hbox.addWidget(right_side)
 
         # ⑤ 右把手容器 (21x79, Frame 1)
         hbox.addWidget(self._build_handle_container(is_left=False))
+
+        # 底部 1px 修正线 (Colorset 15 暗线, 匹配 FvwmButtons 底部修正)
+        # 从 x=21 到右把手起始位置, y=78 (面板底边)
+        bottom_line = QLabel(self)
+        bottom_line.setFixedSize(PANEL_TOTAL_W - 42, 1)
+        bottom_line.move(HANDLE_WIDTH, PANEL_HEIGHT - 1)
+        bottom_line.setStyleSheet(
+            f"background-color: {self.colors['gap_lo']}; border: none;"
+        )
 
     def _build_handle_container(self, is_left=True):
         """Build left or right handle container (21x79, Frame 1).
@@ -694,7 +720,16 @@ class CDEPanel(QWidget):
         """
         container = QWidget()
         container.setFixedSize(HANDLE_WIDTH, PANEL_HEIGHT)
-        container.setStyleSheet(f"background-color: {self.colors['bg']};")
+        # Frame 1: 3D raised border using CS1 colors
+        container.setStyleSheet(f"""
+            QWidget {{
+                background-color: {self.colors['bg']};
+                border-top: 1px solid {self.colors['btn_ts']};
+                border-left: 1px solid {self.colors['btn_ts']};
+                border-right: 1px solid {self.colors['btn_bs']};
+                border-bottom: 1px solid {self.colors['btn_bs']};
+            }}
+        """)
 
         if is_left:
             # 左容器: 竖条 + (Menu + gap + Handle)
@@ -734,18 +769,18 @@ class CDEPanel(QWidget):
                     menu_btn.setIconSize(QSize(17, 12))
             menu_btn.setStyleSheet(f"""
                 QPushButton {{
-                    background-color: {self.colors['bg']};
-                    border-top: 1px solid {self.colors['ts']};
-                    border-left: 1px solid {self.colors['ts']};
-                    border-right: 1px solid {self.colors['bs']};
-                    border-bottom: 1px solid {self.colors['bs']};
+                    background-color: {self.colors['btn_bg']};
+                    border-top: 1px solid {self.colors['btn_ts']};
+                    border-left: 1px solid {self.colors['btn_ts']};
+                    border-right: 1px solid {self.colors['btn_bs']};
+                    border-bottom: 1px solid {self.colors['btn_bs']};
                     padding: 0px;
                 }}
                 QPushButton:pressed {{
-                    border-top: 1px solid {self.colors['bs']};
-                    border-left: 1px solid {self.colors['bs']};
-                    border-right: 1px solid {self.colors['ts']};
-                    border-bottom: 1px solid {self.colors['ts']};
+                    border-top: 1px solid {self.colors['btn_bs']};
+                    border-left: 1px solid {self.colors['btn_bs']};
+                    border-right: 1px solid {self.colors['btn_ts']};
+                    border-bottom: 1px solid {self.colors['btn_ts']};
                 }}
             """)
             menu_btn.clicked.connect(lambda: self._on_menu_clicked(menu_btn))
@@ -794,18 +829,18 @@ class CDEPanel(QWidget):
                     iconify_btn.setIconSize(QSize(18, 12))
             iconify_btn.setStyleSheet(f"""
                 QPushButton {{
-                    background-color: {self.colors['bg']};
-                    border-top: 1px solid {self.colors['ts']};
-                    border-left: 1px solid {self.colors['ts']};
-                    border-right: 1px solid {self.colors['bs']};
-                    border-bottom: 1px solid {self.colors['bs']};
+                    background-color: {self.colors['btn_bg']};
+                    border-top: 1px solid {self.colors['btn_ts']};
+                    border-left: 1px solid {self.colors['btn_ts']};
+                    border-right: 1px solid {self.colors['btn_bs']};
+                    border-bottom: 1px solid {self.colors['btn_bs']};
                     padding: 0px;
                 }}
                 QPushButton:pressed {{
-                    border-top: 1px solid {self.colors['bs']};
-                    border-left: 1px solid {self.colors['bs']};
-                    border-right: 1px solid {self.colors['ts']};
-                    border-bottom: 1px solid {self.colors['ts']};
+                    border-top: 1px solid {self.colors['btn_bs']};
+                    border-left: 1px solid {self.colors['btn_bs']};
+                    border-right: 1px solid {self.colors['btn_ts']};
+                    border-bottom: 1px solid {self.colors['btn_ts']};
                 }}
             """)
             iconify_btn.clicked.connect(self._on_iconify_clicked)
@@ -896,26 +931,36 @@ class CDEPanel(QWidget):
         return hbox
 
     def _build_center_section(self):
-        """Build center section: Lock + WSM + Lite + Exit (343x78, Frame 1).
-        WSM 占主要空间 (约 308x78), Lock/Lite/Exit 叠在上方.
+        """Build center section: Lock + PGM + WSM + Lite + Exit (343x78, Frame 1).
+        布局匹配原版: Lock(左上) PGM(左下) Lite(右上) Exit(右下) WSM(居中).
         """
         container = QWidget()
         container.setFixedSize(CENTER_W, CENTER_H)
+        # Frame 1: 3D raised border using CS1 colors
         container.setStyleSheet(f"""
             background-color: {self.colors['bg']};
-            border: 1px solid {self.colors['btn_bs']};
+            border-top: 1px solid {self.colors['btn_ts']};
+            border-left: 1px solid {self.colors['btn_ts']};
+            border-right: 1px solid {self.colors['btn_bs']};
+            border-bottom: 1px solid {self.colors['btn_bs']};
         """)
 
-        # WSM 主区域 (占满整个容器)
+        # WSM 主区域 (占满整个容器, 底层)
         wsm_widget = self._build_wsm_widget()
         wsm_widget.setParent(container)
         wsm_widget.move(0, 0)
 
-        # Lock 按钮 (左上角, 约 44x39)
+        # Lock 按钮 (左上角, 44x39, Colorset 23, PressColorset 25)
         lock_btn = CenterButton(self, "FpLock.xpm", "Lock Screen")
         lock_btn.setParent(container)
         lock_btn.move(0, 0)
         lock_btn.clicked.connect(self._on_lock_clicked)
+
+        # PGM 按钮 (左下角, 44x39, Colorset 23, PressColorset 25)
+        pgm_btn = CenterButton(self, "Wsm.xpm", "Page Manager")
+        pgm_btn.setParent(container)
+        pgm_btn.move(0, CENTER_H - CENTER_BTN_H)
+        pgm_btn.clicked.connect(self._on_pgm_clicked)
 
         # Lite 按钮 (右上角, 叠在 WSM 上)
         lite_btn = CenterButton(self, "Fplite.s.pm", "System Load")
@@ -1049,6 +1094,13 @@ class CDEPanel(QWidget):
                 except Exception:
                     continue
             print("No screen locker found", file=sys.stderr)
+
+    def _on_pgm_clicked(self):
+        """Handle PGM (Page Manager) button click"""
+        try:
+            QProcess.startDetached("nscde-wayland-run", ["labwc", "-a", "ShowMenu", "workspace"])
+        except Exception as e:
+            print(f"Error showing page manager: {e}", file=sys.stderr)
 
     def _on_lite_clicked(self):
         """Handle lite button click - show system load info"""
