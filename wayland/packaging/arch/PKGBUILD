@@ -1,0 +1,58 @@
+# Maintainer: Wenyin Root <ruojiner@hotmail.com>
+pkgname=nscde-wayland
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="NsCDE-Wayland: CDE-style desktop environment for labwc"
+arch=('any')
+url="https://github.com/wenyinos/NsCDE-zh"
+license=('GPL3')
+depends=(
+    'labwc'
+    'python'
+    'python-pyqt6'
+    'swaybg'
+    'fuzzel'
+    'foot'
+    'fnott'
+    'sfwbar'
+    'lavalauncher'
+    'wl-clipboard'
+    'grim'
+    'slurp'
+    'pcmanfm-qt'
+    'python-pillow'
+)
+optdepends=(
+    'wlr-randr: display scaling'
+    'kanshi: dynamic output configuration'
+    'swaylock: screen locking'
+    'kvantum: Qt theme engine'
+    'qt5ct: Qt5 configuration'
+    'qt6ct: Qt6 configuration'
+    'nwg-look: GTK theme configuration'
+    'wlrctl: window management CLI'
+)
+# To build from a local git checkout:
+#   cd <NsCDE-zh-root>/wayland/packaging/arch
+#   makepkg -p ../../PKGBUILD   (or symlink PKGBUILD to wayland/)
+# Alternatively, copy this PKGBUILD to the project root and adjust paths.
+source=()
+sha256sums=()
+
+build() {
+    true
+}
+
+package() {
+    # Assumes PKGBUILD is run from the NsCDE-zh project root,
+    # or that wayland/ is accessible as a sibling directory.
+    local _srcdir
+    if [ -d "$startdir/../../Makefile" ] && [ -d "$startdir/../../wayland" ]; then
+        _srcdir="$startdir/../.."
+    elif [ -d "$startdir/../Makefile" ] && [ -d "$startdir/../wayland" ]; then
+        _srcdir="$startdir/.."
+    else
+        _srcdir="$startdir"
+    fi
+    make -C "$_srcdir/wayland" PREFIX=/usr DESTDIR="$pkgdir" install
+}

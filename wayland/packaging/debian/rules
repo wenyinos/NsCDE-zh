@@ -1,0 +1,15 @@
+#!/usr/bin/make -f
+
+# This debian/ directory lives at wayland/packaging/debian/.
+# To build, symlink or copy it to the project root:
+#   ln -s wayland/packaging/debian debian
+#   dpkg-buildpackage -us -uc
+
+%:
+	dh $@
+
+override_dh_auto_install:
+	$(MAKE) -C wayland PREFIX=/usr DESTDIR=debian/nscde-wayland install
+
+override_dh_auto_test:
+	$(MAKE) -C wayland check

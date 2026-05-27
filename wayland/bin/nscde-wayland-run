@@ -45,7 +45,7 @@ ensure_app_config() {
 gtk-theme-name=$gtk_theme
 gtk-icon-theme-name=NsCDE
 gtk-cursor-theme-name=NsCDE
-gtk-font-name=DejaVu Serif 10
+gtk-font-name=Noto Sans CJK SC 10
 EOF
 		fi
 	done
@@ -58,8 +58,8 @@ EOF
 				"style=$qt_style" \
 				"" \
 				"[Fonts]" \
-				'fixed="DejaVu Sans Mono,10"' \
-				'general="DejaVu Serif,10"' \
+				'fixed="Noto Sans Mono CJK SC,10"' \
+				'general="Noto Sans CJK SC,10"' \
 				> "$app_config_home/$qtver/${qtver}.conf"
 		fi
 	done

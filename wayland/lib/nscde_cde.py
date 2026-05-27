@@ -167,6 +167,17 @@ def get_palette_list():
     return palettes
 
 
+def reconfigure_labwc():
+    """Signal labwc to reload configuration."""
+    try:
+        subprocess.Popen(
+            ["labwc", "-r"],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
+    except Exception:
+        pass
+
+
 def build_dialog_stylesheet(colors):
     """Build CDE 3D border stylesheet suitable for dialog windows.
 

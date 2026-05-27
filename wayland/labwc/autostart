@@ -57,8 +57,24 @@ if command -v lavalauncher >/dev/null 2>&1; then
 	(nscde-wayland-run app lavalauncher &) 2>/dev/null || true
 fi
 
-# Set wallpaper
-if [ -f "$wallpaper" ]; then
+# Set wallpaper (per-output if outputs.conf exists, else uniform)
+outputs_conf=${NSCDE_WAYLAND_CONFIG:-"$HOME/.config/nscde-wayland"}/outputs.conf
+if [ -f "$outputs_conf" ] && command -v swaybg >/dev/null 2>&1; then
+	swaybg_args=""
+	while IFS='=' read -r key val; do
+		case "$key" in ''|\#*) continue ;; esac
+		img="${val%%:*}"
+		mode="${val#*:}"
+		[ "$mode" = "$val" ] && mode=fill
+		[ -f "$img" ] || continue
+		swaybg_args="$swaybg_args -o $key -i $img -m $mode"
+	done < "$outputs_conf"
+	if [ -n "$swaybg_args" ]; then
+		(eval "swaybg $swaybg_args" &) 2>/dev/null || true
+	elif [ -f "$wallpaper" ]; then
+		(swaybg -i "$wallpaper" -m fill &) 2>/dev/null || true
+	fi
+elif [ -f "$wallpaper" ]; then
 	if command -v swaybg >/dev/null 2>&1; then
 		(swaybg -i "$wallpaper" -m fill &) 2>/dev/null || true
 	elif command -v wbg >/dev/null 2>&1; then

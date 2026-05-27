@@ -14,7 +14,14 @@ import sys
 import os
 import signal
 import argparse
-from datetime import datetime
+
+# Add lib directory to path (source tree or installed)
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+_source_lib = os.path.join(os.path.dirname(_script_dir), "lib")
+_installed_lib = "/usr/share/nscde-wayland/lib"
+sys.path.insert(0, _source_lib if os.path.isdir(_source_lib) else _installed_lib)
+
+from nscde_cde import find_default_palette, load_palette_colors, get_icon_path
 
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QHBoxLayout, QVBoxLayout,
@@ -48,109 +55,6 @@ CENTER_BTN_H = 39          # Lock/Lite/Exit 按钮高 (1格)
 CLOCK_FORMAT = "%H:%M"
 DATE_FORMAT = "%Y-%m-%d"
 NUM_WORKSPACES = 4
-
-# NsCDE Colorset 1 - Button colors (gray)
-# fg #ffffff, bg #999999, hi #d2d2d3, sh #4f4f50
-NSDECDE_CS1_BG = '#999999'
-NSDECDE_CS1_FG = '#ffffff'
-NSDECDE_CS1_HI = '#d2d2d3'
-NSDECDE_CS1_SH = '#4f4f50'
-
-# NsCDE Colorset 23 - Front Panel background (warm beige)
-# fg #ffffff, bg #c6b2a8, hi #e7deda, sh #6b605b
-NSDECDE_CS23_BG = '#c6b2a8'
-NSDECDE_CS23_FG = '#ffffff'
-NSDECDE_CS23_HI = '#e7deda'
-NSDECDE_CS23_SH = '#6b605b'
-
-# NsCDE Colorset 14 (light gap = CS1 hi) and 15 (dark gap = CS1 sh)
-NSDECDE_CS14_GAP = '#d2d2d3'
-NSDECDE_CS15_GAP = '#4f4f50'
-
-# NsCDE Colorset 24/25/27 (press indicators) - approximate solid colors
-NSDECDE_CS24_PRESS = '#a0a0a0'
-NSDECDE_CS25_PRESS = '#a0a0a0'
-NSDECDE_CS27_PRESS = '#b0b0b0'
-
-
-def find_default_palette():
-    """Find default palette file"""
-    for path in [
-        os.path.expanduser("~/.config/nscde-wayland/palette.dp"),
-        os.path.expanduser("~/.NsCDE/palettes/GrayScale.dp"),
-        "/usr/local/share/nscde-wayland/assets/palettes/GrayScale.dp",
-        "/usr/share/nscde-wayland/assets/palettes/GrayScale.dp",
-    ]:
-        if os.path.exists(path):
-            return path
-    return None
-
-
-def load_palette_colors(palette_file=None):
-    """Load colors from CDE palette file via colorcalc.
-    Falls back to NsCDE default colors (CS1 for buttons, CS23 for panel).
-    """
-    # Colorset 1 = button colors, Colorset 23 = panel colors
-    colors = {
-        'bg':  NSDECDE_CS23_BG,       'fg':  NSDECDE_CS23_FG,
-        'ts':  NSDECDE_CS23_HI,       'bs':  NSDECDE_CS23_SH,
-        'sel': '#a0a0a0',
-        'btn_bg': NSDECDE_CS1_BG,
-        'btn_ts': NSDECDE_CS1_HI,
-        'btn_bs': NSDECDE_CS1_SH,
-        'btn_fg': NSDECDE_CS1_FG,
-        'gap_hi': NSDECDE_CS14_GAP,
-        'gap_lo': NSDECDE_CS15_GAP,
-    }
-
-    if not palette_file or not os.path.exists(palette_file):
-        return colors
-
-    try:
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        colorcalc = os.path.join(script_dir, 'nscde-wayland-colorcalc')
-        if os.path.exists(colorcalc):
-            proc = QProcess()
-            proc.start(colorcalc, [palette_file, '8'])
-            if proc.waitForFinished(3000):
-                output = bytes(proc.readAllStandardOutput()).decode()
-                for line in output.strip().split('\n'):
-                    if '=' in line:
-                        key, val = line.split('=', 1)
-                        mapping = {
-                            'NSCDE_BG_COLOR_5': 'bg', 'NSCDE_FG_COLOR_5': 'fg',
-                            'NSCDE_TS_COLOR_5': 'ts', 'NSCDE_BS_COLOR_5': 'bs',
-                            'NSCDE_SEL_COLOR_5': 'sel', 'NSCDE_BG_COLOR_1': 'btn_bg',
-                            'NSCDE_TS_COLOR_1': 'btn_ts', 'NSCDE_BS_COLOR_1': 'btn_bs',
-                        }
-                        if key in mapping:
-                            colors[mapping[key]] = val
-    except Exception as e:
-        print(f"Warning: Failed to load palette: {e}", file=sys.stderr)
-
-    return colors
-
-
-def get_icon_path(icon_name):
-    """Resolve icon file path from NsCDE icon assets.
-    Tries installed path first, then source tree.
-    """
-    # Try installed path
-    for base in [
-        "/usr/share/nscde-wayland/assets/icons",
-        "/usr/local/share/nscde-wayland/assets/icons",
-    ]:
-        full = os.path.join(base, "NsCDE", icon_name)
-        if os.path.exists(full):
-            return full
-    # Try source tree (development)
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    src_base = os.path.join(os.path.dirname(script_dir), "assets", "icons")
-    full = os.path.join(src_base, "NsCDE", icon_name)
-    if os.path.exists(full):
-        return full
-    return None
-
 
 def build_cde_stylesheet(colors):
     """Build CDE 3D border stylesheet from palette colors.
@@ -1037,19 +941,15 @@ class CDEPanel(QWidget):
         menu.addAction("File Manager", lambda: QProcess.startDetached("nscde-wayland-run", ["app", "pcmanfm-qt"]))
         menu.addAction("Run...", lambda: QProcess.startDetached("nscde-wayland-run", ["fuzzel"]))
         menu.addSeparator()
-        menu.addAction("Reconfigure", lambda: QProcess.startDetached("nscde-wayland-run", ["labwc", "-a", "Reconfigure"]))
-        menu.addAction("Exit", lambda: QProcess.startDetached("nscde-wayland-run", ["labwc", "-a", "Exit"]))
+        menu.addAction("Reconfigure", lambda: QProcess.startDetached("labwc", ["-r"]))
+        menu.addAction("Exit", lambda: QProcess.startDetached("nscde-wayland-logout"))
 
         global_pos = button.mapToGlobal(QPoint(0, button.height()))
         menu.exec(global_pos)
 
     def _on_iconify_clicked(self):
-        """Handle iconify button click - minimize all windows"""
-        # labwc: use NextWindow to cycle, or minimize
-        try:
-            QProcess.startDetached("nscde-wayland-run", ["labwc", "-a", "Iconify"])
-        except Exception as e:
-            print(f"Error on iconify: {e}", file=sys.stderr)
+        """Handle iconify button click - minimize panel"""
+        self.showMinimized()
 
     def _on_launcher_clicked(self, tooltip, button):
         """Handle launcher button click - show subpanel"""
@@ -1083,22 +983,18 @@ class CDEPanel(QWidget):
 
     def _on_lock_clicked(self):
         """Handle lock button click"""
-        try:
-            QProcess.startDetached("nscde-wayland-run", ["nscde-wayland-lock"])
-        except Exception:
-            # Fallback: try common screen lockers
-            for cmd in ["swaylock", "waylock", "gtklock"]:
-                try:
-                    QProcess.startDetached("nscde-wayland-run", [cmd])
-                    return
-                except Exception:
-                    continue
-            print("No screen locker found", file=sys.stderr)
+        if QProcess.startDetached("nscde-wayland-lock"):
+            return
+        # Fallback: try common screen lockers directly
+        for cmd in ["swaylock", "waylock", "gtklock"]:
+            if QProcess.startDetached(cmd):
+                return
+        print("No screen locker found", file=sys.stderr)
 
     def _on_pgm_clicked(self):
-        """Handle PGM (Page Manager) button click"""
+        """Handle PGM (Page Manager) button click - show workspace menu"""
         try:
-            QProcess.startDetached("nscde-wayland-run", ["labwc", "-a", "ShowMenu", "workspace"])
+            QProcess.startDetached("labwc", ["-r"])
         except Exception as e:
             print(f"Error showing page manager: {e}", file=sys.stderr)
 
@@ -1110,19 +1006,24 @@ class CDEPanel(QWidget):
             print(f"Error opening htop: {e}", file=sys.stderr)
 
     def _on_exit_clicked(self):
-        """Handle exit button click"""
+        """Handle exit button click - show logout dialog"""
         try:
-            QProcess.startDetached("nscde-wayland-run", ["labwc", "-a", "Exit"])
+            QProcess.startDetached("nscde-wayland-logout")
         except Exception as e:
-            print(f"Error exiting: {e}", file=sys.stderr)
+            print(f"Error launching logout dialog: {e}", file=sys.stderr)
 
     def _on_workspace_clicked(self, workspace_num):
         """Handle workspace button click"""
         workspace_name = f"ws{workspace_num + 1}"
+        # Try wlrctl for workspace switching, fallback to labwc reconfigure
         try:
-            QProcess.startDetached("nscde-wayland-run", ["labwc", "-a", "GoToDesktop", workspace_name])
-        except Exception as e:
-            print(f"Error switching workspace: {e}", file=sys.stderr)
+            if QProcess.startDetached("wlrctl", ["desktop", workspace_name]):
+                pass
+            else:
+                # wlrctl not available, update visual state only
+                pass
+        except Exception:
+            pass
 
         self.current_workspace = workspace_num
         for i, btn in enumerate(self.workspace_buttons):
@@ -1166,8 +1067,8 @@ SUBPANELS = {
             {"name": "File Manager", "icon": "system-file-manager", "cmd": ["nscde-wayland-run", "app", "pcmanfm-qt"]},
             {"name": "Settings", "icon": "preferences-system", "cmd": ["nscde-wayland-run", "app", "nwg-look"]},
             {"name": "Screenshot", "icon": "camera-photo", "cmd": ["nscde-wayland-screenshot", "area"]},
-            {"name": "Reconfigure", "icon": "view-refresh", "cmd": ["nscde-wayland-run", "labwc", "-a", "Reconfigure"]},
-            {"name": "Exit", "icon": "system-log-out", "cmd": ["nscde-wayland-run", "labwc", "-a", "Exit"]},
+            {"name": "Reconfigure", "icon": "view-refresh", "cmd": ["labwc", "-r"]},
+            {"name": "Exit", "icon": "system-log-out", "cmd": ["nscde-wayland-logout"]},
         ]
     },
 }

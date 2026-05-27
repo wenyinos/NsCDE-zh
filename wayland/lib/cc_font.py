@@ -84,7 +84,13 @@ def _save_fontset(name, fonts_dict):
 
 
 def _apply_font_integration(fonts_dict):
-    """Write font settings to GTK/Qt config files."""
+    """Write font settings to GTK/Qt config files.
+
+    Note: This modifies shared desktop config files (gtk-3.0/settings.ini,
+    qt5ct.conf, qt6ct.conf) which is a pragmatic trade-off — GTK/Qt only
+    read fonts from these standard locations. The NsCDE-Wayland settings.ini
+    is also updated as the authoritative source.
+    """
     # Build GTK font string (use variable_regular)
     var_font = fonts_dict.get("variable_regular", "sans-serif 12")
     mono_font = fonts_dict.get("mono_regular", "monospace 12")
@@ -350,7 +356,7 @@ class FontPage(QWidget):
         for cat_label, cat_key in FONT_CATEGORIES:
             fonts[cat_key] = self.font_buttons[cat_key].text()
         _apply_font_integration(fonts)
-        self.status.setText("Font settings applied to GTK/Qt")
+        self.status.setText("Font settings applied to GTK/Qt (shared configs modified)")
 
     def _on_close(self):
         self.window().close()

@@ -1,17 +1,73 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <labwc_config>
+  <core>
+    <decoration>server</decoration>
+    <gap>0</gap>
+  </core>
   <theme>
     <name>NsCDE-Wayland</name>
+    <titleLayout>LIMC</titleLayout>
   </theme>
+  <focus>
+    <followMouse>no</followMouse>
+    <followMouseRequiresMovement>yes</followMouseRequiresMovement>
+    <raiseOnFocus>no</raiseOnFocus>
+  </focus>
+  <placement>
+    <policy>center</policy>
+  </placement>
+  <windowSwitcher>
+    <show>yes</show>
+    <fields>
+      <field content="type" />
+      <field content="title" />
+    </fields>
+  </windowSwitcher>
   <keyboard>
+    <!-- Window management -->
     <keybind key="A-Return">
-      <action name="Execute" command="nscde-wayland-run foot" />
-    </keybind>
-    <keybind key="A-Space">
-      <action name="Execute" command="nscde-wayland-run fuzzel" />
+      <action name="ToggleMaximize" />
     </keybind>
     <keybind key="A-F4">
       <action name="Close" />
+    </keybind>
+    <keybind key="A-Space">
+      <action name="ShowMenu" menu="root-menu" />
+    </keybind>
+    <keybind key="A-Tab">
+      <action name="NextWindow" />
+    </keybind>
+    <keybind key="A-S-Tab">
+      <action name="PreviousWindow" />
+    </keybind>
+    <keybind key="C-A-Left">
+      <action name="GoToDesktop" to="left" />
+    </keybind>
+    <keybind key="C-A-Right">
+      <action name="GoToDesktop" to="right" />
+    </keybind>
+    <keybind key="C-A-Up">
+      <action name="GoToDesktop" to="up" />
+    </keybind>
+    <keybind key="C-A-Down">
+      <action name="GoToDesktop" to="down" />
+    </keybind>
+    <!-- Applications -->
+    <keybind key="W-Return">
+      <action name="Execute" command="nscde-wayland-run foot" />
+    </keybind>
+    <keybind key="W-f">
+      <action name="Execute" command="nscde-wayland-run app pcmanfm-qt" />
+    </keybind>
+    <keybind key="A-F2">
+      <action name="Execute" command="nscde-wayland-run fuzzel" />
+    </keybind>
+    <!-- System -->
+    <keybind key="W-l">
+      <action name="Execute" command="nscde-wayland-lock" />
+    </keybind>
+    <keybind key="C-A-Delete">
+      <action name="Execute" command="nscde-wayland-logout" />
     </keybind>
   </keyboard>
   <mouse>
@@ -19,6 +75,43 @@
     <context name="Root">
       <mousebind button="Right" action="Press">
         <action name="ShowMenu" menu="root-menu" />
+      </mousebind>
+    </context>
+    <context name="TitleBar">
+      <mousebind button="Left" action="Press">
+        <action name="Focus" />
+        <action name="Raise" />
+      </mousebind>
+      <mousebind button="Left" action="Drag">
+        <action name="Move" />
+      </mousebind>
+      <mousebind button="Left" action="DoubleClick">
+        <action name="ToggleMaximize" />
+      </mousebind>
+      <mousebind button="Right" action="Press">
+        <action name="Focus" />
+        <action name="Raise" />
+      </mousebind>
+    </context>
+    <context name="Close">
+      <mousebind button="Left" action="Click">
+        <action name="Close" />
+      </mousebind>
+    </context>
+    <context name="Maximize">
+      <mousebind button="Left" action="Click">
+        <action name="ToggleMaximize" />
+      </mousebind>
+    </context>
+    <context name="Iconify">
+      <mousebind button="Left" action="Click">
+        <action name="Iconify" />
+      </mousebind>
+    </context>
+    <context name="Client">
+      <mousebind button="Left" action="Press">
+        <action name="Focus" />
+        <action name="Raise" />
       </mousebind>
     </context>
   </mouse>

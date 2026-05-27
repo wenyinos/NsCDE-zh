@@ -1,0 +1,205 @@
+#!/usr/bin/env python3
+"""
+nscde-wayland-logout - Session exit/shutdown dialog for NsCDE-Wayland.
+
+Shows a CDE-style dialog with Logout, Reboot, Shutdown, Lock options.
+Uses loginctl for system operations (works with systemd and elogind).
+
+Usage:
+  nscde-wayland-logout [--palette PALETTE.dp]
+"""
+
+import sys
+import os
+import signal
+import argparse
+import subprocess
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+_source_lib = os.path.join(os.path.dirname(script_dir), "lib")
+_installed_lib = "/usr/share/nscde-wayland/lib"
+lib_dir = _source_lib if os.path.isdir(_source_lib) else _installed_lib
+sys.path.insert(0, lib_dir)
+
+from PyQt6.QtWidgets import (
+    QApplication, QWidget, QVBoxLayout, QHBoxLayout,
+    QPushButton, QLabel, QFrame
+)
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QPixmap
+
+from nscde_cde import (
+    find_default_palette, load_palette_colors, get_icon_path,
+    build_dialog_stylesheet
+)
+
+
+def _run_cmd(cmd):
+    """Run a command, return True on success."""
+    try:
+        r = subprocess.run(cmd, capture_output=True, timeout=5)
+        return r.returncode == 0
+    except Exception:
+        return False
+
+
+def _logout():
+    """Logout from labwc session."""
+    _run_cmd(["labwc", "--exit"])
+
+
+def _reboot():
+    """Reboot via loginctl (works with systemd and elogind)."""
+    if not _run_cmd(["loginctl", "reboot"]):
+        # Fallback
+        _run_cmd(["reboot"])
+
+
+def _shutdown():
+    """Shutdown via loginctl."""
+    if not _run_cmd(["loginctl", "poweroff"]):
+        _run_cmd(["shutdown", "-h", "now"])
+
+
+def _lock():
+    """Lock screen using the first available locker."""
+    for cmd in ["nscde-wayland-lock", "swaylock", "waylock", "gtklock"]:
+        try:
+            subprocess.Popen([cmd], start_new_session=True)
+            return
+        except FileNotFoundError:
+            continue
+
+
+class LogoutDialog(QWidget):
+    """CDE-style session exit dialog."""
+
+    def __init__(self, colors):
+        super().__init__()
+        self.colors = colors
+        self.setWindowTitle("Session")
+        self.setObjectName("dialogWindow")
+        self.setFixedSize(340, 220)
+        self.setWindowFlags(
+            Qt.WindowType.Dialog | Qt.WindowType.FramelessWindowHint
+        )
+        self.setStyleSheet(build_dialog_stylesheet(colors))
+        self._build_ui()
+
+    def _build_ui(self):
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(8)
+
+        # Title with icon
+        title_layout = QHBoxLayout()
+        icon_path = get_icon_path("FpExit.xpm")
+        if icon_path:
+            icon_label = QLabel()
+            pm = QPixmap(icon_path).scaled(
+                32, 32, Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation
+            )
+            icon_label.setPixmap(pm)
+            title_layout.addWidget(icon_label)
+
+        title = QLabel("End Session")
+        title.setObjectName("title")
+        title_layout.addWidget(title)
+        title_layout.addStretch()
+        layout.addLayout(title_layout)
+
+        # Separator
+        sep = QFrame()
+        sep.setFrameShape(QFrame.Shape.HLine)
+        sep.setStyleSheet(f"background-color: {self.colors['bs']}")
+        layout.addWidget(sep)
+
+        # Info text
+        info = QLabel("Select an action:")
+        layout.addWidget(info)
+        layout.addSpacing(4)
+
+        # Buttons in 2x2 grid
+        btn_grid = QHBoxLayout()
+        left_col = QVBoxLayout()
+        right_col = QVBoxLayout()
+
+        logout_btn = QPushButton("Logout")
+        logout_btn.setToolTip("End current session")
+        logout_btn.clicked.connect(self._on_logout)
+        left_col.addWidget(logout_btn)
+
+        lock_btn = QPushButton("Lock Screen")
+        lock_btn.setToolTip("Lock the screen")
+        lock_btn.clicked.connect(self._on_lock)
+        left_col.addWidget(lock_btn)
+
+        reboot_btn = QPushButton("Reboot")
+        reboot_btn.setToolTip("Restart the computer")
+        reboot_btn.clicked.connect(self._on_reboot)
+        right_col.addWidget(reboot_btn)
+
+        shutdown_btn = QPushButton("Shutdown")
+        shutdown_btn.setToolTip("Power off the computer")
+        shutdown_btn.clicked.connect(self._on_shutdown)
+        right_col.addWidget(shutdown_btn)
+
+        btn_grid.addLayout(left_col)
+        btn_grid.addLayout(right_col)
+        layout.addLayout(btn_grid)
+
+        # Cancel button
+        layout.addSpacing(4)
+        cancel_btn = QPushButton("Cancel")
+        cancel_btn.clicked.connect(self.close)
+        layout.addWidget(cancel_btn, alignment=Qt.AlignmentFlag.AlignRight)
+
+    def _on_logout(self):
+        _logout()
+        self.close()
+
+    def _on_lock(self):
+        _lock()
+        self.close()
+
+    def _on_reboot(self):
+        _reboot()
+        self.close()
+
+    def _on_shutdown(self):
+        _shutdown()
+        self.close()
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Escape:
+            self.close()
+
+
+def main():
+    parser = argparse.ArgumentParser(description="NsCDE-Wayland Session Dialog")
+    parser.add_argument("--palette", metavar="FILE", help="CDE palette file")
+    args = parser.parse_args()
+
+    palette_file = args.palette or find_default_palette()
+    app = QApplication(sys.argv)
+    colors = load_palette_colors(palette_file)
+
+    dialog = LogoutDialog(colors)
+
+    # Center on screen
+    screen = app.primaryScreen()
+    if screen:
+        geo = screen.availableGeometry()
+        x = geo.x() + (geo.width() - dialog.width()) // 2
+        y = geo.y() + (geo.height() - dialog.height()) // 2
+        dialog.move(x, y)
+
+    dialog.show()
+    signal.signal(signal.SIGINT, lambda *_: app.quit())
+    signal.signal(signal.SIGTERM, lambda *_: app.quit())
+    sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+    main()

@@ -65,7 +65,7 @@ validate_command() {
 	cmd=$1
 	# Reject commands containing shell metacharacters or command substitution
 	case "$cmd" in
-		*[\;\&\|\<\>\`\$\(\)]*)
+		*[\;\&\|\<\>\`\$\(\)\'\"]*)
 			return 1
 			;;
 	esac
@@ -81,10 +81,9 @@ build_safe_terminal_cmd() {
 		printf '%s\n' "error: command contains unsafe characters: $exec_cmd" >&2
 		return 1
 	fi
-	# Output the command wrapped for terminal
-	printf '%s' "$terminal_cmd -e sh -c "
-	printf '%s' "$exec_cmd"
-	printf '"'
+	# Output the command wrapped for terminal, quoting exec_cmd
+	safe_cmd=$(printf '%s' "$exec_cmd" | sed "s/'/'\\\\''/g")
+	printf "%s" "$terminal_cmd -e sh -c '$safe_cmd'"
 }
 
 # Build a safe command for app execution.

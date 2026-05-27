@@ -42,7 +42,7 @@ printf '  XDG_SESSION_TYPE=%s\n' "${XDG_SESSION_TYPE:-unset}"
 printf '  WAYLAND_DISPLAY=%s\n' "${WAYLAND_DISPLAY:-unset}"
 
 printf '\nproject tools:\n'
-for cmd in nscde-labwc nscde-wayland-run nscde-output-scale nscde-wayland-screenshot nscde-wayland-doctor nscde-wayland-pipemenu; do
+for cmd in nscde-labwc nscde-wayland-run nscde-output-scale nscde-wayland-screenshot nscde-wayland-doctor nscde-wayland-pipemenu nscde-wayland-lock nscde-wayland-logout nscde-control-center nscde-panel nscde-wayland-theme nscde-wayland-menugen nscde-wayland-colorcalc; do
 	status_project_tool "$cmd"
 done
 

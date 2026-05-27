@@ -41,6 +41,9 @@ Installed files are placed under:
 ```text
 /usr/local/bin/nscde-labwc
 /usr/local/bin/nscde-panel
+/usr/local/bin/nscde-control-center
+/usr/local/bin/nscde-wayland-lock
+/usr/local/bin/nscde-wayland-logout
 /usr/local/bin/nscde-wayland-run
 /usr/local/bin/nscde-wayland-theme
 /usr/local/bin/nscde-wayland-menugen
@@ -49,6 +52,8 @@ Installed files are placed under:
 /usr/local/bin/nscde-wayland-pipemenu
 /usr/local/bin/nscde-output-scale
 /usr/local/bin/nscde-wayland-screenshot
+/usr/local/share/nscde-wayland/lib/nscde_cde.py
+/usr/local/share/nscde-wayland/lib/cc_*.py
 /usr/local/share/wayland-sessions/nscde-labwc.desktop
 /usr/local/share/nscde-wayland/
 /usr/local/share/themes/NsCDE-Wayland/
@@ -182,3 +187,58 @@ nscde-wayland-colorcalc PALETTE.dp [ncolors]
 ```
 
 Outputs `NSCDE_*_COLOR_N=VALUE` pairs for shell evaluation.
+
+### nscde-control-center
+
+PyQt6-based settings manager with CDE-style UI.
+
+```sh
+nscde-control-center [--palette PALETTE.dp] [--page sysinfo|defaultapps|backdrop|color|font|window]
+```
+
+Pages:
+- **Sysinfo** - Read-only system information display
+- **DefaultApps** - Default application associations (8 categories)
+- **Backdrop** - Wallpaper/photo manager (swaybg integration)
+- **Color** - Palette selection with labwc/GTK4/Kvantum/Firefox integration
+- **Font** - Font set management with GTK/Qt configuration
+- **Window** - labwc rc.xml editor (behavior/theme/placement/keyboard)
+
+### nscde-wayland-logout
+
+Session exit dialog with CDE-style UI.
+
+```sh
+nscde-wayland-logout [--palette PALETTE.dp]
+```
+
+Options: Logout, Lock Screen, Reboot, Shutdown. Uses `loginctl` for system operations (works with systemd and elogind).
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|---|---|
+| Alt+Tab | Window switcher |
+| Alt+F4 | Close window |
+| Alt+Return | Toggle maximize |
+| Alt+Space | Root menu |
+| Ctrl+Alt+Left/Right/Up/Down | Switch workspace |
+| Super+Return | Terminal (foot) |
+| Super+f | File manager |
+| Alt+F2 | Run dialog (fuzzel) |
+| Super+l | Lock screen |
+| Ctrl+Alt+Delete | Session dialog |
+
+## Configuration Files
+
+```text
+~/.config/nscde-wayland/         # NsCDE-Wayland user config
+~/.config/nscde-wayland/settings.ini  # DefaultApps, Font, ColorIntegration
+~/.config/nscde-wayland/palette.dp    # Current palette
+~/.config/nscde-wayland/fontsets/     # User font sets
+~/.config/nscde-wayland/backdrops/    # User backdrops
+~/.config/nscde-wayland/photos/       # User photos
+~/.config/labwc/rc.xml               # labwc configuration
+~/.config/labwc/themerc              # labwc theme (generated)
+~/.config/labwc/menu.xml             # Application menu (generated)
+```

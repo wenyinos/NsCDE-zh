@@ -193,7 +193,4 @@ class SysinfoPage(QWidget):
             pass
         info.append(("CPU:", cpu_model))
 
-        # Kernel
-        info.append(("Kernel:", f"{uname.system} {uname.release}"))
-
         return info

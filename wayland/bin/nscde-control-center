@@ -14,9 +14,11 @@ import os
 import signal
 import argparse
 
-# Add lib directory to path
+# Add lib directory to path (source tree or installed)
 script_dir = os.path.dirname(os.path.abspath(__file__))
-lib_dir = os.path.join(os.path.dirname(script_dir), "lib")
+_source_lib = os.path.join(os.path.dirname(script_dir), "lib")
+_installed_lib = "/usr/share/nscde-wayland/lib"
+lib_dir = _source_lib if os.path.isdir(_source_lib) else _installed_lib
 sys.path.insert(0, lib_dir)
 
 from PyQt6.QtWidgets import (

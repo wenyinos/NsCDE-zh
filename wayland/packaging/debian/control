@@ -1,0 +1,38 @@
+Source: nscde-wayland
+Section: x11
+Priority: optional
+Maintainer: Wenyin Root <ruojiner@hotmail.com>
+Build-Depends: debhelper-compat (= 13), python3
+
+Package: nscde-wayland
+Architecture: all
+Depends:
+    labwc,
+    python3,
+    python3-pyqt6,
+    swaybg,
+    fuzzel,
+    foot-terminal,
+    fnott,
+    sfwbar,
+    lavalauncher,
+    wl-clipboard,
+    grim,
+    slurp,
+    pcmanfm-qt,
+    python3-pil,
+    ${misc:Depends}
+Recommends:
+    wlr-randr,
+    kanshi,
+    swaylock,
+    qt5ct,
+    qt6ct,
+    nwg-look
+Description: CDE-style desktop environment for labwc
+ NsCDE-Wayland provides a Common Desktop Environment (CDE) inspired
+ desktop experience on Wayland using labwc as the compositor.
+ .
+ Features include a CDE-style front panel, color/font/backdrop
+ management, theme generation for labwc/GTK/Qt/Kvantum/Firefox,
+ and XDG menu integration.

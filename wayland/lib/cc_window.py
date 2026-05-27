@@ -5,7 +5,7 @@ Edits labwc rc.xml for window behavior, theme, placement, and keyboard settings.
 """
 
 import os
-import subprocess
+import sys
 import xml.etree.ElementTree as ET
 
 from PyQt6.QtWidgets import (
@@ -15,7 +15,11 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt
 
-LABWC_RC = os.path.expanduser("~/.config/labwc/rc.xml")
+script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, script_dir)
+from nscde_cde import reconfigure_labwc
+
+LABWC_RC = os.path.expanduser("~/.config/nscde-wayland/labwc/rc.xml")
 
 DEFAULT_RC_XML = """<?xml version="1.0" encoding="UTF-8"?>
 <labwc_config>
@@ -81,17 +85,6 @@ def _set_el(root, path, value):
             child = ET.SubElement(current, part)
         current = child
     current.text = str(value)
-
-
-def _reconfigure_labwc():
-    """Signal labwc to reconfigure."""
-    try:
-        subprocess.Popen(
-            ["labwc", "-r"],
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-        )
-    except Exception:
-        pass
 
 
 class WindowPage(QWidget):
@@ -219,7 +212,7 @@ class WindowPage(QWidget):
             "  Alt+Space   Window menu\n"
             "  Alt+Tab     Window switcher\n"
             "  Super+L     Lock screen\n\n"
-            "Edit ~/.config/labwc/rc.xml for custom keybinds."
+            "Edit ~/.config/nscde-wayland/labwc/rc.xml for custom keybinds."
         )
         info.setWordWrap(True)
         layout.addWidget(info)
@@ -277,7 +270,7 @@ class WindowPage(QWidget):
                 'yes' if self.cb_switcher.isChecked() else 'no')
 
         _save_rc_xml(self._tree)
-        _reconfigure_labwc()
+        reconfigure_labwc()
         self.status.setText("Configuration saved and labwc reconfigured")
 
     def _on_close(self):

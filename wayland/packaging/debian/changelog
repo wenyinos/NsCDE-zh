@@ -1,0 +1,12 @@
+nscde-wayland (0.1.0-1) unstable; urgency=medium
+
+  * Initial release.
+  * CDE-style front panel (nscde-panel)
+  * Control center (nscde-control-center) with Sysinfo, DefaultApps,
+    Backdrop, Color, Font, and Window manager pages
+  * Session dialog (nscde-wayland-logout)
+  * Theme generation for labwc, GTK4, Kvantum, Firefox
+  * XDG menu generation
+  * Display scaling support
+
+ -- Wenyin Root <ruojiner@hotmail.com>  Tue, 27 May 2026 12:00:00 +0800

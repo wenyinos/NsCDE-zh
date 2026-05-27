@@ -20,12 +20,13 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-bin_dir = os.path.join(os.path.dirname(script_dir), "bin")
+_source_bin = os.path.join(os.path.dirname(script_dir), "bin")
+bin_dir = _source_bin if os.path.isdir(_source_bin) else "/usr/bin"
 sys.path.insert(0, script_dir)
 
 from nscde_cde import (
     load_all_palette_colors, get_palette_list, find_default_palette,
-    load_palette_colors, build_dialog_stylesheet
+    load_palette_colors, build_dialog_stylesheet, reconfigure_labwc
 )
 
 
@@ -48,7 +49,7 @@ def _run_tool(name, args, timeout=10):
 
 def _apply_labwc_theme(palette_path):
     """Generate and apply labwc theme from palette."""
-    theme_dir = os.path.expanduser("~/.config/labwc")
+    theme_dir = os.path.expanduser("~/.config/nscde-wayland/labwc")
     themerc = os.path.join(theme_dir, "themerc")
     rc, out, err = _run_tool("nscde-wayland-theme", [palette_path])
     if rc == 0 and out:
@@ -87,17 +88,6 @@ def _apply_firefox(palette_path):
         "nscde-wayland-theme", ["--install-firefox", palette_path]
     )
     return rc == 0
-
-
-def _reconfigure_labwc():
-    """Signal labwc to reconfigure."""
-    try:
-        subprocess.Popen(
-            ["labwc", "-r"],
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-        )
-    except Exception:
-        pass
 
 
 def _read_integration_prefs():
@@ -309,7 +299,7 @@ class ColorPage(QWidget):
 
         if self.cb_labwc.isChecked():
             _apply_labwc_theme(self._current_palette_path)
-            _reconfigure_labwc()
+            reconfigure_labwc()
 
         self.status.setText("Preview applied")
 
@@ -342,7 +332,7 @@ class ColorPage(QWidget):
         if prefs['labwc']:
             if _apply_labwc_theme(self._current_palette_path):
                 results.append("labwc theme")
-                _reconfigure_labwc()
+                reconfigure_labwc()
             else:
                 results.append("labwc theme (FAILED)")
 

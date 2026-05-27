@@ -1,0 +1,11 @@
+#!/bin/sh
+# nscde-wayland-lock - Lock the screen using the first available locker.
+
+for locker in swaylock waylock gtklock; do
+    if command -v "$locker" >/dev/null 2>&1; then
+        exec "$locker" "$@"
+    fi
+done
+
+echo "No screen locker found. Install swaylock, waylock, or gtklock." >&2
+exit 1

@@ -16,6 +16,7 @@ check:
 	sh -n bin/nscde-labwc
 	sh -n bin/nscde-wayland-run
 	sh -n bin/nscde-output-scale
+	sh -n bin/nscde-wayland-lock
 	sh -n bin/nscde-wayland-screenshot
 	sh -n bin/nscde-wayland-doctor
 	sh -n bin/nscde-wayland-pipemenu
@@ -23,6 +24,7 @@ check:
 	sh -n bin/nscde-wayland-menugen
 	python3 -m py_compile bin/nscde-wayland-colorcalc
 	python3 -m py_compile bin/nscde-panel
+	python3 -m py_compile bin/nscde-wayland-logout
 	python3 -m py_compile bin/nscde-control-center
 	python3 -m py_compile lib/nscde_cde.py
 	python3 -m py_compile lib/cc_sysinfo.py
@@ -43,6 +45,7 @@ install:
 	$(INSTALL) -m 0755 bin/nscde-labwc "$(DESTDIR)$(BINDIR)/nscde-labwc"
 	$(INSTALL) -m 0755 bin/nscde-wayland-run "$(DESTDIR)$(BINDIR)/nscde-wayland-run"
 	$(INSTALL) -m 0755 bin/nscde-output-scale "$(DESTDIR)$(BINDIR)/nscde-output-scale"
+	$(INSTALL) -m 0755 bin/nscde-wayland-lock "$(DESTDIR)$(BINDIR)/nscde-wayland-lock"
 	$(INSTALL) -m 0755 bin/nscde-wayland-screenshot "$(DESTDIR)$(BINDIR)/nscde-wayland-screenshot"
 	$(INSTALL) -m 0755 bin/nscde-wayland-doctor "$(DESTDIR)$(BINDIR)/nscde-wayland-doctor"
 	$(INSTALL) -m 0755 bin/nscde-wayland-pipemenu "$(DESTDIR)$(BINDIR)/nscde-wayland-pipemenu"
@@ -51,6 +54,7 @@ install:
 	$(INSTALL) -m 0755 bin/nscde-wayland-colorcalc "$(DESTDIR)$(BINDIR)/nscde-wayland-colorcalc"
 	$(INSTALL) -m 0755 bin/nscde-panel "$(DESTDIR)$(BINDIR)/nscde-panel"
 	$(INSTALL) -m 0755 bin/nscde-control-center "$(DESTDIR)$(BINDIR)/nscde-control-center"
+	$(INSTALL) -m 0755 bin/nscde-wayland-logout "$(DESTDIR)$(BINDIR)/nscde-wayland-logout"
 	$(INSTALL) -d "$(DESTDIR)$(PROJECTDATADIR)/lib"
 	$(INSTALL) -m 0644 lib/nscde_cde.py "$(DESTDIR)$(PROJECTDATADIR)/lib/nscde_cde.py"
 	$(INSTALL) -m 0644 lib/cc_sysinfo.py "$(DESTDIR)$(PROJECTDATADIR)/lib/cc_sysinfo.py"
@@ -71,6 +75,7 @@ uninstall:
 	rm -f "$(DESTDIR)$(BINDIR)/nscde-labwc"
 	rm -f "$(DESTDIR)$(BINDIR)/nscde-wayland-run"
 	rm -f "$(DESTDIR)$(BINDIR)/nscde-output-scale"
+	rm -f "$(DESTDIR)$(BINDIR)/nscde-wayland-lock"
 	rm -f "$(DESTDIR)$(BINDIR)/nscde-wayland-screenshot"
 	rm -f "$(DESTDIR)$(BINDIR)/nscde-wayland-doctor"
 	rm -f "$(DESTDIR)$(BINDIR)/nscde-wayland-pipemenu"
@@ -79,6 +84,7 @@ uninstall:
 	rm -f "$(DESTDIR)$(BINDIR)/nscde-wayland-colorcalc"
 	rm -f "$(DESTDIR)$(BINDIR)/nscde-panel"
 	rm -f "$(DESTDIR)$(BINDIR)/nscde-control-center"
+	rm -f "$(DESTDIR)$(BINDIR)/nscde-wayland-logout"
 	rm -rf "$(DESTDIR)$(PROJECTDATADIR)/lib"
 	rm -f "$(DESTDIR)$(SESSIONDIR)/nscde-labwc.desktop"
 	rm -rf "$(DESTDIR)$(PROJECTDATADIR)"

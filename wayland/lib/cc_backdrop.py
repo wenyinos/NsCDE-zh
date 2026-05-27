@@ -15,7 +15,7 @@ _script_dir = os.path.dirname(os.path.abspath(__file__))
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QFrame,
     QListWidget, QListWidgetItem, QPushButton, QCheckBox,
-    QComboBox, QFileDialog, QSplitter
+    QComboBox, QFileDialog, QSplitter, QGroupBox, QGridLayout
 )
 from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QPixmap
@@ -53,6 +53,60 @@ def _xpm_to_pixmap(xpm_path, size=200):
         return pm
     except Exception:
         return None
+
+
+def _get_outputs():
+    """Detect connected display outputs via wlr-randr."""
+    outputs = []
+    try:
+        r = subprocess.run(["wlr-randr"], capture_output=True, text=True, timeout=3)
+        if r.returncode == 0:
+            for line in r.stdout.splitlines():
+                if line and not line.startswith(" "):
+                    name = line.split()[0]
+                    if name:
+                        outputs.append(name)
+    except Exception:
+        pass
+    return outputs
+
+
+def _get_outputs_conf_path():
+    return os.path.expanduser("~/.config/nscde-wayland/outputs.conf")
+
+
+def _load_outputs_conf():
+    """Load per-output wallpaper config. Returns dict of {output: (image, mode)}."""
+    conf = {}
+    path = _get_outputs_conf_path()
+    if not os.path.isfile(path):
+        return conf
+    try:
+        with open(path) as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                if "=" not in line:
+                    continue
+                key, val = line.split("=", 1)
+                img = val.split(":")[0]
+                mode = val.split(":")[1] if ":" in val else "fill"
+                conf[key.strip()] = (img, mode)
+    except Exception:
+        pass
+    return conf
+
+
+def _save_outputs_conf(conf):
+    """Save per-output wallpaper config. conf = {output: (image, mode)}."""
+    path = _get_outputs_conf_path()
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w") as f:
+        f.write("# Per-output wallpaper configuration\n")
+        f.write("# format: OUTPUT=image_path:mode\n\n")
+        for output, (img, mode) in sorted(conf.items()):
+            f.write(f"{output}={img}:{mode}\n")
 
 
 def _set_wallpaper(image_path, mode="fill"):
@@ -148,6 +202,35 @@ class BackdropPage(QWidget):
         splitter.addWidget(preview_frame)
         splitter.setSizes([300, 220])
         layout.addWidget(splitter)
+
+        # Per-output wallpaper section
+        self._output_combos = {}
+        outputs = _get_outputs()
+        if len(outputs) > 1:
+            out_group = QGroupBox("Per-Output Wallpapers")
+            out_layout = QGridLayout(out_group)
+            saved_conf = _load_outputs_conf()
+            for row, output in enumerate(outputs):
+                out_layout.addWidget(QLabel(f"{output}:"), row, 0)
+                combo = QComboBox()
+                combo.setMinimumWidth(250)
+                combo.setEditable(True)
+                combo.addItem("(default)")
+                self._populate_output_combo(combo)
+                # Restore saved value
+                if output in saved_conf:
+                    img, _ = saved_conf[output]
+                    idx = combo.findText(os.path.basename(img))
+                    if idx >= 0:
+                        combo.setCurrentIndex(idx)
+                    else:
+                        combo.setCurrentText(img)
+                out_layout.addWidget(combo, row, 1)
+                self._output_combos[output] = combo
+            apply_out_btn = QPushButton("Apply Per-Output")
+            apply_out_btn.clicked.connect(self._on_apply_per_output)
+            out_layout.addWidget(apply_out_btn, len(outputs), 1)
+            layout.addWidget(out_group)
 
         # Buttons
         btn_layout = QHBoxLayout()
@@ -263,6 +346,51 @@ class BackdropPage(QWidget):
             shutil.copy2(path, dest)
             self._load_list()
             self.status.setText(f"Added: {os.path.basename(path)}")
+
+    def _populate_output_combo(self, combo):
+        """Fill a combo box with available wallpaper files."""
+        for d in [PHOTOS_DIR, _get_user_photos_dir(),
+                  BACKDROPS_DIR, _get_user_backdrops_dir()]:
+            if not os.path.isdir(d):
+                continue
+            for f in sorted(os.listdir(d)):
+                ext = os.path.splitext(f)[1].lower()
+                if ext in {".png", ".jpg", ".jpeg", ".webp", ".pm", ".xpm"}:
+                    full = os.path.join(d, f)
+                    combo.addItem(f, full)
+
+    def _on_apply_per_output(self):
+        """Save per-output config and restart swaybg."""
+        mode = self.mode_combo.currentText()
+        conf = {}
+        for output, combo in self._output_combos.items():
+            text = combo.currentText()
+            if text == "(default)":
+                continue
+            # Try to resolve full path from combo data
+            idx = combo.currentIndex()
+            full_path = combo.itemData(idx) if idx >= 0 else None
+            if not full_path or not os.path.isfile(full_path):
+                # Maybe user typed a path directly
+                full_path = text if os.path.isfile(text) else None
+            if full_path:
+                conf[output] = (full_path, mode)
+        if not conf:
+            self.status.setText("No per-output wallpapers configured")
+            return
+        _save_outputs_conf(conf)
+        # Restart swaybg with per-output args
+        for cmd in ["swaybg", "wbg"]:
+            subprocess.run(["pkill", "-x", cmd], capture_output=True)
+        args = []
+        for output, (img, m) in conf.items():
+            args.extend(["-o", output, "-i", img, "-m", m])
+        try:
+            subprocess.Popen(["swaybg"] + args,
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except FileNotFoundError:
+            pass
+        self.status.setText(f"Per-output wallpapers applied ({len(conf)} outputs)")
 
     def _on_close(self):
         self.window().close()
