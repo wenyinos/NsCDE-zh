@@ -1,0 +1,263 @@
+#!/usr/bin/env python3
+"""
+nscde-control-center - NsCDE-Wayland Settings Manager
+
+A PyQt6-based control center for configuring NsCDE-Wayland desktop.
+Replaces the FvwmScript-based StyleMgr and its sub-managers.
+
+Usage:
+  nscde-control-center [--palette PALETTE.dp] [--page sysinfo|defaultapps|backdrop|color|font|window]
+"""
+
+import sys
+import os
+import signal
+import argparse
+
+# Add lib directory to path
+script_dir = os.path.dirname(os.path.abspath(__file__))
+lib_dir = os.path.join(os.path.dirname(script_dir), "lib")
+sys.path.insert(0, lib_dir)
+
+from PyQt6.QtWidgets import (
+    QApplication, QWidget, QVBoxLayout, QHBoxLayout,
+    QPushButton, QLabel, QStackedWidget, QFrame, QSizePolicy
+)
+from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtGui import QPixmap
+
+from nscde_cde import (
+    find_default_palette, load_palette_colors, get_icon_path,
+    build_dialog_stylesheet
+)
+from cc_sysinfo import SysinfoPage
+from cc_defaultapps import DefaultAppsPage
+from cc_backdrop import BackdropPage
+from cc_color import ColorPage
+from cc_font import FontPage
+from cc_window import WindowPage
+
+
+# Page definitions: (id, label, icon_file, module_attr)
+PAGES = [
+    ("color", "Color", "stylemgr.1.png", "ColorMgr"),
+    ("font", "Font", "stylemgr.2.png", "FontMgr"),
+    ("backdrop", "Backdrop", "stylemgr.3.png", "BackdropMgr"),
+    ("keyboard", "Keyboard", "stylemgr.4.png", None),
+    ("mouse", "Mouse", "stylemgr.5.png", None),
+    ("window", "Window", "stylemgr.8.png", "WindowMgr"),
+    ("defaultapps", "Apps", "stylemgr.11.png", None),
+    ("sysinfo", "Sysinfo", "stylemgr.12.png", None),
+]
+
+
+class StyleButton(QPushButton):
+    """CDE-style icon button for the StyleMgr toolbar."""
+
+    def __init__(self, icon_path, label, colors, parent=None):
+        super().__init__(parent)
+        self.colors = colors
+        self.setCheckable(True)
+        self.setFixedSize(64, 64)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(2, 2, 2, 2)
+        layout.setSpacing(1)
+
+        # Icon
+        icon_label = QLabel()
+        icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        if icon_path and os.path.exists(icon_path):
+            pm = QPixmap(icon_path).scaled(
+                32, 32, Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation
+            )
+            icon_label.setPixmap(pm)
+        else:
+            icon_label.setText(label[:1])
+            icon_label.setStyleSheet("font: bold 16px")
+        layout.addWidget(icon_label, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        # Text
+        text_label = QLabel(label)
+        text_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        text_label.setStyleSheet("font: 9px")
+        layout.addWidget(text_label)
+
+        self.setStyleSheet(self._normal_style())
+
+    def _normal_style(self):
+        return f"""
+            QPushButton {{
+                background-color: {self.colors['btn_bg']};
+                border-top: 2px solid {self.colors['btn_ts']};
+                border-left: 2px solid {self.colors['btn_ts']};
+                border-right: 2px solid {self.colors['btn_bs']};
+                border-bottom: 2px solid {self.colors['btn_bs']};
+                border-radius: 0px;
+                padding: 2px;
+            }}
+            QPushButton:hover {{
+                background-color: {self.colors['sel']};
+            }}
+        """
+
+    def _pressed_style(self):
+        return f"""
+            QPushButton {{
+                background-color: {self.colors['sel']};
+                border-top: 2px solid {self.colors['btn_bs']};
+                border-left: 2px solid {self.colors['btn_bs']};
+                border-right: 2px solid {self.colors['btn_ts']};
+                border-bottom: 2px solid {self.colors['btn_ts']};
+                border-radius: 0px;
+                padding: 2px;
+            }}
+        """
+
+    def setChecked(self, checked):
+        super().setChecked(checked)
+        if checked:
+            self.setStyleSheet(self._pressed_style())
+        else:
+            self.setStyleSheet(self._normal_style())
+
+
+class ControlCenter(QWidget):
+    """Main control center window with StyleMgr toolbar + stacked pages."""
+
+    def __init__(self, colors, initial_page=None):
+        super().__init__()
+        self.colors = colors
+        self.buttons = []
+        self.setWindowTitle("NsCDE Control Center")
+        self.setObjectName("dialogWindow")
+        self.setMinimumSize(640, 480)
+
+        self.setStyleSheet(build_dialog_stylesheet(colors))
+
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(4, 4, 4, 4)
+        main_layout.setSpacing(4)
+
+        # Toolbar (StyleMgr)
+        toolbar = QFrame()
+        toolbar.setStyleSheet(f"""
+            QFrame {{
+                background-color: {colors['bg']};
+                border-top: 2px solid {colors['ts']};
+                border-left: 2px solid {colors['ts']};
+                border-right: 2px solid {colors['bs']};
+                border-bottom: 2px solid {colors['bs']};
+            }}
+        """)
+        toolbar_layout = QHBoxLayout(toolbar)
+        toolbar_layout.setContentsMargins(4, 4, 4, 4)
+        toolbar_layout.setSpacing(2)
+
+        for page_id, label, icon_file, _ in PAGES:
+            icon_path = get_icon_path(icon_file)
+            btn = StyleButton(icon_path, label, colors)
+            btn.clicked.connect(lambda checked, pid=page_id: self._switch_page(pid))
+            toolbar_layout.addWidget(btn)
+            self.buttons.append((page_id, btn))
+
+        toolbar_layout.addStretch()
+        main_layout.addWidget(toolbar)
+
+        # Stacked pages
+        self.stack = QStackedWidget()
+        main_layout.addWidget(self.stack)
+
+        # Create pages
+        self._pages = {}
+        self._create_pages()
+
+        # Select initial page
+        target = initial_page or "sysinfo"
+        if target in self._pages:
+            self._switch_page(target)
+
+    def _create_pages(self):
+        """Create and add all available pages."""
+        # Sysinfo (always available)
+        self._pages["sysinfo"] = SysinfoPage(self.colors)
+        self.stack.addWidget(self._pages["sysinfo"])
+
+        # DefaultApps (always available)
+        self._pages["defaultapps"] = DefaultAppsPage(self.colors)
+        self.stack.addWidget(self._pages["defaultapps"])
+
+        # Backdrop (always available)
+        self._pages["backdrop"] = BackdropPage(self.colors)
+        self.stack.addWidget(self._pages["backdrop"])
+
+        # Color (always available)
+        self._pages["color"] = ColorPage(self.colors)
+        self.stack.addWidget(self._pages["color"])
+
+        # Font (always available)
+        self._pages["font"] = FontPage(self.colors)
+        self.stack.addWidget(self._pages["font"])
+
+        # Window (always available)
+        self._pages["window"] = WindowPage(self.colors)
+        self.stack.addWidget(self._pages["window"])
+
+        # Placeholder pages for not-yet-implemented managers
+        for page_id, label, _, _ in PAGES:
+            if page_id not in self._pages:
+                placeholder = QWidget()
+                layout = QVBoxLayout(placeholder)
+                lbl = QLabel(f"{label} Manager\n\n(Not yet implemented)")
+                lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                lbl.setStyleSheet("font: 14px; color: #888888")
+                layout.addWidget(lbl)
+                self._pages[page_id] = placeholder
+                self.stack.addWidget(placeholder)
+
+    def _switch_page(self, page_id):
+        """Switch to the given page and update toolbar button states."""
+        if page_id in self._pages:
+            self.stack.setCurrentWidget(self._pages[page_id])
+        for pid, btn in self.buttons:
+            btn.setChecked(pid == page_id)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="NsCDE-Wayland Control Center"
+    )
+    parser.add_argument(
+        "--palette", metavar="FILE",
+        help="Path to CDE palette file (.dp)"
+    )
+    parser.add_argument(
+        "--page", default="sysinfo",
+        choices=[p[0] for p in PAGES],
+        help="Initial page to display (default: sysinfo)"
+    )
+    args = parser.parse_args()
+
+    # Find palette
+    palette_file = args.palette or find_default_palette()
+
+    app = QApplication(sys.argv)
+
+    # Load colors
+    colors = load_palette_colors(palette_file)
+
+    # Create and show control center
+    cc = ControlCenter(colors, initial_page=args.page)
+    cc.resize(700, 520)
+    cc.show()
+
+    # Handle SIGINT/SIGTERM gracefully
+    signal.signal(signal.SIGINT, lambda *_: app.quit())
+    signal.signal(signal.SIGTERM, lambda *_: app.quit())
+
+    sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+    main()

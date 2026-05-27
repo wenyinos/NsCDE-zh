@@ -23,6 +23,14 @@ check:
 	sh -n bin/nscde-wayland-menugen
 	python3 -m py_compile bin/nscde-wayland-colorcalc
 	python3 -m py_compile bin/nscde-panel
+	python3 -m py_compile bin/nscde-control-center
+	python3 -m py_compile lib/nscde_cde.py
+	python3 -m py_compile lib/cc_sysinfo.py
+	python3 -m py_compile lib/cc_defaultapps.py
+	python3 -m py_compile lib/cc_backdrop.py
+	python3 -m py_compile lib/cc_color.py
+	python3 -m py_compile lib/cc_font.py
+	python3 -m py_compile lib/cc_window.py
 	sh -n labwc/autostart
 	command -v fuzzel >/dev/null && fuzzel --check-config --config=fuzzel/fuzzel.ini || true
 	command -v foot >/dev/null && foot --check-config --config=foot/foot.ini || true
@@ -42,6 +50,15 @@ install:
 	$(INSTALL) -m 0755 bin/nscde-wayland-menugen "$(DESTDIR)$(BINDIR)/nscde-wayland-menugen"
 	$(INSTALL) -m 0755 bin/nscde-wayland-colorcalc "$(DESTDIR)$(BINDIR)/nscde-wayland-colorcalc"
 	$(INSTALL) -m 0755 bin/nscde-panel "$(DESTDIR)$(BINDIR)/nscde-panel"
+	$(INSTALL) -m 0755 bin/nscde-control-center "$(DESTDIR)$(BINDIR)/nscde-control-center"
+	$(INSTALL) -d "$(DESTDIR)$(PROJECTDATADIR)/lib"
+	$(INSTALL) -m 0644 lib/nscde_cde.py "$(DESTDIR)$(PROJECTDATADIR)/lib/nscde_cde.py"
+	$(INSTALL) -m 0644 lib/cc_sysinfo.py "$(DESTDIR)$(PROJECTDATADIR)/lib/cc_sysinfo.py"
+	$(INSTALL) -m 0644 lib/cc_defaultapps.py "$(DESTDIR)$(PROJECTDATADIR)/lib/cc_defaultapps.py"
+	$(INSTALL) -m 0644 lib/cc_backdrop.py "$(DESTDIR)$(PROJECTDATADIR)/lib/cc_backdrop.py"
+	$(INSTALL) -m 0644 lib/cc_color.py "$(DESTDIR)$(PROJECTDATADIR)/lib/cc_color.py"
+	$(INSTALL) -m 0644 lib/cc_font.py "$(DESTDIR)$(PROJECTDATADIR)/lib/cc_font.py"
+	$(INSTALL) -m 0644 lib/cc_window.py "$(DESTDIR)$(PROJECTDATADIR)/lib/cc_window.py"
 	$(INSTALL) -d "$(DESTDIR)$(SESSIONDIR)"
 	$(INSTALL) -m 0644 session/nscde-labwc.desktop "$(DESTDIR)$(SESSIONDIR)/nscde-labwc.desktop"
 	$(INSTALL) -d "$(DESTDIR)$(PROJECTDATADIR)"
@@ -61,6 +78,8 @@ uninstall:
 	rm -f "$(DESTDIR)$(BINDIR)/nscde-wayland-menugen"
 	rm -f "$(DESTDIR)$(BINDIR)/nscde-wayland-colorcalc"
 	rm -f "$(DESTDIR)$(BINDIR)/nscde-panel"
+	rm -f "$(DESTDIR)$(BINDIR)/nscde-control-center"
+	rm -rf "$(DESTDIR)$(PROJECTDATADIR)/lib"
 	rm -f "$(DESTDIR)$(SESSIONDIR)/nscde-labwc.desktop"
 	rm -rf "$(DESTDIR)$(PROJECTDATADIR)"
 	rm -rf "$(DESTDIR)$(DATADIR)/themes/NsCDE-Wayland"

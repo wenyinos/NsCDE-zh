@@ -179,11 +179,38 @@
 
 ---
 
-## 阶段 4-5 尚未开始
+## 阶段 4：设置管理器重写（完成度 100%）
+
+**计划 7 个管理器，预计 1-2 月**
+
+| # | 管理器 | 状态 | 实现文件 | 说明 |
+|---|---|---|---|---|
+| 1 | StyleMgr（入口） | ✅ | `nscde-control-center` | 工具栏 + QStackedWidget 标签切换 |
+| 2 | Sysinfo | ✅ | `lib/cc_sysinfo.py` | 只读系统信息，14 个字段 |
+| 3 | DefaultAppsMgr | ✅ | `lib/cc_defaultapps.py` | 8 类默认应用，XDG 扫描 |
+| 4 | BackdropMgr | ✅ | `lib/cc_backdrop.py` | 照片/背景双模式，swaybg 集成 |
+| 5 | ColorMgr | ✅ | `lib/cc_color.py` | 调色板选择 + labwc/GTK4/Kvantum/Firefox 集成 |
+| 6 | FontMgr | ✅ | `lib/cc_font.py` | 字体集管理 + GTK/Qt 配置写入 |
+| 7 | WindowMgr | ✅ | `lib/cc_window.py` | labwc rc.xml 4 标签页配置 |
+
+**共享模块**：`lib/nscde_cde.py`（调色板加载、CDE 样式、图标路径）
+
+**交付物**：
+- ✅ `nscde-control-center` 可执行程序（PyQt6）
+- ✅ 7 个管理器页面（含 2 个占位页：Keyboard/Mouse）
+- ✅ CDE 3D 边框样式一致
+- ✅ 调色板自动加载和预览
+- ✅ labwc/GTK/Qt/Kvantum 主题集成
+- ✅ 配置写入 `~/.config/nscde-wayland/`
+
+**代码量**：8 个文件，2300 行
+
+---
+
+## 阶段 5 尚未开始
 
 | 阶段 | 内容 | 计划工时 | 状态 |
 |---|---|---|---|
-| **阶段 4** | 设置管理器重写（StyleMgr/ColorMgr/FontMgr/BackdropMgr/WindowMgr/Sysinfo/DefaultAppsMgr） | 1-2 月 | ❌ 未开始 |
 | **阶段 5** | workspace pager | 2-4 月 | ❌ 未开始 |
 | **阶段 5** | task switcher | 含在上面 | ❌ 未开始 |
 | **阶段 5** | session shutdown dialog | 含在上面 | ❌ 未开始 |
@@ -212,16 +239,17 @@
 | 5月16日 | 17:00 - 17:30 | — | 阶段 2：Kvantum 主题生成、菜单生成器、Firefox CSS 安装 |
 | 5月16日 | 17:30 - 18:00 | — | 阶段 3：nscde-panel 原生面板框架（GTK3 + LayerShell） |
 | 5月16日 | 18:00 - 18:30 | — | 阶段 3：子面板弹出、托盘区域、工作区切换器 |
+| 5月27日 | — | — | 阶段 4：nscde-control-center（8 文件，2319 行，7 个管理器页面） |
 
-**总计约 21 个提交 + 1 轮代码审查 + 阶段 2/3 实现，集中在 ~22 小时内**。
+**总计约 21 个提交 + 1 轮代码审查 + 阶段 2/3/4 实现**。
 
 ---
 
 ## 当前原型的短板
 
-1. **面板是临时方案**：sfwbar 只是一个通用 Wayland 面板，不是 CDE 前面板。缺少子面板弹出、工作区切换器、小程序区域、CDE 3D 立体边框。
+1. **Keyboard/Mouse 管理器未实现**：`nscde-control-center` 中有两个占位页（Keyboard、Mouse），暂无功能。
 
-2. **无设置管理器**：没有 GUI 方式修改主题、字体、背景。
+2. **阶段 5 功能缺失**：workspace pager、task switcher、session shutdown dialog、多显示器支持等。
 
 ---
 
@@ -233,9 +261,10 @@
 | 阶段 1 任务 | 9 | 9 | 0 | 100% |
 | 阶段 2 任务 | 6 | 6 | 0 | 100% |
 | 阶段 3 任务 | 11 | 11 | 0 | 100% |
+| 阶段 4 任务 | 7 | 7 | 0 | 100% |
 | 计划首批文件 | 10 | 4 | 6 | 40% |
-| 阶段 4-5 任务 | ~24 | 0 | 24 | 0% |
-| **整体进度** | **~58 项** | **~41** | **~17** | **~71%** |
+| 阶段 5 任务 | ~12 | 0 | 12 | 0% |
+| **整体进度** | **~66 项** | **~49** | **~17** | **~74%** |
 
 按工时估算：计划总工时约 **5-10 个月**，已投入约 **24 小时**密集开发 + **2 小时**代码审查修复。阶段 0+1+2+3 已全部完成，后续阶段（设置管理器、功能等价）是真正的工程量所在。
 
