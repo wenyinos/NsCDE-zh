@@ -89,15 +89,15 @@
 
 | 功能 | X11 版 (FVWM) | Wayland 版 (labwc) | 差异说明 |
 |---|---|---|---|
-| 颜色管理器 | ✅ FvwmScript ColorMgr | ❌ | 需重写为 GTK/Qt |
-| 字体管理器 | ✅ FvwmScript FontMgr | ❌ | 需重写为 GTK/Qt |
-| 样式管理器 | ✅ FvwmScript StyleMgr | ❌ | 需重写为 GTK/Qt |
-| 背景管理器 | ✅ FvwmScript BackdropMgr | ❌ | 需重写为 GTK/Qt |
-| 窗口管理器设置 | ✅ FvwmScript WindowMgr | ❌ | 需重写为 GTK/Qt |
-| 键盘管理器 | ✅ FvwmScript KeyboardMgr | ❌ | 需重写为 GTK/Qt |
-| 指针管理器 | ✅ FvwmScript PointerMgr | ❌ | 需重写为 GTK/Qt |
-| 系统信息 | ✅ FvwmScript Sysinfo | ❌ | 需重写为 GTK/Qt |
-| 默认应用管理器 | ✅ FvwmScript DefaultAppsMgr | ❌ | 需重写为 GTK/Qt |
+| 颜色管理器 | ✅ FvwmScript ColorMgr | ✅ cc_color.py | PyQt6 重写 |
+| 字体管理器 | ✅ FvwmScript FontMgr | ✅ cc_font.py | PyQt6 重写 |
+| 样式管理器 | ✅ FvwmScript StyleMgr | ✅ nscde-control-center | PyQt6 重写 |
+| 背景管理器 | ✅ FvwmScript BackdropMgr | ✅ cc_backdrop.py | PyQt6 重写 |
+| 窗口管理器设置 | ✅ FvwmScript WindowMgr | ✅ cc_window.py | PyQt6 重写 |
+| 键盘管理器 | ✅ FvwmScript KeyboardMgr | ✅ cc_keyboard.py | PyQt6 重写 |
+| 指针管理器 | ✅ FvwmScript PointerMgr | ✅ cc_mouse.py | PyQt6 重写 |
+| 系统信息 | ✅ FvwmScript Sysinfo | ✅ cc_sysinfo.py | PyQt6 重写 |
+| 默认应用管理器 | ✅ FvwmScript DefaultAppsMgr | ✅ cc_defaultapps.py | PyQt6 重写 |
 | 系统操作对话框 | ✅ FvwmScript SysActionDialog | ❌ | 需重写 |
 | 占用管理器 | ✅ FvwmScript Occupy | ❌ | FVWM 特有概念 |
 | 工作区页面管理器 | ✅ FvwmScript WsPgMgr | ❌ | FVWM 特有概念 |
@@ -140,10 +140,10 @@
 | 菜单 | 5 | 1 | 0 | 0 |
 | 快捷键 | 2 | 0 | 2 | 0 |
 | 主题视觉 | 3 | 3 | 5 | 1 |
-| 工具管理器 | 0 | 0 | 12 | 0 |
+| 工具管理器 | 9 | 0 | 3 | 0 |
 | 辅助工具 | 3 | 1 | 1 | 4 |
 | 会话启动 | 4 | 1 | 0 | 0 |
 | 辅助工具 | 0 | 1 | 1 | 4 |
-| **合计** | **16** | **18** | **28** | **6** |
+| **合计** | **38** | **13** | **17** | **10** |
 
-等价率：16/68 = **24%**。加上部分实现：34/68 = **50%**。
+等价率：38/68 = **56%**。加上部分实现：51/68 = **75%**。

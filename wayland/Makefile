@@ -33,6 +33,8 @@ check:
 	python3 -m py_compile lib/cc_color.py
 	python3 -m py_compile lib/cc_font.py
 	python3 -m py_compile lib/cc_window.py
+	python3 -m py_compile lib/cc_keyboard.py
+	python3 -m py_compile lib/cc_mouse.py
 	sh -n labwc/autostart
 	command -v fuzzel >/dev/null && fuzzel --check-config --config=fuzzel/fuzzel.ini || true
 	command -v foot >/dev/null && foot --check-config --config=foot/foot.ini || true
@@ -63,6 +65,8 @@ install:
 	$(INSTALL) -m 0644 lib/cc_color.py "$(DESTDIR)$(PROJECTDATADIR)/lib/cc_color.py"
 	$(INSTALL) -m 0644 lib/cc_font.py "$(DESTDIR)$(PROJECTDATADIR)/lib/cc_font.py"
 	$(INSTALL) -m 0644 lib/cc_window.py "$(DESTDIR)$(PROJECTDATADIR)/lib/cc_window.py"
+	$(INSTALL) -m 0644 lib/cc_keyboard.py "$(DESTDIR)$(PROJECTDATADIR)/lib/cc_keyboard.py"
+	$(INSTALL) -m 0644 lib/cc_mouse.py "$(DESTDIR)$(PROJECTDATADIR)/lib/cc_mouse.py"
 	$(INSTALL) -d "$(DESTDIR)$(SESSIONDIR)"
 	$(INSTALL) -m 0644 session/nscde-labwc.desktop "$(DESTDIR)$(SESSIONDIR)/nscde-labwc.desktop"
 	$(INSTALL) -d "$(DESTDIR)$(PROJECTDATADIR)"

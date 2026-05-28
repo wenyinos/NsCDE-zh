@@ -6,7 +6,7 @@ A PyQt6-based control center for configuring NsCDE-Wayland desktop.
 Replaces the FvwmScript-based StyleMgr and its sub-managers.
 
 Usage:
-  nscde-control-center [--palette PALETTE.dp] [--page sysinfo|defaultapps|backdrop|color|font|window]
+  nscde-control-center [--palette PALETTE.dp] [--page sysinfo|defaultapps|backdrop|color|font|window|keyboard|mouse]
 """
 
 import sys
@@ -38,6 +38,8 @@ from cc_backdrop import BackdropPage
 from cc_color import ColorPage
 from cc_font import FontPage
 from cc_window import WindowPage
+from cc_keyboard import KeyboardPage
+from cc_mouse import MousePage
 
 
 # Page definitions: (id, label, icon_file, module_attr)
@@ -45,8 +47,8 @@ PAGES = [
     ("color", "Color", "stylemgr.1.png", "ColorMgr"),
     ("font", "Font", "stylemgr.2.png", "FontMgr"),
     ("backdrop", "Backdrop", "stylemgr.3.png", "BackdropMgr"),
-    ("keyboard", "Keyboard", "stylemgr.4.png", None),
-    ("mouse", "Mouse", "stylemgr.5.png", None),
+    ("keyboard", "Keyboard", "stylemgr.4.png", "KeyboardMgr"),
+    ("mouse", "Mouse", "stylemgr.5.png", "MouseMgr"),
     ("window", "Window", "stylemgr.8.png", "WindowMgr"),
     ("defaultapps", "Apps", "stylemgr.11.png", None),
     ("sysinfo", "Sysinfo", "stylemgr.12.png", None),
@@ -205,6 +207,14 @@ class ControlCenter(QWidget):
         # Window (always available)
         self._pages["window"] = WindowPage(self.colors)
         self.stack.addWidget(self._pages["window"])
+
+        # Keyboard (always available)
+        self._pages["keyboard"] = KeyboardPage(self.colors)
+        self.stack.addWidget(self._pages["keyboard"])
+
+        # Mouse (always available)
+        self._pages["mouse"] = MousePage(self.colors)
+        self.stack.addWidget(self._pages["mouse"])
 
         # Placeholder pages for not-yet-implemented managers
         for page_id, label, _, _ in PAGES:
