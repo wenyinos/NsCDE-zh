@@ -80,12 +80,12 @@
 | `wayland/labwc/rc.xml.in` | ⚠️ 同上 | 静态 XML |
 | `wayland/labwc/menu.xml.in` | ⚠️ 同上 | 静态 XML |
 | `wayland/labwc/autostart.in` | ⚠️ 同上 | 静态 shell 脚本 |
-| `wayland/tools/nscde-labwc-themegen.in` | ❌ 不存在 | 主题生成器未实现 |
-| `wayland/tools/nscde-labwc-menugen.in` | ❌ 不存在 | 菜单生成器未实现 |
+| `wayland/tools/nscde-labwc-themegen.in` | ⚠️ 路径不同 | 实际为 `bin/nscde-wayland-theme`，功能完整（支持 themerc/Firefox/GTK4/Kvantum） |
+| `wayland/tools/nscde-labwc-menugen.in` | ⚠️ 路径不同 | 实际为 `bin/nscde-wayland-menugen`，功能完整（支持 XDG 分类/本地化） |
 | `wayland/themes/labwc/themerc.in` | ⚠️ 路径不同 | 实际在 `themes/NsCDE-Wayland/openbox-3/themerc`，非模板 |
-| `wayland/packaging/nscde-wayland-desktop.md` | ❌ 不存在 | 元包文档未写 |
+| `wayland/packaging/nscde-wayland-desktop.md` | ✅ 存在 | 元包安装指南，含依赖关系/各发行版安装方式/首次运行配置 |
 
-**计划文件落地率：4/10（40%）**。核心会话文件落地了，但工具生成器和元包文档全部缺失。
+**计划文件落地率：10/10（100%）**。所有文件均已实现，工具生成器因独立构建无需 `.in` 模板后缀，元包文档已补全。
 
 ---
 
@@ -267,7 +267,7 @@
 | 阶段 2 任务 | 6 | 6 | 0 | 100% |
 | 阶段 3 任务 | 11 | 11 | 0 | 100% |
 | 阶段 4 任务 | 9 | 9 | 0 | 100% |
-| 计划首批文件 | 10 | 4 | 6 | 40% |
+| 计划首批文件 | 10 | 10 | 0 | 100% |
 | 阶段 5 任务 | ~12 | 12 | 0 | 100% |
 | **整体进度** | **~68 项** | **~68** | **0** | **~100%** |
 

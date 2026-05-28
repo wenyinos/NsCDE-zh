@@ -17,11 +17,10 @@
     <policy>center</policy>
   </placement>
   <windowSwitcher>
-    <show>yes</show>
-    <fields>
-      <field content="type" />
-      <field content="title" />
-    </fields>
+    <osd show="yes">
+      <field content="type" width="20%" />
+      <field content="title" width="80%" />
+    </osd>
   </windowSwitcher>
   <keyboard>
     <!-- Window management -->
